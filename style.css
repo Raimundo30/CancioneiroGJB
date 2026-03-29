@@ -1,0 +1,376 @@
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: Georgia, serif;
+	background: #f9f7f2;
+	color: #2c2c2c;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 1rem;
+}
+
+header {
+	padding: 2rem 0 1.5rem;
+	border-bottom: 1px solid #ddd;
+	margin-bottom: 1.5rem;
+}
+
+h1 {
+	font-size: 2rem;
+	margin-bottom: 1rem;
+}
+
+#pesquisa {
+	width: 100%;
+	padding: 0.6rem 1rem;
+	font-size: 1rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+}
+
+#lista-canticos {
+	list-style: none;
+}
+
+#lista-canticos li {
+	padding: 1rem;
+	border-bottom: 1px solid #eee;
+	cursor: pointer;
+}
+
+#lista-canticos li:hover {
+	background: #f0ece3;
+}
+
+.cantico-titulo {
+	font-size: 1.1rem;
+	font-weight: bold;
+}
+
+.cantico-meta {
+	font-size: 0.85rem;
+	color: #777;
+	margin-top: 0.2rem;
+}
+
+
+/* --- Botão de definições --- */
+#btn-definicoes {
+	position: fixed;
+	top: 1rem;
+	right: 1rem;
+	background: none;
+	border: 1px solid #ccc;
+	border-radius: 50%;
+	width: 2.5rem;
+	height: 2.5rem;
+	font-size: 1.1rem;
+	cursor: pointer;
+	background: white;
+	z-index: 100;
+}
+
+/* --- Painel de definições --- */
+#painel-definicoes {
+	position: fixed;
+	top: 0;
+	right: 0;
+	height: 100%;
+	width: 280px;
+	background: white;
+	box-shadow: -2px 0 8px rgba(0,0,0,0.15);
+	z-index: 200;
+	transition: transform 0.3s ease;
+}
+
+.painel-fechado { transform: translateX(100%); }
+.painel-aberto  { transform: translateX(0); }
+
+#painel-interior {
+	padding: 1.5rem;
+}
+
+#painel-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+}
+
+#btn-fechar-painel {
+	background: none;
+	border: none;
+	font-size: 1.2rem;
+	cursor: pointer;
+	color: #777;
+}
+
+.definicao-grupo {
+	margin-bottom: 1.5rem;
+}
+
+.definicao-grupo label {
+	display: block;
+	font-size: 0.85rem;
+	color: #777;
+	margin-bottom: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.opcoes-toggle {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.opcao-toggle {
+	flex: 1;
+	padding: 0.5rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+	cursor: pointer;
+	font-size: 0.9rem;
+}
+
+.opcao-toggle.ativo {
+	background: #2c2c2c;
+	color: white;
+	border-color: #2c2c2c;
+}
+
+/* --- Overlay --- */
+#overlay-definicoes {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: rgba(0,0,0,0.3);
+	z-index: 150;
+}
+
+.overlay-visivel {
+	display: block !important;
+}
+
+/* --- Separador de secção no painel --- */
+.painel-separador {
+	border: none;
+	border-top: 1px solid #eee;
+	margin: 1.5rem 0;
+}
+
+.painel-secao-titulo {
+	font-size: 0.75rem;
+	color: #aaa;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	margin-bottom: 1rem;
+}
+
+/* --- Controlo de transposição --- */
+.transposicao-controlo {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.transposicao-controlo button {
+	width: 2rem;
+	height: 2rem;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+	font-size: 1.1rem;
+	cursor: pointer;
+	line-height: 1;
+}
+
+.transposicao-controlo button:hover {
+	background: #f0ece3;
+}
+
+#transp-valor {
+	flex: 1;
+	text-align: center;
+	font-size: 0.95rem;
+	font-weight: bold;
+}
+
+#btn-transp-reset {
+	flex: 1;
+	padding: 0;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	background: white;
+	cursor: pointer;
+	font-size: 0.8rem;
+	height: 2rem;
+}
+
+
+/* --- Cabeçalho do cântico --- */
+#btn-voltar {
+	display: inline-block;
+	margin-bottom: 0.5rem;
+	color: #777;
+	text-decoration: none;
+	font-size: 0.9rem;
+}
+
+#cantico-meta {
+	color: #777;
+	font-size: 0.9rem;
+	margin-top: 0.3rem;
+}
+
+/* --- Secções --- */
+.seccao {
+	margin-bottom: 1.5rem;
+}
+
+.seccao-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: #aaa;
+	margin-bottom: 0.4rem;
+}
+
+.seccao-chorus .seccao-label {
+	color: #888;
+}
+
+/* --- Linhas de letra --- */
+.linha-letra {
+	display: flex;
+	flex-wrap: wrap;
+	line-height: 1;
+	margin-bottom: 0.15rem;
+}
+
+.linha-vazia {
+	height: 0.6rem;
+}
+
+.linha-comentario {
+	font-style: italic;
+	color: #999;
+	font-size: 0.85rem;
+	margin-bottom: 0.3rem;
+}
+
+/* --- Tokens (acorde + sílaba) --- */
+.token {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.acorde {
+	font-family: monospace;
+	font-size: 0.8rem;
+	color: #b05a00;
+	font-weight: bold;
+	white-space: pre;
+	min-width: 1ch;
+	line-height: 1.4;
+}
+
+.acorde-vazio {
+	visibility: hidden;
+}
+
+.silaba {
+	font-size: 1.05rem;
+	white-space: pre;
+}
+
+.seccao-chorus .silaba {
+	font-weight: bold;
+}
+
+/* --- Secção de folhas no painel --- */
+.painel-secao-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+#btn-nova-folha-painel {
+	background: none;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	font-size: 1.2rem;
+	cursor: pointer;
+	line-height: 1;
+	color: #555;
+}
+
+#btn-nova-folha-painel:hover {
+	background: #f0ece3;
+}
+
+#painel-folhas-ordenacao {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+#painel-folhas-ordenacao .opcao-toggle {
+	font-size: 0.8rem;
+	padding: 0.3rem 0.6rem;
+}
+
+#lista-folhas-painel {
+	list-style: none;
+}
+
+#lista-folhas-painel li {
+	display: flex;
+	align-items: center;
+	padding: 0.6rem 0;
+	border-bottom: 1px solid #f0ece3;
+	cursor: pointer;
+}
+
+#lista-folhas-painel li:hover .folha-painel-titulo {
+	text-decoration: underline;
+}
+
+.folha-painel-info {
+	flex: 1;
+}
+
+.folha-painel-titulo {
+	font-size: 0.95rem;
+}
+
+.folha-painel-data {
+	font-size: 0.75rem;
+	color: #aaa;
+}
+
+.btn-apagar-folha {
+	background: none;
+	border: none;
+	color: #ddd;
+	cursor: pointer;
+	font-size: 0.9rem;
+	padding: 0.2rem 0.4rem;
+}
+
+.btn-apagar-folha:hover {
+	color: #e55;
+}
+
+.pagina-cantico #painel-definicoes-gerais {
+	display: none;
+}

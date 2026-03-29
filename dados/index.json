@@ -1,0 +1,11 @@
+[
+	{
+		"id": "001",
+		"titulo": "Santo",
+		"autor": "Tradicional",
+		"tom": "G",
+		"categorias": ["ordinário", "missa"],
+		"ficheiro": "dados/canticos/001.cho",
+		"partitura": null
+	}
+]
