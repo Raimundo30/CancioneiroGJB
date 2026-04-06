@@ -14,6 +14,9 @@ window.Cancioneiro.painelPronto = false;
 
 		window.Cancioneiro.painelPronto = true;
 		document.dispatchEvent(new CustomEvent("painel-pronto"));
+
+		// Inicializa a secção de folhas
+		Cancioneiro.painelFolhas.init();
 	} catch (e) {
 		console.error("Erro ao carregar o painel:", e);
 	}

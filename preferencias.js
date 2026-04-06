@@ -37,7 +37,9 @@ window.Cancioneiro.preferencias = (function () {
 
 	function definir(chave, valor) {
 		if (chave === "mostrarAcordes") {
-			sessionStorage.setItem("mostrarAcordes", String(valor));
+			// O botão passa "true" ou "false" como string
+			const valorBool = valor === true || valor === "true";
+			sessionStorage.setItem("mostrarAcordes", String(valorBool));
 		} else {
 			atual[chave] = valor;
 			guardar(atual);

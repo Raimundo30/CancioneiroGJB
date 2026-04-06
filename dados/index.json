@@ -1,11 +1,210 @@
 [
 	{
 		"id": "001",
-		"titulo": "Santo",
-		"autor": "Tradicional",
-		"tom": "G",
-		"categorias": ["ordinário", "missa"],
+		"titulo": "A decisão é tua",
+		"autor": "",
+		"tom": "Bm",
+		"categorias": [],
 		"ficheiro": "dados/canticos/001.cho",
+		"partitura": null
+	},
+	{
+		"id": "002",
+		"titulo": "A Ti meu Deus",
+		"autor": "",
+		"tom": "Fm",
+		"categorias": [],
+		"ficheiro": "dados/canticos/002.cho",
+		"partitura": null
+	},
+	{
+		"id": "003",
+		"titulo": "A Tua Palavra, Senhor",
+		"autor": "",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/003.cho",
+		"partitura": null
+	},
+	{
+		"id": "004",
+		"titulo": "Abençoa",
+		"autor": "",
+		"tom": "Bm",
+		"categorias": [
+			"Ofertório"
+		],
+		"ficheiro": "dados/canticos/004.cho",
+		"partitura": null
+	},
+	{
+		"id": "005",
+		"titulo": "Abriu-se a manhã",
+		"autor": "",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/005.cho",
+		"partitura": null
+	},
+	{
+		"id": "006",
+		"titulo": "Acolhe a Vida",
+		"autor": "",
+		"tom": "A",
+		"categorias": [],
+		"ficheiro": "dados/canticos/006.cho",
+		"partitura": null
+	},
+	{
+		"id": "007",
+		"titulo": "Água",
+		"autor": "",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/007.cho",
+		"partitura": null
+	},
+	{
+		"id": "008",
+		"titulo": "Aleluia (A Palavra de Deus é Vida)",
+		"autor": "",
+		"tom": "C",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/008.cho",
+		"partitura": null
+	},
+	{
+		"id": "009",
+		"titulo": "Aleluia (A Palavra é Deus em nós)",
+		"autor": "",
+		"tom": "C",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/009.cho",
+		"partitura": null
+	},
+	{
+		"id": "010",
+		"titulo": "Aleluia (Cristo está vivo)",
+		"autor": "Desconhecido",
+		"tom": "",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/010.cho",
+		"partitura": null
+	},
+	{
+		"id": "011",
+		"titulo": "Aleluia (Deus está)",
+		"autor": "",
+		"tom": "A",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/011.cho",
+		"partitura": null
+	},
+	{
+		"id": "012",
+		"titulo": "Aleluia (Jesus vai falar)",
+		"autor": "",
+		"tom": "C",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/012.cho",
+		"partitura": null
+	},
+	{
+		"id": "013",
+		"titulo": "Aleluia (Taizé)",
+		"autor": "",
+		"tom": "Am",
+		"categorias": [
+			"Aclamação do Evangelho"
+		],
+		"ficheiro": "dados/canticos/013.cho",
+		"partitura": null
+	},
+	{
+		"id": "014",
+		"titulo": "Amar como Jesus amou",
+		"autor": "",
+		"tom": "E",
+		"categorias": [
+			"Geral"
+		],
+		"ficheiro": "dados/canticos/014.cho",
+		"partitura": null
+	},
+	{
+		"id": "015",
+		"titulo": "Ando à Procura",
+		"autor": "",
+		"tom": "D",
+		"categorias": [
+			"Entrada"
+		],
+		"ficheiro": "dados/canticos/015.cho",
+		"partitura": null
+	},
+	{
+		"id": "016",
+		"titulo": "Aliança Eterna",
+		"autor": "",
+		"tom": "A",
+		"categorias": [
+			"Geral"
+		],
+		"ficheiro": "dados/canticos/016.cho",
+		"partitura": null
+	},
+	{
+		"id": "017",
+		"titulo": "Ao partir do Pão",
+		"autor": "",
+		"tom": "Bm",
+		"categorias": [
+			"Geral"
+		],
+		"ficheiro": "dados/canticos/017.cho",
+		"partitura": null
+	},
+	{
+		"id": "018",
+		"titulo": "Ao Teu Altar",
+		"autor": "",
+		"tom": "C",
+		"categorias": [
+			"Ofertório"
+		],
+		"ficheiro": "dados/canticos/018.cho",
+		"partitura": null
+	},
+	{
+		"id": "019",
+		"titulo": "Bem Aventurados os Misericordiosos",
+		"autor": "",
+		"tom": "C#m",
+		"categorias": [
+			"Hino"
+		],
+		"ficheiro": "dados/canticos/019.cho",
+		"partitura": null
+	},
+	{
+		"id": "020",
+		"titulo": "Caminha na Luz",
+		"autor": "",
+		"tom": "G",
+		"categorias": [
+			"Final"
+		],
+		"ficheiro": "dados/canticos/020.cho",
 		"partitura": null
 	}
 ]

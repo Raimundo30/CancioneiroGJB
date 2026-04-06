@@ -37,7 +37,9 @@ document.addEventListener("painel-pronto", () => {
 		document.querySelectorAll(".opcao-toggle[data-pref][data-valor]").forEach(btn => {
 			const chave = btn.dataset.pref;
 			const valor = btn.dataset.valor;
-			btn.classList.toggle("ativo", Cancioneiro.preferencias.obter(chave) === valor);
+			const atual = Cancioneiro.preferencias.obter(chave);
+			// Compara como string para suportar booleanos guardados como "true"/"false"
+			btn.classList.toggle("ativo", String(atual) === String(valor));
 		});
 	}
 
