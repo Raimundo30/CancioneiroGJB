@@ -2,7 +2,7 @@
 	{
 		"id": "001",
 		"titulo": "A decisão é tua",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "Bm",
 		"categorias": [],
 		"ficheiro": "dados/canticos/001.cho",
@@ -11,7 +11,7 @@
 	{
 		"id": "002",
 		"titulo": "A Ti meu Deus",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "Fm",
 		"categorias": [],
 		"ficheiro": "dados/canticos/002.cho",
@@ -20,7 +20,7 @@
 	{
 		"id": "003",
 		"titulo": "A Tua Palavra, Senhor",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "D",
 		"categorias": [],
 		"ficheiro": "dados/canticos/003.cho",
@@ -29,7 +29,7 @@
 	{
 		"id": "004",
 		"titulo": "Abençoa",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "Bm",
 		"categorias": [
 			"Ofertório"
@@ -40,7 +40,7 @@
 	{
 		"id": "005",
 		"titulo": "Abriu-se a manhã",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "D",
 		"categorias": [],
 		"ficheiro": "dados/canticos/005.cho",
@@ -49,7 +49,7 @@
 	{
 		"id": "006",
 		"titulo": "Acolhe a Vida",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "A",
 		"categorias": [],
 		"ficheiro": "dados/canticos/006.cho",
@@ -58,7 +58,7 @@
 	{
 		"id": "007",
 		"titulo": "Água",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "G",
 		"categorias": [],
 		"ficheiro": "dados/canticos/007.cho",
@@ -67,7 +67,7 @@
 	{
 		"id": "008",
 		"titulo": "Aleluia (A Palavra de Deus é Vida)",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "C",
 		"categorias": [
 			"Aclamação do Evangelho"
@@ -78,7 +78,7 @@
 	{
 		"id": "009",
 		"titulo": "Aleluia (A Palavra é Deus em nós)",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "C",
 		"categorias": [
 			"Aclamação do Evangelho"
@@ -90,7 +90,7 @@
 		"id": "010",
 		"titulo": "Aleluia (Cristo está vivo)",
 		"autor": "Desconhecido",
-		"tom": "",
+		"tom": "D",
 		"categorias": [
 			"Aclamação do Evangelho"
 		],
@@ -100,7 +100,7 @@
 	{
 		"id": "011",
 		"titulo": "Aleluia (Deus está)",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "A",
 		"categorias": [
 			"Aclamação do Evangelho"
@@ -111,7 +111,7 @@
 	{
 		"id": "012",
 		"titulo": "Aleluia (Jesus vai falar)",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "C",
 		"categorias": [
 			"Aclamação do Evangelho"
@@ -122,7 +122,7 @@
 	{
 		"id": "013",
 		"titulo": "Aleluia (Taizé)",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "Am",
 		"categorias": [
 			"Aclamação do Evangelho"
@@ -133,18 +133,16 @@
 	{
 		"id": "014",
 		"titulo": "Amar como Jesus amou",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "E",
-		"categorias": [
-			"Geral"
-		],
+		"categorias": [],
 		"ficheiro": "dados/canticos/014.cho",
 		"partitura": null
 	},
 	{
 		"id": "015",
 		"titulo": "Ando à Procura",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "D",
 		"categorias": [
 			"Entrada"
@@ -155,29 +153,25 @@
 	{
 		"id": "016",
 		"titulo": "Aliança Eterna",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "A",
-		"categorias": [
-			"Geral"
-		],
+		"categorias": [],
 		"ficheiro": "dados/canticos/016.cho",
 		"partitura": null
 	},
 	{
 		"id": "017",
 		"titulo": "Ao partir do Pão",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "Bm",
-		"categorias": [
-			"Geral"
-		],
+		"categorias": [],
 		"ficheiro": "dados/canticos/017.cho",
 		"partitura": null
 	},
 	{
 		"id": "018",
 		"titulo": "Ao Teu Altar",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "C",
 		"categorias": [
 			"Ofertório"
@@ -188,7 +182,7 @@
 	{
 		"id": "019",
 		"titulo": "Bem Aventurados os Misericordiosos",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "C#m",
 		"categorias": [
 			"Hino"
@@ -199,12 +193,625 @@
 	{
 		"id": "020",
 		"titulo": "Caminha na Luz",
-		"autor": "",
+		"autor": "Desconhecido",
 		"tom": "G",
 		"categorias": [
 			"Final"
 		],
 		"ficheiro": "dados/canticos/020.cho",
+		"partitura": null
+	},
+	{
+		"id": "021",
+		"titulo": "Caminharei",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Entrada"
+		],
+		"ficheiro": "dados/canticos/021.cho",
+		"partitura": null
+	},
+	{
+		"id": "022",
+		"titulo": "Canção da Caridade",
+		"autor": "Desconhecido",
+		"tom": "Dm",
+		"categorias": [],
+		"ficheiro": "dados/canticos/022.cho",
+		"partitura": null
+	},
+	{
+		"id": "023",
+		"titulo": "Cantarei ao Senhor",
+		"autor": "Desconhecido",
+		"tom": "Em",
+		"categorias": [],
+		"ficheiro": "dados/canticos/023.cho",
+		"partitura": null
+	},
+	{
+		"id": "024",
+		"titulo": "Comei do Pão",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Comunhão"
+		],
+		"ficheiro": "dados/canticos/024.cho",
+		"partitura": null
+	},
+	{
+		"id": "025",
+		"titulo": "Como o Pai me amou",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/025.cho",
+		"partitura": null
+	},
+	{
+		"id": "026",
+		"titulo": "Consagração a Nossa Senhora",
+		"autor": "Desconhecido",
+		"tom": "F",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/026.cho",
+		"partitura": null
+	},
+	{
+		"id": "027",
+		"titulo": "Conta as Estrelas do Céu",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/027.cho",
+		"partitura": null
+	},
+	{
+		"id": "028",
+		"titulo": "Corça",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Ação de Graças",
+			"Baptismo",
+			"Crisma"
+		],
+		"ficheiro": "dados/canticos/028.cho",
+		"partitura": null
+	},
+	{
+		"id": "029",
+		"titulo": "Cordeiro de Deus #1",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Cordeiro"
+		],
+		"ficheiro": "dados/canticos/029.cho",
+		"partitura": null
+	},
+	{
+		"id": "030",
+		"titulo": "Cordeiro de Deus #2",
+		"autor": "Desconhecido",
+		"tom": "Fm",
+		"categorias": [
+			"Cordeiro"
+		],
+		"ficheiro": "dados/canticos/030.cho",
+		"partitura": null
+	},
+	{
+		"id": "031",
+		"titulo": "Cordeiro de Deus",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Cordeiro"
+		],
+		"ficheiro": "dados/canticos/031.cho",
+		"partitura": null
+	},
+	{
+		"id": "032",
+		"titulo": "Dar Mais",
+		"autor": "Desconhecido",
+		"tom": "A",
+		"categorias": [
+			"Ofertório",
+			"Final"
+		],
+		"ficheiro": "dados/canticos/032.cho",
+		"partitura": null
+	},
+	{
+		"id": "033",
+		"titulo": "Deixa Deus entrar",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Entrada"
+		],
+		"ficheiro": "dados/canticos/033.cho",
+		"partitura": null
+	},
+	{
+		"id": "034",
+		"titulo": "Dentro de mim existe uma luz",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/034.cho",
+		"partitura": null
+	},
+	{
+		"id": "035",
+		"titulo": "Deus está aqui (Tão certo)",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/035.cho",
+		"partitura": null
+	},
+	{
+		"id": "036",
+		"titulo": "Deus é Amor",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Taizé",
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/036.cho",
+		"partitura": null
+	},
+	{
+		"id": "037",
+		"titulo": "Deus precisa de ti",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/037.cho",
+		"partitura": null
+	},
+	{
+		"id": "038",
+		"titulo": "Este é o Meu Corpo",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Comunhão"
+		],
+		"ficheiro": "dados/canticos/038.cho",
+		"partitura": null
+	},
+	{
+		"id": "039",
+		"titulo": "Embarcar",
+		"autor": "Desconhecido",
+		"tom": "A",
+		"categorias": [
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/039.cho",
+		"partitura": null
+	},
+	{
+		"id": "040",
+		"titulo": "Em nome do Pai",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/040.cho",
+		"partitura": null
+	},
+	{
+		"id": "041",
+		"titulo": "Espírito de Amor",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/041.cho",
+		"partitura": null
+	},
+	{
+		"id": "042",
+		"titulo": "Esta luz pequenina",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/042.cho",
+		"partitura": null
+	},
+	{
+		"id": "043",
+		"titulo": "Estrela Polar",
+		"autor": "Desconhecido",
+		"tom": "F#m",
+		"categorias": [],
+		"ficheiro": "dados/canticos/043.cho",
+		"partitura": null
+	},
+	{
+		"id": "044",
+		"titulo": "Eu te amo, ó Senhor",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/044.cho",
+		"partitura": null
+	},
+	{
+		"id": "045",
+		"titulo": "Eu tenho um amigo que me ama",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/045.cho",
+		"partitura": null
+	},
+	{
+		"id": "046",
+		"titulo": "Eu irei cantar pelo mundo",
+		"autor": "Desconhecido",
+		"tom": "F",
+		"categorias": [],
+		"ficheiro": "dados/canticos/046.cho",
+		"partitura": null
+	},
+	{
+		"id": "047",
+		"titulo": "Eu vim para escutar",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/047.cho",
+		"partitura": null
+	},
+	{
+		"id": "048",
+		"titulo": "Faz a Paz",
+		"autor": "Desconhecido",
+		"tom": "Bm",
+		"categorias": [],
+		"ficheiro": "dados/canticos/048.cho",
+		"partitura": null
+	},
+	{
+		"id": "049",
+		"titulo": "Feliz Caminhar",
+		"autor": "Desconhecido",
+		"tom": "",
+		"categorias": [
+			"Geral"
+		],
+		"ficheiro": "dados/canticos/049.cho",
+		"partitura": null
+	},
+	{
+		"id": "050",
+		"titulo": "Felizes os que amam o Senhor",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/050.cho",
+		"partitura": null
+	},
+	{
+		"id": "051",
+		"titulo": "Fica junto a nós",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/051.cho",
+		"partitura": null
+	},
+	{
+		"id": "052",
+		"titulo": "Gloria in Excelsis Deo",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/052.cho",
+		"partitura": null
+	},
+	{
+		"id": "053",
+		"titulo": "Grão de Trigo",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Ofertório",
+			"Comunhão"
+		],
+		"ficheiro": "dados/canticos/053.cho",
+		"partitura": null
+	},
+	{
+		"id": "054",
+		"titulo": "Guiado pela Mão",
+		"autor": "Desconhecido",
+		"tom": "A7",
+		"categorias": [
+			"Entrada",
+			"Final"
+		],
+		"ficheiro": "dados/canticos/054.cho",
+		"partitura": null
+	},
+	{
+		"id": "055",
+		"titulo": "Há Pressa no Ar (original)",
+		"autor": "Desconhecido",
+		"tom": "E",
+		"categorias": [
+			"Hino"
+		],
+		"ficheiro": "dados/canticos/055.cho",
+		"partitura": null
+	},
+	{
+		"id": "056",
+		"titulo": "Há Pressa no Ar",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/056.cho",
+		"partitura": null
+	},
+	{
+		"id": "057",
+		"titulo": "Peregrinos de Esperança",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Hino"
+		],
+		"ficheiro": "dados/canticos/057.cho",
+		"partitura": null
+	},
+	{
+		"id": "058",
+		"titulo": "Furacão",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [],
+		"ficheiro": "dados/canticos/058.cho",
+		"partitura": null
+	},
+	{
+		"id": "059",
+		"titulo": "Inunda o Meu Ser",
+		"autor": "Desconhecido",
+		"tom": "E",
+		"categorias": [],
+		"ficheiro": "dados/canticos/059.cho",
+		"partitura": null
+	},
+	{
+		"id": "060",
+		"titulo": "Igreja Reunida",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Entrada"
+		],
+		"ficheiro": "dados/canticos/060.cho",
+		"partitura": null
+	},
+	{
+		"id": "061",
+		"titulo": "Luz Terna e Suave",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/061.cho",
+		"partitura": null
+	},
+	{
+		"id": "062",
+		"titulo": "Louco e Sábio",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [],
+		"ficheiro": "dados/canticos/062.cho",
+		"partitura": null
+	},
+	{
+		"id": "063",
+		"titulo": "Mãe, olha para mim",
+		"autor": "Desconhecido",
+		"tom": "D",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/063.cho",
+		"partitura": null
+	},
+	{
+		"id": "064",
+		"titulo": "Maravilhas fez em mim",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/064.cho",
+		"partitura": null
+	},
+	{
+		"id": "065",
+		"titulo": "Maria Lindíssima",
+		"autor": "Desconhecido",
+		"tom": "E",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/065.cho",
+		"partitura": null
+	},
+	{
+		"id": "066",
+		"titulo": "Maria tu és",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/066.cho",
+		"partitura": null
+	},
+	{
+		"id": "067",
+		"titulo": "Na tua casa eu canto a ti, Maria",
+		"autor": "Desconhecido",
+		"tom": "E",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/067.cho",
+		"partitura": null
+	},
+	{
+		"id": "068",
+		"titulo": "Na Tua Luz",
+		"autor": "Desconhecido",
+		"tom": "F",
+		"categorias": [],
+		"ficheiro": "dados/canticos/068.cho",
+		"partitura": null
+	},
+	{
+		"id": "069",
+		"titulo": "Nada te Turbe",
+		"autor": "Desconhecido",
+		"tom": "Am",
+		"categorias": [
+			"Taizé"
+		],
+		"ficheiro": "dados/canticos/069.cho",
+		"partitura": null
+	},
+	{
+		"id": "070",
+		"titulo": "Não adores nunca ninguém mais",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/070.cho",
+		"partitura": null
+	},
+	{
+		"id": "071",
+		"titulo": "Ninguém te ama como eu",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/071.cho",
+		"partitura": null
+	},
+	{
+		"id": "072",
+		"titulo": "Nossa Senhora do Sim",
+		"autor": "Desconhecido",
+		"tom": "",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/072.cho",
+		"partitura": null
+	},
+	{
+		"id": "073",
+		"titulo": "Nossa Senhora do Sim",
+		"autor": "Desconhecido",
+		"tom": "G",
+		"categorias": [
+			"Maria"
+		],
+		"ficheiro": "dados/canticos/073.cho",
+		"partitura": null
+	},
+	{
+		"id": "074",
+		"titulo": "O Reino de Deus",
+		"autor": "Desconhecido",
+		"tom": "Em",
+		"categorias": [
+			"Taizé"
+		],
+		"ficheiro": "dados/canticos/074.cho",
+		"partitura": null
+	},
+	{
+		"id": "075",
+		"titulo": "O Senhor é a minha força",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Taizé",
+			"Ação de Graças"
+		],
+		"ficheiro": "dados/canticos/075.cho",
+		"partitura": null
+	},
+	{
+		"id": "076",
+		"titulo": "O Senhor é meu Pastor",
+		"autor": "Desconhecido",
+		"tom": "Bm",
+		"categorias": [],
+		"ficheiro": "dados/canticos/076.cho",
+		"partitura": null
+	},
+	{
+		"id": "077",
+		"titulo": "O Verbo de Deus",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [
+			"Hino"
+		],
+		"ficheiro": "dados/canticos/077.cho",
+		"partitura": null
+	},
+	{
+		"id": "078",
+		"titulo": "Obrigado",
+		"autor": "Desconhecido",
+		"tom": "C",
+		"categorias": [],
+		"ficheiro": "dados/canticos/078.cho",
+		"partitura": null
+	},
+	{
+		"id": "079",
+		"titulo": "Oceanos (Onde Meus Pés Podem Falhar)",
+		"autor": "Desconhecido",
+		"tom": "Bm",
+		"categorias": [
+			"Final"
+		],
+		"ficheiro": "dados/canticos/079.cho",
+		"partitura": null
+	},
+	{
+		"id": "080",
+		"titulo": "Onde Deus te Levar",
+		"autor": "Desconhecido",
+		"tom": "A",
+		"categorias": [
+			"Final"
+		],
+		"ficheiro": "dados/canticos/080.cho",
 		"partitura": null
 	}
 ]
