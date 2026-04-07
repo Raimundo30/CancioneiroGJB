@@ -4,18 +4,27 @@
 	--cor-primaria: Black;
 	--cor-secundaria: GhostWhite;
 	--cor-destaque: #ff6400;
-	--cor-fundo: GhostWhite;
-	--cor-fundo-secundario: White;
-	--cor-fundo-hover: Gainsboro;
-	--cor-sombra: #0000000F;		/* Preto com opacidade para sombras */
-	--cor-overlay: #00000040;		/* Preto com opacidade para overlays */
-	--cor-texto: Black;
-	--cor-texto-secundario: Grey;
-	--cor-texto-terciario: LightGray;
-	--cor-contorno: Silver;
-	--cor-contorno-secundario: LightGray;
-	--cor-botao-fundo: DimGray;
-	--cor-botao-texto: White;
+
+    --cor-fundo: GhostWhite;
+    --cor-fundo-secundario: White;
+    
+    --cor-hover: Gainsboro;
+
+    --cor-texto: var(--cor-primaria);
+    --cor-texto-secundario: color-mix(in srgb, var(--cor-primaria), White 20%);
+    --cor-texto-terciario: color-mix(in srgb, var(--cor-primaria), White 40%)   ;
+    
+    --cor-texto-destaque: var(--cor-destaque);
+	--cor-texto-eliminar: Crimson;
+
+    --cor-contorno: color-mix(in srgb, var(--cor-secundaria), Black 60%);
+    --cor-contorno-secundario: color-mix(in srgb, var(--cor-secundaria), Black 40%);
+
+    --cor-sombra-overlay: rgba(0,0,0,0.3);
+
+    --cor-fundo-btn-ativo: #2c2c2c;
+    --cor-texto-btn-ativo: White;
+    --cor-contorno-btn-ativo: var(--cor-fundo-btn-ativo);
 }
 
 * {
@@ -44,6 +53,10 @@ h1 {
 	margin-bottom: 1rem;
 }
 
+.oculto {
+	display: none !important;
+}
+
 /* || MAIN PAGE */
 
 #pesquisa {
@@ -66,7 +79,7 @@ h1 {
 }
 
 #lista-canticos li:hover {
-	background: var(--cor-fundo-hover);
+	background: var(--cor-hover);
 }
 
 .cantico-titulo {
@@ -106,8 +119,8 @@ h1 {
 	right: 0;
 	height: 100%;
 	width: 280px;
-	background: var(--cor-fundo-secundario);
-	box-shadow: -2px 0 8px var(--cor-sombra);
+	background: var(--cor-fundo);
+	box-shadow: -2px 0 8px var(--cor-sombra-overlay);
 	z-index: 200;
 	transition: transform 0.3s ease;
 }
@@ -131,7 +144,7 @@ h1 {
 	border: none;
 	font-size: 1.2rem;
 	cursor: pointer;
-	color: var(--cor-texto-secundario);
+	color: var(--cor-contorno);
 }
 
 .definicao-grupo {
@@ -162,10 +175,14 @@ h1 {
 	font-size: 0.9rem;
 }
 
+.opcao-toggle:hover {
+	background: var(--cor-hover);
+}
+
 .opcao-toggle.ativo {
-	background: var(--cor-botao-fundo);
-	color: var(--cor-botao-texto);
-	border-color: var(--cor-contorno);
+	background: var( --cor-fundo-btn-ativo);
+	color: var(--cor-texto-btn-ativo);
+	border-color: var(--cor-contorno-btn-ativo);
 }
 
 /* --- Overlay --- */
@@ -173,7 +190,7 @@ h1 {
 	display: none;
 	position: fixed;
 	inset: 0;
-	background: var(--cor-overlay);
+	background: var(--cor-sombra-overlay);
 	z-index: 150;
 }
 
@@ -215,7 +232,7 @@ h1 {
 }
 
 .transposicao-controlo button:hover {
-	background: var(--cor-fundo-hover);
+	background: var(--cor-hover);
 }
 
 #transp-valor {
@@ -228,96 +245,14 @@ h1 {
 #btn-transp-reset {
 	flex: 1;
 	padding: 0;
-	border: 1px solid #ccc;
+	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
-	background: white;
+	background: var(--cor-fundo-secundario);
 	cursor: pointer;
 	font-size: 0.8rem;
 	height: 2rem;
 }
 
-/* || PÁGINA DO CÂNTICO */
-
-/* --- Cabeçalho do cântico --- */
-#btn-voltar {
-	display: inline-block;
-	margin-bottom: 0.5rem;
-	color: #777;
-	text-decoration: none;
-	font-size: 0.9rem;
-}
-
-#cantico-meta {
-	color: #777;
-	font-size: 0.9rem;
-	margin-top: 0.3rem;
-}
-
-/* --- Secções --- */
-.seccao {
-	margin-bottom: 1.5rem;
-}
-
-.seccao-label {
-	font-size: 0.75rem;
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-	color: #aaa;
-	margin-bottom: 0.4rem;
-}
-
-.seccao-chorus .seccao-label {
-	color: #888;
-}
-
-/* --- Linhas de letra --- */
-.linha-letra {
-	display: flex;
-	flex-wrap: wrap;
-	line-height: 1;
-	margin-bottom: 0.15rem;
-}
-
-.linha-vazia {
-	height: 0.6rem;
-}
-
-.linha-comentario {
-	font-style: italic;
-	color: #999;
-	font-size: 0.85rem;
-	margin-bottom: 0.3rem;
-}
-
-/* --- Tokens (acorde + sílaba) --- */
-.token {
-	display: inline-flex;
-	flex-direction: column;
-	align-items: flex-start;
-}
-
-.acorde {
-	font-family: monospace;
-	font-size: 1rem;
-	color: #ff6400;
-	font-weight: bold;
-	white-space: pre;
-	min-width: 1ch;
-	line-height: 1.4;
-}
-
-.acorde-vazio {
-	visibility: hidden;
-}
-
-.silaba {
-	font-size: 1.05rem;
-	white-space: pre;
-}
-
-.seccao-chorus .silaba {
-	font-weight: bold;
-}
 
 /* --- Secção de folhas no painel --- */
 .painel-secao-cabecalho {
@@ -329,18 +264,18 @@ h1 {
 
 #btn-nova-folha-painel {
 	background: none;
-	border: 1px solid #ccc;
+	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
 	width: 1.8rem;
 	height: 1.8rem;
 	font-size: 1.2rem;
 	cursor: pointer;
 	line-height: 1;
-	color: #555;
+	color: var(--cor-texto-secundario);
 }
 
 #btn-nova-folha-painel:hover {
-	background: #f0ece3;
+	background: var(--cor-hover);
 }
 
 #painel-folhas-ordenacao {
@@ -362,7 +297,7 @@ h1 {
 	display: flex;
 	align-items: center;
 	padding: 0.6rem 0;
-	border-bottom: 1px solid #f0ece3;
+	border-bottom: 1px solid var(--cor-contorno-secundario);
 	cursor: pointer;
 }
 
@@ -380,29 +315,12 @@ h1 {
 
 .folha-painel-data {
 	font-size: 0.75rem;
-	color: #aaa;
-}
-
-.btn-apagar-folha {
-	background: none;
-	border: none;
-	color: #ddd;
-	cursor: pointer;
-	font-size: 0.9rem;
-	padding: 0.2rem 0.4rem;
-}
-
-.btn-apagar-folha:hover {
-	color: #e55;
-}
-
-.pagina-cantico #painel-definicoes-gerais {
-	display: none;
+	color: var(--cor-texto-secundario);
 }
 
 .folha-painel-vazia {
 	font-size: 0.85rem;
-	color: #bbb;
+	color: var(--cor-texto-secundario);
 	font-style: italic;
 	padding: 0.5rem 0;
 }
@@ -412,38 +330,187 @@ h1 {
 	gap: 0.2rem;
 }
 
-.btn-editar-folha {
+.btn-apagar-folha {
 	background: none;
 	border: none;
-	color: #ccc;
+	color: var(--cor-texto-secundario);
 	cursor: pointer;
 	font-size: 0.9rem;
 	padding: 0.2rem 0.4rem;
 }
 
-.btn-editar-folha:hover {
-	color: #888;
+.btn-editar-folha {
+	background: none;
+	border: none;
+	color: var(--cor-texto-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	padding: 0.2rem 0.4rem;
 }
+
+.btn-apagar-folha:hover { color: var(--cor-texto-eliminar);}
+.btn-editar-folha:hover { color: var(--cor-texto-terciario);}
+
+/* || PÁGINA DO CÂNTICO */
+
+.pagina-cantico #painel-definicoes-gerais {
+	display: none;
+}
+
+/* --- Cabeçalho do cântico --- */
+
+#btn-voltar {
+	display: inline-block;
+	margin-bottom: 0.5rem;
+	color: var(--cor-texto-secundario);
+	text-decoration: none;
+	font-size: 0.9rem;
+}
+
+#cantico-meta {
+	color: var(--cor-texto-secundario);
+	font-size: 0.9rem;
+	margin-top: 0.3rem;
+}
+
+/* --- Secções --- */
+.seccao {
+	margin-bottom: 1.5rem;
+}
+
+.seccao-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--cor-texto-terciario);
+	margin-bottom: 0.4rem;
+}
+
+.seccao-chorus .seccao-label {
+	color: var(--cor-texto-terciario);
+}
+
+/* --- Linhas de letra --- */
+.linha-letra {
+	display: flex;
+	flex-wrap: wrap;
+	line-height: 1;
+	margin-bottom: 0.15rem;
+}
+
+.linha-vazia {
+	height: 0.6rem;
+}
+
+.linha-comentario {
+	font-style: italic;
+	color: var(--cor-texto-terciario);
+	font-size: 0.85rem;
+	margin-bottom: 0.3rem;
+}
+
+/* --- Tokens (acorde + sílaba) --- */
+.token {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.acorde {
+	font-family: monospace;
+	font-size: 1rem;
+	color: var(--cor-texto-destaque);
+	font-weight: bold;
+	white-space: pre;
+	min-width: 1ch;
+	line-height: 1.4;
+}
+
+.acorde-vazio {
+	visibility: hidden;
+}
+
+.silaba {
+	font-size: 1.05rem;
+	white-space: pre;
+}
+
+.seccao-chorus .silaba {
+	font-weight: bold;
+}
+
+/* || PÁGINA DA FOLHA || */
+
+/* --- Página da folha --- */
 
 #folha-meta {
 	font-size: 0.85rem;
-	color: #777;
+	color: var(--cor-texto-secundario);
 	margin-top: 0.2rem;
 }
 
+#folha-titulo-linha {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+#folha-header-info {
+	flex: 1;
+}
+
+#folha-header {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 2rem 0 1.5rem;
+	border-bottom: 1px solid var(--cor-contorno);
+	margin-bottom: 1.5rem;
+}
+
+#folha-header-direita {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+#folha-header-acoes {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+/* --- Botão de editar título da folha --- */
+#btn-editar-titulo {
+	background: none;
+	border: none;
+	color: var(--cor-contorno-secundario);
+	cursor: pointer;
+	font-size: 1rem;
+	padding: 0.2rem;
+}
+
+#btn-editar-titulo:hover { color: var(--cor-texto-secundario); }
+
+/* --- Modo Editar/Apresentar --- */
 .btn-modo {
 	padding: 0.4rem 0.9rem;
-	border: 1px solid #ccc;
+	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
-	background: white;
+	background: var(--cor-fundo-secundario);
 	cursor: pointer;
 	font-size: 0.9rem;
 }
 
+.btn-modo:hover {
+	background: var(--cor-hover);
+}
+
 .btn-modo.ativo {
-	background: #2c2c2c;
-	color: white;
-	border-color: #2c2c2c;
+	background: var(--cor-fundo-btn-ativo);
+	color: var(--cor-texto-btn-ativo);
+	border-color: var(--cor-contorno-btn-ativo);
 }
 
 /* --- Toggle contínuo/individual --- */
@@ -459,18 +526,19 @@ h1 {
 }
 
 /* --- Barra de navegação individual --- */
+/*||||*/
 #folha-nav-momentos {
 	display: flex;
 	align-items: center;
 	padding: 0.75rem 0;
 	margin-bottom: 1rem;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--cor-contorno);
 	gap: 0.5rem;
 }
 
 #folha-nav-momentos > button {
 	background: none;
-	border: 1px solid #ccc;
+	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
 	width: 2.5rem;
 	height: 2.5rem;
@@ -479,9 +547,7 @@ h1 {
 	flex-shrink: 0;
 }
 
-#folha-nav-momentos > button:hover {
-	background: #f0ece3;
-}
+#folha-nav-momentos > button:hover { background: var(--cor-hover);}
 
 #folha-nav-label-container {
 	position: relative;
@@ -500,19 +566,17 @@ h1 {
 	width: 100%;
 }
 
-#folha-nav-label:hover {
-	background: #f0ece3;
-}
+#folha-nav-label:hover {background: var(--cor-hover);}
 
 #folha-nav-dropdown {
 	position: absolute;
 	top: 100%;
 	left: 50%;
 	transform: translateX(-50%);
-	background: white;
-	border: 1px solid #ddd;
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno-secundario);
 	border-radius: 4px;
-	box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	box-shadow: 0 4px 12px var(--cor-sombra-overlay);
 	list-style: none;
 	min-width: 180px;
 	z-index: 50;
@@ -526,16 +590,17 @@ h1 {
 	white-space: nowrap;
 }
 
-#folha-nav-dropdown li:hover {
-	background: #f0ece3;
-}
+#folha-nav-dropdown li:hover { background: var(--cor-hover);}
 
 #folha-nav-dropdown li.ativo {
 	font-weight: bold;
-	color: #ff6400;
+	color: var(--cor-destaque);
 }
 
-/* --- Momentos --- */
+/* |||| */
+ /* Para eliminar quando passar a botões no header */
+
+/* ||| MOMENTOS ||| */
 .folha-momento {
 	margin-bottom: 2.5rem;
 }
@@ -544,19 +609,64 @@ h1 {
 	font-size: 1rem;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
-	color: #aaa;
+	color: var(--cor-texto-secundario);
 	margin-bottom: 1rem;
 	padding-bottom: 0.4rem;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--cor-texto-secundario);
+}
+
+.folha-momento-cabecalho {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/* --- Ações do momento --- */
+.folha-momento-acoes {
+	display: flex;
+	gap: 0.3rem;
+}
+
+.folha-momento-acoes button {
+	background: none;
+	border: none;
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 0.85rem;
+	color: var(--cor-contorno-secundario);
+}
+
+.folha-momento-acoes button:hover:not(:disabled) { color: var(--cor-texto-secundario); }
+.folha-momento-acoes button:disabled { opacity: 0.3; cursor: default; }
+.folha-momento-acoes button.btn-apagar-momento:hover { color: var(--cor-texto-eliminar); }
+
+/* --- Botão adicionar momento --- */
+#btn-adicionar-momento {
+	width: 100%;
+	padding: 0.7rem;
+	border: 2px dashed var(--cor-contorno-secundario);
+	border-radius: 4px;
+	background: none;
+	color: var(--cor-contorno-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	margin-top: 1rem;
+}
+
+#btn-adicionar-momento:hover {
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
 }
 
 /* --- Cântico dentro da folha --- */
 .folha-cantico {
 	margin-bottom: 1.5rem;
 	padding: 1rem;
-	background: white;
+	background: var(--cor-fundo-secundario);
 	border-radius: 4px;
-	border: 1px solid #eee;
+	border: 1px solid var(--cor-contorno-secundario);
 }
 
 .folha-cantico-cabecalho {
@@ -579,12 +689,12 @@ h1 {
 
 .folha-cantico-tom {
 	font-size: 0.8rem;
-	color: #777;
+	color: var(--cor-texto-secundario);
 }
 
 .folha-cantico-notas {
 	font-size: 0.8rem;
-	color: #999;
+	color: var(--cor-texto-terciario);
 	font-style: italic;
 }
 
@@ -594,141 +704,81 @@ h1 {
 	align-items: center;
 }
 
-.btn-toggle-acordes-cantico,
+/* --- Botões de ação do cântico --- */
 .btn-editar-entrada,
-.btn-remover-cantico {
+.btn-remover-cantico,
+.btn-link-cantico,
+.transposicao-inline button {
 	background: none;
-	border: 1px solid #eee;
+	border: 1px solid var(--cor-contorno-secundario);
 	border-radius: 4px;
 	width: 1.8rem;
 	height: 1.8rem;
 	cursor: pointer;
 	font-size: 0.85rem;
-	color: #aaa;
+	color: var(--cor-contorno-secundario);
 }
 
-.btn-toggle-acordes-cantico.ativo {
-	background: #f0ece3;
-	color: #ff6400;
-	border-color: #ddd;
+.btn-transp-reset-inline {
+	font-size: 0.7rem !important;
+	padding: 0 0.3rem;
+	width: auto !important;
 }
-
-.btn-remover-cantico:hover { color: #e55; }
-.btn-editar-entrada:hover  { color: #555; }
 
 .btn-link-cantico {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 1.8rem;
-	height: 1.8rem;
-	border: 1px solid #eee;
-	border-radius: 4px;
 	text-decoration: none;
-	font-size: 0.85rem;
-	color: #aaa;
 }
 
-.btn-link-cantico:hover { color: #555; }
-
-/* --- Botão adicionar cântico --- */
 .btn-adicionar-cantico {
 	width: 100%;
 	padding: 0.7rem;
-	border: 2px dashed #ddd;
+	border: 2px dashed var(--cor-contorno-secundario);
 	border-radius: 4px;
 	background: none;
-	color: #aaa;
+	color: var(--cor-contorno-secundario);
 	cursor: pointer;
 	font-size: 0.9rem;
 	margin-top: 0.5rem;
 }
 
+.btn-editar-entrada:hover,
+.btn-link-cantico:hover,
+.transposicao-inline button:hover,
 .btn-adicionar-cantico:hover {
-	border-color: #bbb;
-	color: #777;
-}
-
-/* --- Modo apresentar --- */
-.modo-apresentar .folha-cantico {
-	border: none;
-	padding: 0;
-}
-
-.modo-apresentar .folha-momento-titulo {
-	font-size: 1.2rem;
-}
-
-/* --- Título da folha com lápis --- */
-#folha-titulo-linha {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-#btn-editar-titulo {
 	background: none;
-	border: none;
-	color: #ccc;
-	cursor: pointer;
-	font-size: 1rem;
-	padding: 0.2rem;
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
 }
 
-#btn-editar-titulo:hover { color: #777; }
+.btn-remover-cantico:hover {
+	border-color: var(--cor-texto-eliminar);
+	color: var(--cor-texto-eliminar);
+}
 
-/* --- Cabeçalho do momento --- */
-.folha-momento-cabecalho {
+.transposicao-inline {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	margin-bottom: 1rem;
-	padding-bottom: 0.4rem;
-	border-bottom: 1px solid #eee;
-}
-
-.folha-momento-acoes {
-	display: flex;
 	gap: 0.3rem;
 }
 
-.folha-momento-acoes button {
-	background: none;
-	border: 1px solid #eee;
-	border-radius: 4px;
-	width: 1.8rem;
-	height: 1.8rem;
-	cursor: pointer;
+.transp-valor-inline {
 	font-size: 0.85rem;
-	color: #bbb;
+	font-weight: bold;
+	min-width: 2rem;
+	text-align: center;
+	color: var(--cor-contorno-secundario);
 }
 
-.folha-momento-acoes button:hover:not(:disabled) { color: #555; }
-.folha-momento-acoes button:disabled { opacity: 0.3; cursor: default; }
 
-/* --- Botão adicionar momento --- */
-#btn-adicionar-momento {
-	width: 100%;
-	padding: 0.7rem;
-	border: 2px dashed #ddd;
-	border-radius: 4px;
-	background: none;
-	color: #aaa;
-	cursor: pointer;
-	font-size: 0.9rem;
-	margin-top: 1rem;
-}
+/* ||| OVERLAY DE EDIÇÃO DE ENTRADA ||| */
 
-#btn-adicionar-momento:hover {
-	border-color: #bbb;
-	color: #777;
-}
-
-/* --- Modal de edição de entrada --- */
 #modal-editar-entrada {
 	position: fixed;
 	inset: 0;
-	background: rgba(0,0,0,0.4);
+	background: var(--cor-sombra-overlay);
 	z-index: 300;
 	display: flex;
 	align-items: center;
@@ -737,7 +787,8 @@ h1 {
 }
 
 #modal-interior {
-	background: white;
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
 	border-radius: 6px;
 	padding: 1.5rem;
 	width: 100%;
@@ -762,7 +813,7 @@ h1 {
 	border: none;
 	font-size: 1.1rem;
 	cursor: pointer;
-	color: #777;
+	color: var(--cor-contorno);
 }
 
 .modal-seccao-item {
@@ -778,78 +829,11 @@ h1 {
 	width: auto;
 }
 
-.transposicao-inline {
-	display: flex;
-	align-items: center;
-	gap: 0.3rem;
-}
-
-.transposicao-inline button {
-	width: 1.8rem;
-	height: 1.8rem;
-	border: 1px solid #eee;
-	border-radius: 4px;
-	background: white;
-	cursor: pointer;
-	font-size: 0.9rem;
-	color: #777;
-}
-
-.transposicao-inline button:hover {
-	background: #f0ece3;
-}
-
-.transp-valor-inline {
-	font-size: 0.85rem;
-	font-weight: bold;
-	min-width: 2rem;
-	text-align: center;
-	color: #555;
-}
-
-.btn-transp-reset-inline {
-	font-size: 0.7rem !important;
-	padding: 0 0.3rem;
-	width: auto !important;
-	color: #aaa !important;
-}
-
-/* --- Header direita --- */
-#folha-header-info {
-	flex: 1;
-}
-
-#folha-header {
-	display: flex;
-	flex-direction: column;
-	gap: 0.5rem;
-	padding: 2rem 0 1.5rem;
-	border-bottom: 1px solid #ddd;
-	margin-bottom: 1.5rem;
-}
-
-#folha-header-direita {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-#folha-header-acoes {
-	display: flex;
-	gap: 0.5rem;
-	align-items: center;
-}
-
-.oculto {
-  display: none !important;
-}
-
-/* --- Overlay de adicionar cântico --- */
+/* ||| OVERLAY DE ADICIONAR CÂNTICO ||| */
 #overlay-adicionar-cantico {
 	position: fixed;
 	inset: 0;
-	background: rgba(0,0,0,0.4);
+	background: var(--cor-sombra-overlay);
 	z-index: 300;
 	display: flex;
 	align-items: center;
@@ -858,7 +842,8 @@ h1 {
 }
 
 #overlay-interior {
-	background: white;
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
 	border-radius: 6px;
 	width: 100%;
 	max-width: 480px;
@@ -873,7 +858,7 @@ h1 {
 	justify-content: space-between;
 	align-items: center;
 	padding: 1.2rem 1.5rem;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--cor-contorno);
 }
 
 #overlay-cabecalho h3 {
@@ -885,13 +870,14 @@ h1 {
 	border: none;
 	font-size: 1.1rem;
 	cursor: pointer;
-	color: #777;
+	color: var(--cor-contorno);
 }
 
 #overlay-pesquisa {
 	margin: 1rem 1.5rem 0.75rem;
 	padding: 0.6rem 1rem;
-	border: 1px solid #ccc;
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
 	font-size: 1rem;
 	font-family: inherit;
@@ -902,23 +888,23 @@ h1 {
 	flex-wrap: wrap;
 	gap: 0.4rem;
 	padding: 0 1.5rem 0.75rem;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--cor-contorno);
 }
 
 .filtro-categoria {
 	padding: 0.25rem 0.7rem;
-	border: 1px solid #ccc;
+	border: 1px solid var(--cor-contorno);
 	border-radius: 20px;
-	background: white;
+	background: var(--cor-fundo-secundario);
 	font-size: 0.8rem;
 	cursor: pointer;
 	font-family: inherit;
 }
 
 .filtro-categoria.ativo {
-	background: #2c2c2c;
-	color: white;
-	border-color: #2c2c2c;
+	background: var(--cor-fundo-btn-ativo);
+	color: var(--cor-texto-btn-ativo);
+	border-color: var(--cor-contorno-btn-ativo);
 }
 
 #overlay-lista {
@@ -934,11 +920,11 @@ h1 {
 	justify-content: space-between;
 	padding: 0.75rem 1.5rem;
 	cursor: pointer;
-	border-bottom: 1px solid #f5f5f5;
+	border-bottom: 1px solid var(--cor-contorno);
 }
 
 .overlay-cantico-item:hover:not(.ja-adicionado) {
-	background: #f0ece3;
+	background: var(--cor-hover);
 }
 
 .overlay-cantico-item.ja-adicionado {
@@ -959,26 +945,26 @@ h1 {
 
 .overlay-cantico-meta {
 	font-size: 0.8rem;
-	color: #777;
+	color: var(--cor-texto-secundario);
 }
 
 .overlay-ja-adicionado {
 	font-size: 0.8rem;
-	color: #aaa;
+	color: var(--cor-texto-secundario);
 }
 
 .overlay-vazio {
 	padding: 1rem 1.5rem;
-	color: #aaa;
+	color: var(--cor-texto-secundario);
 	font-style: italic;
 	font-size: 0.9rem;
 }
 
-/* --- Overlay de preview do cântico --- */
+/* ||| OVERLAY DE PREVIEW DO CÂNTICO ||| */
 #overlay-preview-cantico {
 	position: fixed;
 	inset: 0;
-	background: rgba(0,0,0,0.5);
+	background: var(--cor-sombra-overlay);
 	z-index: 400;
 	display: flex;
 	align-items: center;
@@ -987,7 +973,8 @@ h1 {
 }
 
 #overlay-preview-interior {
-	background: white;
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
 	border-radius: 6px;
 	width: 100%;
 	max-width: 600px;
@@ -1002,7 +989,7 @@ h1 {
 	justify-content: space-between;
 	align-items: center;
 	padding: 1rem 1.5rem;
-	border-bottom: 1px solid #eee;
+	border-bottom: 1px solid var(--cor-contorno);
 	gap: 1rem;
 }
 
@@ -1011,12 +998,8 @@ h1 {
 	border: none;
 	font-size: 0.95rem;
 	cursor: pointer;
-	color: #777;
+	color: var(--cor-contorno-secundario);
 	padding: 0;
-}
-
-#btn-voltar-overlay:hover {
-	color: #333;
 }
 
 #overlay-preview-acoes {
@@ -1024,21 +1007,32 @@ h1 {
 	align-items: center;
 	gap: 0.75rem;
 	margin-left: auto;
+	color: var(--cor-contorno-secundario);
+}
+
+#preview-transp-reset {
+	padding: 0 0.3rem;
+	width: auto !important;
+}
+
+#preview-transp-valor {
+	font-weight: bold;
 }
 
 #btn-adicionar-do-preview {
 	padding: 0.4rem 1rem;
-	background: #2c2c2c;
-	color: white;
-	border: none;
+	background: none;
+	border: 1px solid var(--cor-contorno-secundario);
 	border-radius: 4px;
 	cursor: pointer;
 	font-size: 0.9rem;
 	font-family: inherit;
+	color: var(--cor-contorno-secundario);
 }
 
+#btn-voltar-overlay:hover,
 #btn-adicionar-do-preview:hover {
-	background: #444;
+	color: var(--cor-texto-secundario);
 }
 
 #overlay-preview-conteudo {
@@ -1054,6 +1048,6 @@ h1 {
 
 #overlay-preview-meta {
 	font-size: 0.85rem;
-	color: #777;
+	color: var(--cor-texto-secundario);
 	margin-bottom: 1.5rem;
 }
