@@ -8,13 +8,37 @@
 	</head>
 
 	<body>
-		<header>
-			<a href="index.html" id="btn-voltar">← Cancioneiro</a>
-			<h1 id="cantico-titulo">A carregar...</h1>
-			<div id="cantico-meta"></div>
+		<header id="header-cantico">
+			
+			<div id="header-cantico-info">
+				<a href="index.html" id="btn-voltar">← Cancioneiro</a>
+			
+				<h1 id="cantico-titulo">A carregar...</h1>
+				<div id="cantico-meta">
+					<span id="cantico-autor"></span>
+					<span id="cantico-tom"></span>
+					<span id="cantico-categorias"></span>					
+				</div>
+			</div>
+
+			<div id="header-nav">
+				<!-- Botões de navegação -->
+				<button id="btn-anterior" title="Cântico anterior">‹</button>
+				<button id="btn-indice" title="Índice de cânticos">≡</button>
+				<button id="btn-seguinte" title="Cântico seguinte">›</button>
+			</div>
+
 		</header>
 
-		<main>
+		<main id="cantico-conteudo">
+			<!-- Transposição | Só visível quando acordes visíveis -->
+			<div id="cantico-transposicao" class="oculto"> <!--class="oculto"-->
+				<button id="btn-transp-menos">−</button>
+				<span id="spn-transp-valor">...</span>
+				<button id="btn-transp-mais">+</button>
+				<button id="btn-transp-reset">Repor</button>
+			</div>
+
 			<div id="cantico-letra"></div>
 		</main>
 

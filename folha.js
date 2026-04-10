@@ -484,16 +484,6 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 			</div>
 
 			<div class="form-grupo">
-				<label>Transposição</label>
-				<div class="transposicao-controlo">
-					<button id="modal-transp-menos">−</button>
-					<span id="modal-transp-valor">${tomAtual}</span>
-					<button id="modal-transp-mais">+</button>
-					<button id="modal-transp-reset">Repor</button>
-				</div>
-			</div>
-
-			<div class="form-grupo">
 				<label>Secções a incluir</label>
 				<div id="modal-seccoes">
 					${dados.sections.map(s => `
@@ -521,27 +511,6 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 
 	document.body.appendChild(modal);
 
-	// Transposição dentro do modal
-	let semitonsModal = semitons;
-
-	function atualizarTomModal() {
-		const tom = transporAcorde(tomOriginal, semitonsModal);
-		document.getElementById("modal-transp-valor").textContent = tom;
-	}
-
-	document.getElementById("modal-transp-mais").addEventListener("click", () => {
-		semitonsModal++;
-		atualizarTomModal();
-	});
-	document.getElementById("modal-transp-menos").addEventListener("click", () => {
-		semitonsModal--;
-		atualizarTomModal();
-	});
-	document.getElementById("modal-transp-reset").addEventListener("click", () => {
-		semitonsModal = 0;
-		atualizarTomModal();
-	});
-
 	// Fechar
 	document.getElementById("btn-fechar-modal").addEventListener("click", () => modal.remove());
 	document.getElementById("btn-cancelar-modal").addEventListener("click", () => modal.remove());
@@ -554,7 +523,6 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 			.filter(cb => cb.checked)
 			.map(cb => cb.value);
 
-		entrada.tom    = semitonsModal;
 		entrada.seccoes = todasChecked ? null : selecionadas;
 		entrada.notas  = document.getElementById("modal-notas").value.trim();
 
@@ -778,7 +746,14 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 			overlay.remove();
 			onAdicionar();
 		});
+
+		overlay.addEventListener("click", (e) => {
+			if (e.target === overlay) {
+				overlay.remove();
+			}
+		});
 	}
+	
 
 	function atualizarPreview() {
 		const letra = renderizarLetraCantico(dados, {

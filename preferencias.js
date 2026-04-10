@@ -54,11 +54,13 @@ window.Cancioneiro.preferencias = (function () {
 		const val = localStorage.getItem(`transp_${canticoId}`);
 		return val === null ? 0 : parseInt(val, 10);
 	}
-
-	function definirTransposicao(canticoId, semitons) {
-		localStorage.setItem(`transp_${canticoId}`, String(semitons));
+	
+	function alterarTransposicao(canticoId, semitons) {
+		const antigaTransp = obterTransposicao(canticoId);
+		const novaTransp = antigaTransp + semitons;
+		localStorage.setItem(`transp_${canticoId}`, String(novaTransp));
 		document.dispatchEvent(new CustomEvent("transposicao-alterada", {
-			detail: { canticoId, semitons }
+			detail: { canticoId, semitons: novaTransp }
 		}));
 	}
 
@@ -73,7 +75,7 @@ window.Cancioneiro.preferencias = (function () {
 		obter,
 		definir,
 		obterTransposicao,
-		definirTransposicao,
+		alterarTransposicao,
 		resetarTransposicao
 	};
 

@@ -351,29 +351,136 @@ h1 {
 .btn-apagar-folha:hover { color: var(--cor-texto-eliminar);}
 .btn-editar-folha:hover { color: var(--cor-texto-terciario);}
 
+
+
+
 /* || PÁGINA DO CÂNTICO */
 
-.pagina-cantico #painel-definicoes-gerais {
-	display: none;
-}
-
-/* --- Cabeçalho do cântico --- */
-
-#btn-voltar {
-	display: inline-block;
-	margin-bottom: 0.5rem;
-	color: var(--cor-texto-secundario);
-	text-decoration: none;
-	font-size: 0.9rem;
+/* --- header --- */
+#header-cantico {
+	display: flex;
+	gap: 0.3rem;
+	justify-content: space-between;
+	align-items: center;
 }
 
 #cantico-meta {
+	display: flex;
+	gap: 0.3rem;
+	flex-flow: row wrap;
+	align-items: center;
+	justify-content: flex-start;
 	color: var(--cor-texto-secundario);
 	font-size: 0.9rem;
 	margin-top: 0.3rem;
 }
 
-/* --- Secções --- */
+#header-nav {
+	align-self: end;
+	float: right;
+}
+
+#header-nav button {
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno-secundario);
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 1rem;
+	color: var(--cor-contorno-secundario);
+}
+
+#header-nav button:hover {
+	background: var(--cor-hover);
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
+}
+
+#header-nav button:disabled {
+	opacity: 0.3;
+	cursor: auto;
+	border-color: var(--cor-contorno-secundario); /* Mantém o aspeto inicial */
+}
+
+#painel-indice {
+	position: fixed;
+	top: 0;
+	right: 0;
+	height: 100%;
+	width: 280px;
+	background: var(--cor-fundo);
+	box-shadow: -2px 0 8px var(--cor-sombra-overlay);
+	z-index: 200;
+	transition: transform 0.3s ease;
+}
+
+/* --- cântico --- */
+
+#cantico-conteudo {
+	display: flex;
+	gap: 0.3rem;
+	flex-flow: row-reverse wrap;
+	align-items: start;
+	justify-content: space-between;
+}
+
+/* --- transposição --- */
+
+#cantico-transposicao {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+#btn-transp-menos,
+#btn-transp-mais,
+#btn-transp-reset {
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno-secundario);
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 1rem;
+	color: var(--cor-contorno-secundario);
+}
+
+#btn-transp-menos:hover,
+#btn-transp-mais:hover,
+#btn-transp-reset:hover {
+	background: var(--cor-hover);
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
+}
+
+#btn-transp-reset {
+	font-size: 0.95rem !important;
+	padding: 0 0.3rem;
+	width: auto !important;
+}
+
+#btn-transp-reset:disabled {
+	opacity: 0.3;
+	cursor: auto;
+	border-color: var(--cor-contorno-secundario); /* Mantém o aspeto inicial */
+}
+
+#spn-transp-valor {
+	font-size: 0.95rem;
+	font-weight: bold;
+	min-width: 2rem;
+	text-align: center;
+	color: var(--cor-contorno-secundario);
+}
+
+/* --- letra --- */
+
+#cantico-letra {
+	flex-grow: 2;
+}
+
 .seccao {
 	margin-bottom: 1.5rem;
 }
@@ -388,6 +495,7 @@ h1 {
 
 .seccao-chorus .seccao-label {
 	color: var(--cor-texto-terciario);
+	font-weight: bold;
 }
 
 /* --- Linhas de letra --- */
@@ -439,6 +547,16 @@ h1 {
 	font-weight: bold;
 }
 
+/* --- painel --- */
+
+#btn-voltar {
+	display: inline-block;
+	margin-bottom: 0.5rem;
+	color: var(--cor-texto-secundario);
+	text-decoration: none;
+	font-size: 0.9rem;
+}
+
 /* || PÁGINA DA FOLHA || */
 
 /* --- Página da folha --- */
@@ -455,10 +573,6 @@ h1 {
 	align-items: center;
 }
 
-#folha-header-info {
-	flex: 1;
-}
-
 #folha-header {
 	display: flex;
 	flex-direction: column;
@@ -468,11 +582,8 @@ h1 {
 	margin-bottom: 1.5rem;
 }
 
-#folha-header-direita {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	gap: 0.5rem;
+#folha-header-info {
+	flex: 1;
 }
 
 #folha-header-acoes {
