@@ -21,12 +21,21 @@ const ESCALA_BEMOIS     = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]
 function transporAcorde(acorde, semitons) {
 	if (semitons === 0) return acorde;
 
-	// Se for acorde composto (ex: "D/F#"), transpõe ambas as partes
-    if (acorde.includes("/")) {
-        const partes = acorde.split("/");
-        return transporAcorde(partes[0], semitons) + "/" + transporAcorde(partes[1], semitons);
+	// Se estiver entre parênteses (ex: "(B F G)"), extrai o interior e transpõe
+    if (acorde.startsWith("(") && acorde.endsWith(")")) {
+        return "(" + transporAcorde(acorde.slice(1, -1), semitons) + ")";
     }
 
+	// Se tiver múltiplos acordes separados por espaço (ex: "A D G")
+    if (acorde.includes(" ")) {
+        return acorde.split(" ").map(parte => transporAcorde(parte, semitons)).join(" ");
+    }
+
+	// Se for acorde composto com várias barras (ex: "A/C#/G")
+    if (acorde.includes("/")) {
+        return acorde.split("/").map(parte => transporAcorde(parte, semitons)).join("/");
+    }
+	
 	// Encontra a nota base (pode ter # ou b)
 	const match = acorde.match(/^([A-G][#b]?)(.*)/);
 	if (!match) return acorde;
