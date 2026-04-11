@@ -163,15 +163,13 @@ async function renderizarFolha() {
 			const tomAtual    = transporAcorde(tomOriginal, semitons);
 			const notacao     = Cancioneiro.preferencias.obter("notacao");
 
+			const tomTexto = notacao === "latino"
+				? Cancioneiro.parser.converterAcorde(tomOriginal, "latino")
+				: tomOriginal;
+
 			const tomApresentado = notacao === "latino"
 				? Cancioneiro.parser.converterAcorde(tomAtual, "latino")
 				: tomAtual;
-			const tomOriginalApresentado = notacao === "latino"
-				? Cancioneiro.parser.converterAcorde(tomOriginal, "latino")
-				: tomOriginal;
-			const tomTexto = semitons === 0
-				? `Tom: ${tomApresentado}`
-				: `Tom: ${tomApresentado} (original: ${tomOriginalApresentado})`;
 
 			const letra = renderizarLetraCantico(dados, {
 				seccoes: entrada.seccoes,
@@ -189,7 +187,7 @@ async function renderizarFolha() {
 				<div class="folha-cantico-cabecalho">
 					<div class="folha-cantico-info">
 						<span class="folha-cantico-titulo">${dados.meta.title || meta.titulo}</span>
-						<span class="folha-cantico-tom">${tomTexto}</span>
+						<span class="folha-cantico-tom">Tom: ${tomTexto}</span>
 						${entrada.notas ? `<span class="folha-cantico-notas">${entrada.notas}</span>` : ""}
 					</div>
 					<div class="folha-cantico-acoes">

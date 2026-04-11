@@ -27,7 +27,7 @@ function renderizarLista(canticos) {
 		const li = document.createElement("li");
 
 		li.innerHTML = `
-			<div class="cantico-titulo">${cantico.titulo}</div>
+			<div class="cantico-titulo">${cantico.titulo} ${cantico.subtitulo ? '(' + cantico.subtitulo + ')' : ''}</div>
 			<div class="cantico-meta">${cantico.autor} · Tom: ${tomApresentado} · ${cantico.categorias.join(", ")}</div>
 		`;
 

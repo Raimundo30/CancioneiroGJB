@@ -228,7 +228,7 @@ function registaEventos(canticoId, indice) {
 							${indice.map(c => `
 								<li ${c.id === canticoId ? 'id="indice-item-atual"' : ''} style="margin-bottom: 0.5rem; ${c.id === canticoId ? 'font-weight: bold; background-color: var(--cor-fundo-secundario, #f0f0f0); padding: 5px; border-radius: 4px;' : 'padding: 5px;'}">
 									<a href="cantico.html?id=${c.id}" style="text-decoration: none; color: inherit; display: block;">
-										${c.titulo || c.title}
+										${(c.titulo || c.title) + (c.subtitulo ? ' (' + (c.subtitulo || c.subtitle) + ')' : '')}
 									</a>
 								</li>
 						`).join('')}
@@ -277,16 +277,21 @@ function registaEventos(canticoId, indice) {
 	});
 }
 
-function preencheHeader(meta, tomOriginal) {
+function preencheHeader(dadosCantico, meta, tomOriginal) {
 	const canticoMeta = document.getElementById("cantico-meta");
 	const notacao     = Cancioneiro.preferencias.obter("notacao");
 
 	// Preenche o cabeçalho
 	const tituloEl = document.getElementById("cantico-titulo");
-	tituloEl.textContent    = meta.title || meta.titulo;
+	tituloEl.textContent    = dadosCantico.meta.title || meta.titulo;
 
+	const subtituloEl = document.getElementById("cantico-subtitulo");
+	if (dadosCantico.meta.subtitle || meta.subtitulo) {
+		subtituloEl.textContent = `${"(" + (dadosCantico.meta.subtitle || meta.subtitulo) + ")"}`;
+	}
+	
 	const autorEl = document.getElementById("cantico-autor");
-	autorEl.textContent = meta.author || meta.autor;
+	autorEl.textContent = dadosCantico.meta.author || meta.autor;
 	canticoMeta.appendChild(autorEl);
 	
 	const tomEl = document.getElementById("cantico-tom");
@@ -329,7 +334,7 @@ async function init() {
 	}
 
 	// Carrega o ficheiro .cho
-	const respostaCho = await fetch(meta.ficheiro);
+	const respostaCho = await fetch(meta.ficheiro + "?v=" + Date.now());
 	const textoCho    = await respostaCho.text();
 
 	// Faz parse
@@ -337,7 +342,7 @@ async function init() {
 	const tomOriginal  = dadosCantico.meta.key || meta.tom;
 	const tomEl        = document.getElementById("cantico-tom");
 
-	preencheHeader(meta, tomOriginal);
+	preencheHeader(dadosCantico, meta, tomOriginal);
 	registaEventos(canticoId, indice);
 
 	// Renderiza a letra pela primeira vez
