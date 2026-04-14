@@ -537,7 +537,11 @@
 		"titulo": "Feliz Caminhar",
 		"subtitulo": "",
 		"autor": "",
+<<<<<<< HEAD
 		"tom": "",
+=======
+		"tom": "C",
+>>>>>>> 6ca9708 (Ligação Git)
 		"categorias": [],
 		"ficheiro": "dados/canticos/feliz-caminhar.cho",
 		"partitura": null

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 <!DOCTYPE html>
 <html lang="pt">
 	<head>
@@ -53,4 +54,82 @@
 		<script src="folha.js"></script>
 
 	</body>
+=======
+<!DOCTYPE html>
+<html lang="pt">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Folha de Cânticos</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+
+	<body>
+		<header id="folha-header">
+			<div id="folha-header-info">
+				<!-- <a href="index.html" id="btn-voltar">← Voltar</a> -->
+				<button onclick="location.reload();location.href='index.html'" class="btn-transparente btn-voltar">← Voltar</button>
+				<div id="folha-titulo-linha">
+					<h1 id="folha-titulo"></h1>
+					<div class="btn-normal">
+						<button id="btn-editar-folha" title="Editar folha" class="btn-header">✎</button>
+						<button id="btn-apagar-folha" title="Apagar folha" class="btn-header btn-apagar">✕</button>
+					</div>
+				</div>
+				<div id="folha-meta"></div>
+			</div>
+
+			<div id="folha-header-acoes">
+				<div class="btn-header btn-normal">
+					<!-- Componente de navegação -->
+					<nav-comp id="nav-comp" class="oculto"></nav-comp>
+					<!-- Botão de definições -->
+					<button id="btn-folha-definicoes" title="Definições">⚙</button>
+				</div>
+
+				<!-- Dropdown de definições -->
+				<!-- <div id="btn-folha-definicoes-dropdown" class="oculto"> -->
+				<div id="btn-folha-dropdown">
+					<div class="toggle">
+						<div> Editar folha </div>
+						<label class="switch">
+							<input type="checkbox" id="toggle-folha-editar">
+							<span class="slider round"></span>
+						</label>
+					</div>
+
+					<div id="opt-folha-pagina" class="toggle oculto">
+						<div> Ver por página </div>
+						<label class="switch">
+							<input type="checkbox" id="toggle-folha-pagina">
+							<span class="slider round"></span>
+						</label>
+					</div>
+
+					<div class="toggle">
+						<div> Ocultar meta </div>
+						<label class="switch">
+							<input type="checkbox" id="toggle-folha-meta">
+							<span class="slider round"></span>
+						</label>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<main id="folha-conteudo">
+			<!-- preenchido pelo folha.js -->
+		</main>
+
+		<script src="preferencias.js"></script>
+		<script src="parser.js"></script>
+		<script src="folhas.js"></script>
+		<script src="painel-folhas.js"></script>
+		<script src="painel.js"></script>
+		<script src="definicoes.js"></script>
+		<script src="folha.js"></script>
+		<script src="componentes.js"></script>
+
+	</body>
+>>>>>>> 6ca9708 (Ligação Git)
 </html>

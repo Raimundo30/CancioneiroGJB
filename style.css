@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 /* || GENERAL STYLES */
 
 :root {
@@ -1168,3 +1169,1076 @@ h2 {
 	color: var(--cor-texto-secundario);
 	margin-bottom: 1.5rem;
 }
+=======
+/* || GENERAL STYLES */
+
+:root {
+	--cor-primaria: Black;
+	--cor-secundaria: GhostWhite;
+	--cor-destaque: #ff6400;
+
+    --cor-fundo: GhostWhite;
+    --cor-fundo-secundario: White;
+    
+    --cor-hover: Gainsboro;
+
+    --cor-texto: var(--cor-primaria);
+    --cor-texto-secundario: color-mix(in srgb, var(--cor-primaria), White 20%);
+    --cor-texto-terciario: color-mix(in srgb, var(--cor-primaria), White 40%)   ;
+    
+    --cor-texto-destaque: var(--cor-destaque);
+	--cor-texto-eliminar: Crimson;
+
+    --cor-contorno: color-mix(in srgb, var(--cor-secundaria), Black 60%);
+    --cor-contorno-secundario: color-mix(in srgb, var(--cor-secundaria), Black 40%);
+
+    --cor-sombra-overlay: rgba(0,0,0,0.3);
+
+    --cor-fundo-btn-ativo: #2c2c2c;
+    --cor-texto-btn-ativo: White;
+    --cor-contorno-btn-ativo: var(--cor-fundo-btn-ativo);
+}
+
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+body {
+	font-family: Georgia, serif;
+	background: var(--cor-fundo);
+	color: var(--cor-texto);
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 1rem;
+}
+
+header {
+	padding: 2rem 0 1.5rem;
+	border-bottom: 1px solid var(--cor-contorno);
+	margin-bottom: 1.5rem;
+}
+
+h1 {
+	font-size: 2rem;
+	margin-bottom: 0.5rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-bottom: 0.5rem;
+	color: var(--cor-texto-secundario);
+}
+
+.oculto {
+	display: none !important;
+}
+
+/* || MAIN PAGE */
+
+#pesquisa {
+	width: 100%;
+	padding: 0.6rem 1rem;
+	font-size: 1rem;
+	border: 1px solid var(--cor-contorno);
+	border-radius: 4px;
+	background: var(--cor-fundo-secundario);
+}
+
+#lista-canticos {
+	list-style: none;
+}
+
+#lista-canticos li {
+	padding: 1rem;
+	border-bottom: 1px solid var(--cor-contorno-secundario);
+	cursor: pointer;
+}
+
+#lista-canticos li:hover {
+	background: var(--cor-hover);
+}
+
+.cantico-titulo {
+	font-size: 1.1rem;
+	font-weight: bold;
+}
+
+.cantico-meta {
+	font-size: 0.85rem;
+	color: var(--cor-texto-secundario);
+	margin-top: 0.2rem;
+}
+
+
+/* || PAINEL DE DEFINIÇÕES */
+
+/* --- Botão de definições --- */
+#btn-definicoes {
+	position: fixed;
+	top: 1rem;
+	right: 1rem;
+	background: none;
+	border: 1px solid var(--cor-contorno);
+	border-radius: 50%;
+	width: 2.5rem;
+	height: 2.5rem;
+	font-size: 1.1rem;
+	cursor: pointer;
+	background: var(--cor-fundo-secundario);
+	z-index: 100;
+}
+
+/* --- Painel de definições --- */
+#painel-definicoes {
+	position: fixed;
+	top: 0;
+	right: 0;
+	height: 100%;
+	width: 280px;
+	background: var(--cor-fundo);
+	box-shadow: -2px 0 8px var(--cor-sombra-overlay);
+	z-index: 200;
+	transition: transform 0.3s ease;
+}
+
+.painel-fechado { transform: translateX(100%); }
+.painel-aberto  { transform: translateX(0); }
+
+#painel-interior {
+	padding: 1.5rem;
+}
+
+#painel-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 2rem;
+}
+
+#btn-fechar-painel {
+	background: none;
+	border: none;
+	font-size: 1.2rem;
+	cursor: pointer;
+	color: var(--cor-contorno);
+}
+
+.definicao-grupo {
+	margin-bottom: 1.5rem;
+}
+
+.definicao-grupo label {
+	display: block;
+	font-size: 0.85rem;
+	color: var(--cor-texto-secundario);
+	margin-bottom: 0.5rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.opcoes-toggle {
+	display: flex;
+	gap: 0.5rem;
+}
+
+.opcao-toggle {
+	flex: 1;
+	padding: 0.5rem;
+	border: 1px solid var(--cor-contorno);
+	border-radius: 4px;
+	background: var(--cor-fundo-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+}
+
+.opcao-toggle:hover {
+	background: var(--cor-hover);
+}
+
+.opcao-toggle.ativo {
+	background: var( --cor-fundo-btn-ativo);
+	color: var(--cor-texto-btn-ativo);
+	border-color: var(--cor-contorno-btn-ativo);
+}
+
+/* --- Overlay --- */
+#overlay-definicoes {
+	display: none;
+	position: fixed;
+	inset: 0;
+	background: var(--cor-sombra-overlay);
+	z-index: 150;
+}
+
+.overlay-visivel {
+	display: block !important;
+}
+
+/* --- Separador de secção no painel --- */
+.painel-separador {
+	border: none;
+	border-top: 1px solid var(--cor-contorno);
+	margin: 1.5rem 0;
+}
+
+.painel-secao-titulo {
+	font-size: 0.75rem;
+	color: var(--cor-texto-secundario);
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	margin-bottom: 1rem;
+}
+
+/* --- Secção de folhas no painel --- */
+.painel-secao-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 0.75rem;
+}
+
+#btn-nova-folha-painel {
+	background: none;
+	border: 1px solid var(--cor-contorno);
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	font-size: 1.2rem;
+	cursor: pointer;
+	line-height: 1;
+	color: var(--cor-texto-secundario);
+}
+
+#btn-nova-folha-painel:hover {
+	background: var(--cor-hover);
+}
+
+#painel-folhas-ordenacao {
+	display: flex;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+
+#painel-folhas-ordenacao .opcao-toggle {
+	font-size: 0.8rem;
+	padding: 0.3rem 0.6rem;
+}
+
+#lista-folhas-painel {
+	list-style: none;
+}
+
+#lista-folhas-painel li {
+	display: flex;
+	align-items: center;
+	padding: 0.6rem 0;
+	border-bottom: 1px solid var(--cor-contorno-secundario);
+	cursor: pointer;
+}
+
+#lista-folhas-painel li:hover .folha-painel-titulo {
+	text-decoration: underline;
+}
+
+.folha-painel-info {
+	flex: 1;
+}
+
+.folha-painel-titulo {
+	font-size: 0.95rem;
+}
+
+.folha-painel-data {
+	font-size: 0.75rem;
+	color: var(--cor-texto-secundario);
+}
+
+.folha-painel-vazia {
+	font-size: 0.85rem;
+	color: var(--cor-texto-secundario);
+	font-style: italic;
+	padding: 0.5rem 0;
+}
+
+.folha-painel-acoes {
+	display: flex;
+	gap: 0.2rem;
+}
+
+.btn-apagar-folha {
+	background: none;
+	border: none;
+	color: var(--cor-texto-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	padding: 0.2rem 0.4rem;
+}
+
+.btn-editar-folha {
+	background: none;
+	border: none;
+	color: var(--cor-texto-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	padding: 0.2rem 0.4rem;
+}
+
+.btn-apagar-folha:hover { color: var(--cor-texto-eliminar);}
+.btn-editar-folha:hover { color: var(--cor-texto-terciario);}
+
+
+/* || PÁGINA DO CÂNTICO */
+
+/* --- header --- */
+#cantico-header {
+	display: flex;
+	gap: 0.3rem;
+	align-items: center;
+	justify-content: space-between;
+}
+
+#cantico-meta {
+	display: flex;
+	gap: 0.3rem;
+	flex-flow: row wrap;
+	align-items: center;
+	justify-content: flex-start;
+	color: var(--cor-texto-secundario);
+	font-size: 0.9rem;
+	margin-top: 0.3rem;
+}
+
+/* || CLASSES DE BOTÕES */
+
+.btn-header {
+	display: inline-flex;
+	align-self: flex-end;
+	gap: 0.3rem;
+}
+
+.btn-main {
+	display: inline-flex;
+	align-self: flex-start;
+	gap: 0.3rem;
+}
+
+/* --- Botões normais --- */
+button.btn-normal,
+.btn-normal button {
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno-secundario);
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 1rem;
+	color: var(--cor-contorno-secundario);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+button.btn-normal:hover,
+.btn-normal button:hover {
+	background: var(--cor-hover);
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
+}
+
+.btn-apagar:hover,
+button.btn-apagar:hover{
+	border-color: var(--cor-texto-eliminar) !important;
+	color: var(--cor-texto-eliminar) !important;
+}
+
+button.btn-normal:disabled,
+.btn-normal button:disabled {
+	opacity: 0.3;
+	cursor: default;
+	border-color: var(--cor-contorno-secundario); /* Mantém o aspeto inicial */
+}
+
+.btn-texto {
+	font-size: 0.95rem !important;
+	padding: 0 0.3rem;
+	width: auto !important;
+}
+
+.btn-voltar {
+	font-size: 0.95rem !important;
+	padding: 0 0.3rem;
+	width: auto !important;
+	white-space: nowrap;
+}
+
+#spn-transp-valor {
+	font-size: 0.95rem;
+	font-weight: bold;
+	min-width: 2rem;
+	padding: 0 0.3rem;
+	text-align: center;
+	color: var(--cor-contorno-secundario);
+}
+
+/* --- Botões Transparentes --- */
+button.btn-transparente,
+.btn-transparente button {
+	background: none;
+	border: none;
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 0.85rem;
+	color: var(--cor-contorno-secundario);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+
+button.btn-transparente:hover,
+.btn-transparente button:hover {
+	color: var(--cor-texto-secundario);
+}
+
+button.btn-transparente:disabled,
+.btn-transparente button:disabled {
+	opacity: 0.3;
+	cursor: default;
+}
+
+
+/* || PAINEL DE ÍNDICE */
+#painel-indice {
+	position: fixed;
+	top: 0;
+	right: 0;
+	height: 100%;
+	width: 280px;
+	background: var(--cor-fundo);
+	box-shadow: -2px 0 8px var(--cor-sombra-overlay);
+	z-index: 200;
+	transition: transform 0.3s ease;
+}
+
+/* --- cântico --- */
+
+#cantico-conteudo {
+	display: flex;
+	gap: 0.3rem;
+	flex-flow: row-reverse wrap;
+	align-items: start;
+	justify-content: space-between;
+}
+
+/* --- letra --- */
+
+#cantico-letra {
+	flex-grow: 2;
+}
+
+.seccao {
+	margin-bottom: 1.5rem;
+}
+
+.seccao-label {
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--cor-texto-terciario);
+	margin-bottom: 0.4rem;
+}
+
+.seccao-chorus .seccao-label {
+	color: var(--cor-texto-terciario);
+	font-weight: bold;
+}
+
+/* --- Linhas de letra --- */
+.linha-letra {
+	display: flex;
+	flex-wrap: wrap;
+	line-height: 1;
+	margin-bottom: 0.15rem;
+}
+
+.linha-vazia {
+	height: 0.6rem;
+}
+
+.linha-comentario {
+	font-style: italic;
+	color: var(--cor-texto-terciario);
+	font-size: 0.85rem;
+	margin-bottom: 0.3rem;
+}
+
+/* --- Tokens (acorde + sílaba) --- */
+.token {
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.acorde {
+	font-family: monospace;
+	font-size: 1rem;
+	color: var(--cor-texto-destaque);
+	font-weight: bold;
+	white-space: pre;
+	min-width: 1ch;
+	line-height: 1.4;
+}
+
+.acorde-vazio {
+	visibility: hidden;
+}
+
+.silaba {
+	font-size: 1.05rem;
+	white-space: pre;
+}
+
+.seccao-chorus .silaba {
+	font-weight: bold;
+}
+
+/* || PÁGINA DA FOLHA || */
+
+/* --- Página da folha --- */
+
+#folha-meta {
+	font-size: 0.85rem;
+	color: var(--cor-texto-secundario);
+	margin-top: 0.2rem;
+}
+
+#folha-titulo-linha {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+#folha-titulo-linha .btn-header {
+    align-self: center;
+	margin-bottom: 0.5rem;
+}
+
+#folha-header {
+	display: flex;
+	gap: 0.3rem;
+	justify-content: space-between;
+	align-items: flex-start;
+}
+
+/* #folha-header-info {
+	display: flex;
+	flex-direction: row;
+} */
+
+#folha-header-acoes {
+	display: flex;
+	gap: 0.5rem;
+	align-self: flex-end;
+	align-items: center;
+}
+
+#folha-nav-dropdown {
+	position: absolute;
+	top: 100%;
+	left: 50%;
+	transform: translateX(-50%);
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno-secundario);
+	border-radius: 4px;
+	box-shadow: 0 4px 12px var(--cor-sombra-overlay);
+	list-style: none;
+	min-width: 180px;
+	z-index: 50;
+	padding: 0.3rem 0;
+}
+
+#folha-nav-dropdown li {
+	padding: 0.6rem 1rem;
+	cursor: pointer;
+	font-size: 0.95rem;
+	white-space: nowrap;
+}
+
+#folha-nav-dropdown li:hover { background: var(--cor-hover);}
+
+#folha-nav-dropdown li.ativo {
+	font-weight: bold;
+	color: var(--cor-destaque);
+}
+
+/* ||| MOMENTOS ||| */
+.folha-momento {
+	margin-bottom: 2.5rem;
+}
+
+.folha-momento-titulo {
+	font-size: 1rem;
+	text-transform: uppercase;
+	letter-spacing: 0.08em;
+	color: var(--cor-texto-secundario);
+	margin-bottom: 1rem;
+	padding-bottom: 0.4rem;
+	border-bottom: 1px solid var(--cor-texto-secundario);
+}
+
+.folha-momento-cabecalho {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+/* --- Ações do momento --- */
+.folha-momento-acoes {
+	display: flex;
+	gap: 0.3rem;
+}
+
+
+/* --- Botão adicionar momento --- */
+#btn-adicionar-momento {
+	width: 100%;
+	padding: 0.7rem;
+	border: 2px dashed var(--cor-contorno-secundario);
+	border-radius: 4px;
+	background: none;
+	color: var(--cor-contorno-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	margin-top: 1rem;
+}
+
+#btn-adicionar-momento:hover {
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
+}
+
+/* --- Cântico dentro da folha --- */
+.folha-cantico {
+	margin-bottom: 1.5rem;
+	padding: 1rem;
+	background: var(--cor-fundo-secundario);
+	border-radius: 4px;
+	border: 1px solid var(--cor-contorno-secundario);
+}
+
+.folha-cantico-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 0.75rem;
+}
+
+.folha-cantico-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.2rem;
+}
+
+.folha-cantico-titulo {
+	font-weight: bold;
+	font-size: 1rem;
+}
+
+.folha-cantico-tom {
+	font-size: 0.8rem;
+	color: var(--cor-texto-secundario);
+}
+
+.folha-cantico-notas {
+	font-size: 0.8rem;
+	color: var(--cor-texto-terciario);
+	font-style: italic;
+}
+
+/* .folha-cantico-acoes {
+	display: flex;
+	gap: 0.3rem;
+	align-items: center;
+} */
+
+/* --- Botões de ação do cântico --- */
+/* .btn-editar-entrada,
+.btn-apagar-cantico,
+.btn-link-cantico,
+.transposicao-inline button {
+	background: none;
+	border: 1px solid var(--cor-contorno-secundario);
+	border-radius: 4px;
+	width: 1.8rem;
+	height: 1.8rem;
+	cursor: pointer;
+	font-size: 0.85rem;
+	color: var(--cor-contorno-secundario);
+}
+
+.btn-transp-reset-inline {
+	font-size: 0.7rem !important;
+	padding: 0 0.3rem;
+	width: auto !important;
+} */
+/* 
+.btn-link-cantico {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	text-decoration: none;
+} */
+
+.btn-adicionar-cantico {
+	width: 100%;
+	padding: 0.7rem;
+	border: 2px dashed var(--cor-contorno-secundario);
+	border-radius: 4px;
+	background: none;
+	color: var(--cor-contorno-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	margin-top: 0.5rem;
+}
+
+/* .btn-editar-entrada:hover,
+.btn-link-cantico:hover,
+.transposicao-inline button:hover,
+.btn-adicionar-cantico:hover {
+	background: none;
+	border-color: var(--cor-texto-secundario);
+	color: var(--cor-texto-secundario);
+}
+
+.btn-apagar-cantico:hover {
+	border-color: var(--cor-texto-eliminar);
+	color: var(--cor-texto-eliminar);
+} */
+/* 
+.transposicao-inline {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+}
+
+.transp-valor-inline {
+	font-size: 0.85rem;
+	font-weight: bold;
+	min-width: 2rem;
+	text-align: center;
+	color: var(--cor-contorno-secundario);
+}
+ */
+
+/* ||| OVERLAY DE EDIÇÃO DE ENTRADA ||| */
+
+#modal-editar-entrada {
+	position: fixed;
+	inset: 0;
+	background: var(--cor-sombra-overlay);
+	z-index: 300;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+#modal-interior {
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
+	border-radius: 6px;
+	padding: 1.5rem;
+	width: 100%;
+	max-width: 420px;
+	max-height: 90vh;
+	overflow-y: auto;
+}
+
+#modal-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 1.5rem;
+}
+
+#modal-cabecalho h3 {
+	font-size: 1.1rem;
+}
+
+#btn-fechar-modal {
+	background: none;
+	border: none;
+	font-size: 1.1rem;
+	cursor: pointer;
+	color: var(--cor-contorno);
+}
+
+.modal-seccao-item {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0;
+	cursor: pointer;
+	font-size: 0.95rem;
+}
+
+.modal-seccao-item input {
+	width: auto;
+}
+
+/* ||| OVERLAY DE ADICIONAR CÂNTICO ||| */
+#overlay-adicionar-cantico {
+	position: fixed;
+	inset: 0;
+	background: var(--cor-sombra-overlay);
+	z-index: 300;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+#overlay-interior {
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
+	border-radius: 6px;
+	width: 100%;
+	max-width: 480px;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+#overlay-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1.2rem 1.5rem;
+	border-bottom: 1px solid var(--cor-contorno);
+}
+
+#overlay-cabecalho h3 {
+	font-size: 1.1rem;
+}
+
+#btn-fechar-overlay {
+	background: none;
+	border: none;
+	font-size: 1.1rem;
+	cursor: pointer;
+	color: var(--cor-contorno);
+}
+
+#overlay-pesquisa {
+	margin: 1rem 1.5rem 0.75rem;
+	padding: 0.6rem 1rem;
+	background: var(--cor-fundo-secundario);
+	border: 1px solid var(--cor-contorno);
+	border-radius: 4px;
+	font-size: 1rem;
+	font-family: inherit;
+}
+
+#overlay-filtros {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	padding: 0 1.5rem 0.75rem;
+	border-bottom: 1px solid var(--cor-contorno);
+}
+
+.filtro-categoria {
+	padding: 0.25rem 0.7rem;
+	border: 1px solid var(--cor-contorno);
+	border-radius: 20px;
+	background: var(--cor-fundo-secundario);
+	font-size: 0.8rem;
+	cursor: pointer;
+	font-family: inherit;
+}
+
+.filtro-categoria.ativo {
+	background: var(--cor-fundo-btn-ativo);
+	color: var(--cor-texto-btn-ativo);
+	border-color: var(--cor-contorno-btn-ativo);
+}
+
+#overlay-lista {
+	list-style: none;
+	overflow-y: auto;
+	flex: 1;
+	padding: 0.5rem 0;
+}
+
+.overlay-cantico-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem 1.5rem;
+	cursor: pointer;
+	border-bottom: 1px solid var(--cor-contorno);
+}
+
+.overlay-cantico-item:hover:not(.ja-adicionado) {
+	background: var(--cor-hover);
+}
+
+.overlay-cantico-item.ja-adicionado {
+	opacity: 0.5;
+	cursor: default;
+}
+
+.overlay-cantico-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+}
+
+.overlay-cantico-titulo {
+	font-size: 0.95rem;
+	font-weight: bold;
+}
+
+.overlay-cantico-meta {
+	font-size: 0.8rem;
+	color: var(--cor-texto-secundario);
+}
+
+.overlay-ja-adicionado {
+	font-size: 0.8rem;
+	color: var(--cor-texto-secundario);
+}
+
+.overlay-vazio {
+	padding: 1rem 1.5rem;
+	color: var(--cor-texto-secundario);
+	font-style: italic;
+	font-size: 0.9rem;
+}
+
+/* ||| OVERLAY DE PREVIEW DO CÂNTICO ||| */
+#overlay-preview-cantico {
+	position: fixed;
+	inset: 0;
+	background: var(--cor-sombra-overlay);
+	z-index: 400;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+}
+
+#overlay-preview-interior {
+	background: var(--cor-fundo);
+	border: 1px solid var(--cor-contorno);
+	border-radius: 6px;
+	width: 100%;
+	max-width: 600px;
+	max-height: 90vh;
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+
+#overlay-preview-cabecalho {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1rem 1.5rem;
+	border-bottom: 1px solid var(--cor-contorno);
+	gap: 1rem;
+}
+
+#overlay-preview-conteudo {
+	padding: 1.5rem;
+	overflow-y: auto;
+	flex: 1;
+}
+
+#overlay-preview-titulo {
+	font-size: 1.3rem;
+	margin-bottom: 0.3rem;
+}
+
+#overlay-preview-meta {
+	font-size: 0.85rem;
+	color: var(--cor-texto-secundario);
+	margin-bottom: 1.5rem;
+}
+
+
+/* --- toggle --- */
+
+#btn-folha-dropdown {
+	display: grid;
+	grid-auto-rows: max-content;
+	grid-template-columns: repeat(1, auto);
+	row-gap: 0.2rem;
+}
+
+.toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 5px; /* Adiciona um pequeno espaçamento entre o texto e o switch caso o menu fique muito estreito */
+}
+
+/* ||| Switch ||| */
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 40px;
+	height: 20px;
+}
+
+.switch input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: var(--cor-contorno);
+	transition: .4s;
+	border-radius: 20px;
+}
+
+.slider.round {
+	border-radius: 20px;
+}
+
+.slider:before {
+	position: absolute;
+	content: "";
+	height: 16px;
+	width: 16px;
+	left: 2px;
+	bottom: 2px;
+	background-color: var(--cor-fundo-secundario);
+	transition: .4s;
+	border-radius: 50%;
+}
+
+.slider.round:before {
+	border-radius: 50%;
+}
+
+input:checked + .slider {
+	background-color: var(--cor-destaque);
+}
+
+input:checked + .slider:before {
+	transform: translateX(20px);
+}
+>>>>>>> 6ca9708 (Ligação Git)
