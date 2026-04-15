@@ -37,6 +37,7 @@ body {
 	font-family: Georgia, serif;
 	background: var(--cor-fundo);
 	color: var(--cor-texto);
+	width: 100%;
 	max-width: 900px;
 	margin: 0 auto;
 	padding: 1rem;
@@ -342,14 +343,27 @@ h2 {
 
 .btn-header {
 	display: inline-flex;
+	flex-direction: row-reverse;
+	flex-wrap: wrap;
 	align-self: flex-end;
 	gap: 0.3rem;
+	position: relative;
 }
 
 .btn-main {
 	display: inline-flex;
+	flex-wrap: wrap;
 	align-self: flex-start;
+	justify-content: flex-end;
 	gap: 0.3rem;
+}
+
+#nav-comp,
+#transp-comp {
+    display: inline-flex;
+    flex-wrap: nowrap; /* Impede que os botões dentro destes componentes quebrem linha */
+    gap: 0.3rem;
+    align-items: center;
 }
 
 /* --- Botões normais --- */
@@ -465,6 +479,9 @@ button.btn-transparente:disabled,
 
 #cantico-letra {
 	flex-grow: 2;
+	/*  */
+	container-type: inline-size; /* Permite que os tamanhos baseiem-se na largura deste contentor */
+	min-width: 65%;
 }
 
 .seccao {
@@ -487,9 +504,14 @@ button.btn-transparente:disabled,
 /* --- Linhas de letra --- */
 .linha-letra {
 	display: flex;
-	flex-wrap: wrap;
+	/* flex-wrap: wrap; */
 	line-height: 1;
 	margin-bottom: 0.15rem;
+
+	/*  */
+	flex-wrap: nowrap; /* Impede que as sílabas quebrem para a linha seguinte */
+	width: 100%; /* Garante que a linha ocupe toda a largura disponível */
+	max-width: 100%;
 }
 
 .linha-vazia {
@@ -512,12 +534,14 @@ button.btn-transparente:disabled,
 
 .acorde {
 	font-family: monospace;
-	font-size: 1rem;
+	/* font-size: 1rem; */
 	color: var(--cor-texto-destaque);
 	font-weight: bold;
 	white-space: pre;
 	min-width: 1ch;
 	line-height: 1.4;
+	/*  */
+	font-size: clamp(0.1rem, 2.5cqw, 1rem);
 }
 
 .acorde-vazio {
@@ -525,8 +549,11 @@ button.btn-transparente:disabled,
 }
 
 .silaba {
-	font-size: 1.05rem;
+	/* font-size: 1.05rem; */
 	white-space: pre;
+
+	/*  */
+	font-size: clamp(0.1rem, 3cqw, 1.05rem); /* Redimensiona dinamicamente */
 }
 
 .seccao-chorus .silaba {
@@ -536,6 +563,18 @@ button.btn-transparente:disabled,
 /* || PÁGINA DA FOLHA || */
 
 /* --- Página da folha --- */
+
+/* #folha-header-info {
+	display: flex;
+	flex-direction: row;
+} */
+
+#folha-header {
+	display: flex;
+	gap: 0.3rem;
+	justify-content: space-between;
+	align-items: flex-start;
+}
 
 #folha-meta {
 	font-size: 0.85rem;
@@ -554,30 +593,17 @@ button.btn-transparente:disabled,
 	margin-bottom: 0.5rem;
 }
 
-#folha-header {
-	display: flex;
-	gap: 0.3rem;
-	justify-content: space-between;
-	align-items: flex-start;
-}
-
-/* #folha-header-info {
-	display: flex;
-	flex-direction: row;
-} */
-
-#folha-header-acoes {
+/* #folha-header-acoes {
 	display: flex;
 	gap: 0.5rem;
 	align-self: flex-end;
 	align-items: center;
-}
+} */
 
-#folha-nav-dropdown {
-	position: absolute;
-	top: 100%;
-	left: 50%;
-	transform: translateX(-50%);
+.dropdown {
+	position: absolute;	
+	top: calc(100% + 0.4rem); /* Coloca o dropdown logo abaixo do botão com um pequeno espaço */
+	right: 0; /* Encosta à direita do contentor pai */
 	background: var(--cor-fundo-secundario);
 	border: 1px solid var(--cor-contorno-secundario);
 	border-radius: 4px;
@@ -588,18 +614,30 @@ button.btn-transparente:disabled,
 	padding: 0.3rem 0;
 }
 
-#folha-nav-dropdown li {
+.dropdown li {
 	padding: 0.6rem 1rem;
 	cursor: pointer;
 	font-size: 0.95rem;
 	white-space: nowrap;
 }
 
-#folha-nav-dropdown li:hover { background: var(--cor-hover);}
+.dropdown li:hover { background: var(--cor-hover);}
 
-#folha-nav-dropdown li.ativo {
+.dropdown li.ativo {
 	font-weight: bold;
 	color: var(--cor-destaque);
+}
+
+#folha-def-dropdown {
+	display: flex;
+	flex-direction: column;
+	gap: 0.8rem;
+	padding: 1rem;
+	min-width: 200px;
+}
+
+#folha-def-dropdown .toggle {
+    white-space: nowrap;
 }
 
 /* ||| MOMENTOS ||| */
@@ -624,11 +662,23 @@ button.btn-transparente:disabled,
 }
 
 /* --- Ações do momento --- */
-.folha-momento-acoes {
+/* .folha-momento-acoes {
 	display: flex;
 	gap: 0.3rem;
-}
+} */
 
+/* --- Botões de ação do cântico --- */
+.btn-adicionar-cantico {
+	width: 100%;
+	padding: 0.7rem;
+	border: 2px dashed var(--cor-contorno-secundario);
+	border-radius: 4px;
+	background: none;
+	color: var(--cor-contorno-secundario);
+	cursor: pointer;
+	font-size: 0.9rem;
+	margin-top: 0.5rem;
+}
 
 /* --- Botão adicionar momento --- */
 #btn-adicionar-momento {
@@ -685,81 +735,6 @@ button.btn-transparente:disabled,
 	color: var(--cor-texto-terciario);
 	font-style: italic;
 }
-
-/* .folha-cantico-acoes {
-	display: flex;
-	gap: 0.3rem;
-	align-items: center;
-} */
-
-/* --- Botões de ação do cântico --- */
-/* .btn-editar-entrada,
-.btn-apagar-cantico,
-.btn-link-cantico,
-.transposicao-inline button {
-	background: none;
-	border: 1px solid var(--cor-contorno-secundario);
-	border-radius: 4px;
-	width: 1.8rem;
-	height: 1.8rem;
-	cursor: pointer;
-	font-size: 0.85rem;
-	color: var(--cor-contorno-secundario);
-}
-
-.btn-transp-reset-inline {
-	font-size: 0.7rem !important;
-	padding: 0 0.3rem;
-	width: auto !important;
-} */
-/* 
-.btn-link-cantico {
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	text-decoration: none;
-} */
-
-.btn-adicionar-cantico {
-	width: 100%;
-	padding: 0.7rem;
-	border: 2px dashed var(--cor-contorno-secundario);
-	border-radius: 4px;
-	background: none;
-	color: var(--cor-contorno-secundario);
-	cursor: pointer;
-	font-size: 0.9rem;
-	margin-top: 0.5rem;
-}
-
-/* .btn-editar-entrada:hover,
-.btn-link-cantico:hover,
-.transposicao-inline button:hover,
-.btn-adicionar-cantico:hover {
-	background: none;
-	border-color: var(--cor-texto-secundario);
-	color: var(--cor-texto-secundario);
-}
-
-.btn-apagar-cantico:hover {
-	border-color: var(--cor-texto-eliminar);
-	color: var(--cor-texto-eliminar);
-} */
-/* 
-.transposicao-inline {
-	display: flex;
-	align-items: center;
-	gap: 0.3rem;
-}
-
-.transp-valor-inline {
-	font-size: 0.85rem;
-	font-weight: bold;
-	min-width: 2rem;
-	text-align: center;
-	color: var(--cor-contorno-secundario);
-}
- */
 
 /* ||| OVERLAY DE EDIÇÃO DE ENTRADA ||| */
 
@@ -1001,13 +976,6 @@ button.btn-transparente:disabled,
 
 /* --- toggle --- */
 
-#btn-folha-dropdown {
-	display: grid;
-	grid-auto-rows: max-content;
-	grid-template-columns: repeat(1, auto);
-	row-gap: 0.2rem;
-}
-
 .toggle {
     display: flex;
     justify-content: space-between;
@@ -1068,4 +1036,22 @@ input:checked + .slider {
 
 input:checked + .slider:before {
 	transform: translateX(20px);
+}
+
+/* --- Responsividade Extra --- */
+@media (max-width: 600px) {
+	#cantico-conteudo {
+		/* Quando o ecrã fica pequeno, empilha os elementos colocando os botões em cima */
+		flex-flow: column nowrap;
+	}
+
+	.btn-main {
+		align-self: flex-end; /* Puxa os botões ativamente para a direita quando está em vista de coluna */
+		margin-bottom: 1rem;
+	}
+
+	#cantico-letra {
+		width: 100%;
+		min-width: 100%;
+	}
 }

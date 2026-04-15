@@ -8,8 +8,6 @@ let estadoFolha = {
 	folha: null,
 	indice: [],
 	canticosCache: {},
-	editar: true,
-	verPaginas: false,
     momentoAtivo: 0
 };
 
@@ -47,7 +45,10 @@ async function renderizarFolha() {
 	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
 	conteudo.innerHTML  = "";
 
-	const { folha, editar, verPaginas } = estadoFolha;
+	const folha = estadoFolha.folha;
+	const editar = folha.editar !== false; 
+	const verPaginas = folha.verPaginas === true;
+
 	const momentosFiltrados = folha.momentos.filter(
 		m => editar === true || m.canticos.length > 0
 	);
@@ -55,8 +56,8 @@ async function renderizarFolha() {
 	// Renderiza cada momento
 	for (let i = 0; i < momentosFiltrados.length; i++) {
 		const momento = momentosFiltrados[i];
-		const oculto = estadoFolha.editar === false &&
-						estadoFolha.verPaginas === true &&
+		const oculto = editar === false &&
+						verPaginas === true &&
 						i !== estadoFolha.momentoAtivo ? "oculto" : "";
 		const secDiv = document.createElement("div");
 		secDiv.className = `folha-momento ${oculto}`;
@@ -108,7 +109,7 @@ async function renderizarFolha() {
 			const letra = renderizarCantico(dados, semitons);
 
 			const canticoDiv = document.createElement("div");
-			canticoDiv.className = "folha-cantico";
+			canticoDiv.className = "folha-cantico cantico-conteudo";
 			canticoDiv.dataset.canticoId = entrada.canticoId;
 			canticoDiv.dataset.momentoId = momento.id;
 
@@ -133,7 +134,7 @@ async function renderizarFolha() {
 						` : ""}
 					</div>
 				</div>
-				<div class="folha-cantico-letra">${letra}</div>
+				<div class="cantico-letra">${letra}</div>
 			`;
 			secDiv.appendChild(canticoDiv);
 		}
@@ -375,39 +376,42 @@ function atualizarNavegacao(momentosFiltrados) {
 
 	if (!navComp || !btnIndice) return;
 
-	const verPaginas = estadoFolha.editar === false && estadoFolha.verPaginas === true && momentosFiltrados.length > 1;
+	const folha = estadoFolha.folha;
+	const editar = folha.editar !== false;
+	const verPaginas = folha.verPaginas === true;
 
-	if (verPaginas) {
+	const verPaginasAtiva = editar === false && verPaginas === true && momentosFiltrados.length > 1;
+
+	if (verPaginasAtiva) {
 		navComp.classList.remove("oculto");
 		
-		// Cria o dropdown dinamicamente se não existir
-		let dropdown = document.getElementById("folha-nav-dropdown");
-		if (!dropdown) {
-			dropdown = document.createElement("ul");
-			dropdown.id = "folha-nav-dropdown";
-			dropdown.className = "oculto";
+		// Cria o nav-dropdown dinamicamente se não existir
+		let navDropdown = document.getElementById("folha-nav-dropdown");
+		if (!navDropdown) {
+			navDropdown = document.createElement("ul");
+			navDropdown.id = "folha-nav-dropdown";
+			navDropdown.className = "dropdown oculto";
 
 			// Fica posicionado em relação ao nav-comp
 			navComp.style.position = "relative";
-			dropdown.style.position = "absolute";
+			navDropdown.style.position = "absolute";
 
-			navComp.appendChild(dropdown);
+			navComp.appendChild(navDropdown);
 
 			// Eventos para abrir e fechar o menu adicionados apenas ao criar
 			btnIndice.addEventListener("click", (e) => {
-				e.stopPropagation();
-				dropdown.classList.toggle("oculto");
+				navDropdown.classList.toggle("oculto");
 			});
 
 			document.addEventListener("click", (e) => {
-				if (!dropdown.contains(e.target) && e.target !== btnIndice) {
-					dropdown.classList.add("oculto");
+				if (!navDropdown.contains(e.target) && e.target !== btnIndice) {
+					navDropdown.classList.add("oculto");
 				}
 			});
 		}
 
 		// Preenche a lista com os momentos
-		dropdown.innerHTML = "";
+		navDropdown.innerHTML = "";
 		momentosFiltrados.forEach((m, i) => {
 			const li = document.createElement("li");
 			li.textContent = m.label;
@@ -417,11 +421,11 @@ function atualizarNavegacao(momentosFiltrados) {
 
 			li.addEventListener("click", () => {
 				estadoFolha.momentoAtivo = i;
-				dropdown.classList.add("oculto");
+				navDropdown.classList.add("oculto");
 				renderizarFolha();
 			});
 
-			dropdown.appendChild(li);
+			navDropdown.appendChild(li);
 		});
 	} else {
 		navComp.classList.add("oculto");
@@ -751,7 +755,8 @@ function inicializarCabecalho() {
 	const folha      = estadoFolha.folha;
 	const tituloEl   = document.getElementById("folha-titulo");
 	const navComp    = document.getElementById("nav-comp");
-	const btnDefinicoes= document.getElementById("btn-folha-dropdown");
+	const btnDefinicoes= document.getElementById("btn-folha-definicoes");
+	const dropdownDefinicoes = document.getElementById("folha-def-dropdown"); // Selecionado
 	const toggleEditar = document.getElementById("toggle-folha-editar");
 	const togglePagina = document.getElementById("toggle-folha-pagina");
 	const toggleMeta   = document.getElementById("toggle-folha-meta");
@@ -787,7 +792,17 @@ function inicializarCabecalho() {
 		}
 	});
 
+	// Toggle dropdown definições
+	btnDefinicoes.addEventListener("click", (e) => {
+		dropdownDefinicoes.classList.toggle("oculto");
+	});
 
+	// Fechar dropdown ao clicar fora
+	document.addEventListener("click", (e) => {
+		if (!dropdownDefinicoes.contains(e.target) && e.target !== btnDefinicoes) {
+			dropdownDefinicoes.classList.add("oculto");
+		}
+	});
 
 	// Lista de elementos a mostrar/ocultar consoante o modo editar/apresentar
 	const listaEditar = [
@@ -802,45 +817,41 @@ function inicializarCabecalho() {
 		document.getElementById("opt-folha-pagina"),
 		navComp
 	];
-	
-	// Estado inicial do toggle editar/apresentar
-	toggleEditar.checked = estadoFolha.editar;
 
-	// Toggle editar / apresentar
-	toggleEditar.addEventListener("change", () => {
-		if (toggleEditar.checked) {
-			estadoFolha.editar = true;
+	function aplicarVisibilidadeCabecalho() {
+		const editar     = folha.editar !== false;
+		const verPaginas = folha.verPaginas === true;
+
+		if (editar) {
 			listaEditar.forEach(el => el?.classList.remove("oculto"));
-			
-			// Elementos a ocultar no modo de editar
 			listaApresentar.forEach(el => el?.classList.add("oculto"));
-
 		} else {
-			estadoFolha.editar = false;
 			listaEditar.forEach(el => el?.classList.add("oculto"));
-			
-			// Elementos a mostrar no modo de apresentar
 			listaApresentar.forEach(el => el?.classList.remove("oculto"));
-			// Mostrar navegação se estiver em modo pagina
-			if (estadoFolha.verPaginas === false) {
+			if (!verPaginas) {
 				navComp.classList.add("oculto");
 			}
 		}
+	}
+	
+	// Estado inicial dos switches
+	toggleEditar.checked = folha.editar !== false;
+	togglePagina.checked = folha.verPaginas === true;
+	aplicarVisibilidadeCabecalho();
+
+	// Toggle editar / apresentar
+	toggleEditar.addEventListener("change", () => {
+		folha.editar = toggleEditar.checked;
+		Cancioneiro.folhas.guardar(folha); // Grava a opção nesta folha específica
+		aplicarVisibilidadeCabecalho();
 		renderizarFolha();
 	});
 
-	// Estado inicial do toggle contínuo/individual
-	togglePagina.checked = estadoFolha.verPaginas;
-
 	// Toggle contínuo / individual
 	togglePagina.addEventListener("change", () => {
-		if (togglePagina.checked) {
-			estadoFolha.verPaginas = true;
-			navComp.classList.remove("oculto");
-		} else {
-			estadoFolha.verPaginas = false;
-			navComp.classList.add("oculto");
-		}
+		folha.verPaginas = togglePagina.checked;
+		Cancioneiro.folhas.guardar(folha); // Grava a opção nesta folha específica
+		aplicarVisibilidadeCabecalho();
 		renderizarFolha();
 	});
 }
