@@ -71,7 +71,7 @@ async function renderizarFolha() {
 			const idxReal = folha.momentos.indexOf(momento);
 			cabMomento.innerHTML = `
 				<h2 class="folha-momento-titulo">${momento.label}</h2>
-				<div class="btn-transparente">
+				<div class="btn-main btn-transparente">
 					<button id="btn-renomear-momento" title="Renomear"
 						data-id="${momento.id}">✎</button>
 					<button id="btn-mover-momento-cima" title="Mover para cima"

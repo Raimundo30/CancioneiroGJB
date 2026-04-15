@@ -8,15 +8,15 @@
 	</head>
 
 	<body>
-		<header id="folha-header">
-			<div id="folha-header-info">
+		<header class="header-grid">
+			<div class="header-info">
 				<!-- <a href="index.html" id="btn-voltar">← Voltar</a> -->
 				<button onclick="location.reload();location.href='index.html'" class="btn-transparente btn-voltar">← Voltar</button>
 				<div id="folha-titulo-linha">
 					<h1 id="folha-titulo"></h1>
-					<div class="btn-normal">
-						<button id="btn-editar-folha" title="Editar folha" class="btn-header">✎</button>
-						<button id="btn-apagar-folha" title="Apagar folha" class="btn-header btn-apagar">✕</button>
+					<div class="btn-header btn-normal">
+						<button id="btn-apagar-folha" title="Apagar folha" class="btn-apagar">✕</button>
+						<button id="btn-editar-folha" title="Editar folha">✎</button>
 					</div>
 				</div>
 				<div id="folha-meta"></div>
@@ -31,7 +31,7 @@
 				<!-- Dropdown de definições -->
                 <div id="folha-def-dropdown" class="dropdown oculto">
                     <div class="toggle">
-                        <div> Editar folha </div>
+                        <span> Editar folha </span>
                         <label class="switch">
                             <input type="checkbox" id="toggle-folha-editar">
                             <span class="slider round"></span>
@@ -39,7 +39,7 @@
                     </div>
 
                     <div id="opt-folha-pagina" class="toggle oculto">
-                        <div> Ver por página </div>
+                        <span> Ver por página </span>
                         <label class="switch">
                             <input type="checkbox" id="toggle-folha-pagina">
                             <span class="slider round"></span>
@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="toggle">
-                        <div> Ocultar meta </div>
+                        <span> Ocultar meta </span>
                         <label class="switch">
                             <input type="checkbox" id="toggle-folha-meta">
                             <span class="slider round"></span>

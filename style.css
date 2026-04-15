@@ -38,24 +38,41 @@ body {
 	background: var(--cor-fundo);
 	color: var(--cor-texto);
 	width: 100%;
-	max-width: 900px;
+	max-width: 1400px;
 	margin: 0 auto;
 	padding: 1rem;
 }
 
 header {
-	padding: 2rem 0 1.5rem;
+	padding-bottom: 0.5rem;
 	border-bottom: 1px solid var(--cor-contorno);
 	margin-bottom: 1.5rem;
 }
 
+.header-grid {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.header-info {
+	display: flex;
+	gap: 0.3rem;
+	flex-direction: column;
+	align-items: flex-start;
+	justify-content: flex-start;
+}
+
 h1 {
-	font-size: 2rem;
+	font-size: 2.5rem;
 	margin-bottom: 0.5rem;
+	color: var(--cor-texto);
 }
 
 h2 {
-	font-size: 1.5rem;
+	font-size: 2rem;
 	margin-bottom: 0.5rem;
 	color: var(--cor-texto-secundario);
 }
@@ -69,7 +86,7 @@ h2 {
 #pesquisa {
 	width: 100%;
 	padding: 0.6rem 1rem;
-	font-size: 1rem;
+	font-size: 1.5rem;
 	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
 	background: var(--cor-fundo-secundario);
@@ -90,12 +107,12 @@ h2 {
 }
 
 .cantico-titulo {
-	font-size: 1.1rem;
+	font-size: 1.25rem;
 	font-weight: bold;
 }
 
 .cantico-meta {
-	font-size: 0.85rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 	margin-top: 0.2rem;
 }
@@ -113,7 +130,7 @@ h2 {
 	border-radius: 50%;
 	width: 2.5rem;
 	height: 2.5rem;
-	font-size: 1.1rem;
+	font-size: 1.5rem;
 	cursor: pointer;
 	background: var(--cor-fundo-secundario);
 	z-index: 100;
@@ -130,6 +147,7 @@ h2 {
 	box-shadow: -2px 0 8px var(--cor-sombra-overlay);
 	z-index: 200;
 	transition: transform 0.3s ease;
+	overflow-y: auto; 
 }
 
 .painel-fechado { transform: translateX(100%); }
@@ -149,7 +167,7 @@ h2 {
 #btn-fechar-painel {
 	background: none;
 	border: none;
-	font-size: 1.2rem;
+	font-size: 1.5rem;
 	cursor: pointer;
 	color: var(--cor-contorno);
 }
@@ -160,7 +178,7 @@ h2 {
 
 .definicao-grupo label {
 	display: block;
-	font-size: 0.85rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 	margin-bottom: 0.5rem;
 	text-transform: uppercase;
@@ -179,7 +197,7 @@ h2 {
 	border-radius: 4px;
 	background: var(--cor-fundo-secundario);
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 1rem;
 }
 
 .opcao-toggle:hover {
@@ -213,7 +231,7 @@ h2 {
 }
 
 .painel-secao-titulo {
-	font-size: 0.75rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
@@ -234,7 +252,7 @@ h2 {
 	border-radius: 4px;
 	width: 1.8rem;
 	height: 1.8rem;
-	font-size: 1.2rem;
+	font-size: 1.25rem;
 	cursor: pointer;
 	line-height: 1;
 	color: var(--cor-texto-secundario);
@@ -276,16 +294,16 @@ h2 {
 }
 
 .folha-painel-titulo {
-	font-size: 0.95rem;
+	font-size: 1rem;
 }
 
 .folha-painel-data {
-	font-size: 0.75rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 }
 
 .folha-painel-vazia {
-	font-size: 0.85rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 	font-style: italic;
 	padding: 0.5rem 0;
@@ -301,7 +319,7 @@ h2 {
 	border: none;
 	color: var(--cor-texto-secundario);
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 1rem;
 	padding: 0.2rem 0.4rem;
 }
 
@@ -310,7 +328,7 @@ h2 {
 	border: none;
 	color: var(--cor-texto-secundario);
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 1rem;
 	padding: 0.2rem 0.4rem;
 }
 
@@ -320,14 +338,6 @@ h2 {
 
 /* || PÁGINA DO CÂNTICO */
 
-/* --- header --- */
-#cantico-header {
-	display: flex;
-	gap: 0.3rem;
-	align-items: center;
-	justify-content: space-between;
-}
-
 #cantico-meta {
 	display: flex;
 	gap: 0.3rem;
@@ -335,7 +345,7 @@ h2 {
 	align-items: center;
 	justify-content: flex-start;
 	color: var(--cor-texto-secundario);
-	font-size: 0.9rem;
+	font-size: 1.25rem;
 	margin-top: 0.3rem;
 }
 
@@ -343,11 +353,13 @@ h2 {
 
 .btn-header {
 	display: inline-flex;
-	flex-direction: row-reverse;
-	flex-wrap: wrap;
-	align-self: flex-end;
+	flex-flow: row-reverse wrap;
 	gap: 0.3rem;
+	align-items: center;
+	justify-content: center;
+	align-self: flex-end;
 	position: relative;
+	margin-left: auto;
 }
 
 .btn-main {
@@ -356,6 +368,7 @@ h2 {
 	align-self: flex-start;
 	justify-content: flex-end;
 	gap: 0.3rem;
+	margin-left: auto;
 }
 
 #nav-comp,
@@ -375,11 +388,8 @@ button.btn-normal,
 	width: 1.8rem;
 	height: 1.8rem;
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: 1.2rem;
 	color: var(--cor-contorno-secundario);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 }
 
 button.btn-normal:hover,
@@ -403,7 +413,7 @@ button.btn-normal:disabled,
 }
 
 .btn-texto {
-	font-size: 0.95rem !important;
+	/* font-size: 0.95rem !important; */
 	padding: 0 0.3rem;
 	width: auto !important;
 }
@@ -433,11 +443,8 @@ button.btn-transparente,
 	width: 1.8rem;
 	height: 1.8rem;
 	cursor: pointer;
-	font-size: 0.85rem;
+	font-size: 1.2rem;
 	color: var(--cor-contorno-secundario);
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
 }
 
 button.btn-transparente:hover,
@@ -479,7 +486,6 @@ button.btn-transparente:disabled,
 
 #cantico-letra {
 	flex-grow: 2;
-	/*  */
 	container-type: inline-size; /* Permite que os tamanhos baseiem-se na largura deste contentor */
 	min-width: 65%;
 }
@@ -489,7 +495,7 @@ button.btn-transparente:disabled,
 }
 
 .seccao-label {
-	font-size: 0.75rem;
+	font-size: clamp(0.1rem, 2.5cqw, 1.5rem);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--cor-texto-terciario);
@@ -534,14 +540,12 @@ button.btn-transparente:disabled,
 
 .acorde {
 	font-family: monospace;
-	/* font-size: 1rem; */
+	font-size: clamp(0.1rem, 2.5cqw, 2rem);
 	color: var(--cor-texto-destaque);
 	font-weight: bold;
 	white-space: pre;
 	min-width: 1ch;
 	line-height: 1.4;
-	/*  */
-	font-size: clamp(0.1rem, 2.5cqw, 1rem);
 }
 
 .acorde-vazio {
@@ -549,11 +553,8 @@ button.btn-transparente:disabled,
 }
 
 .silaba {
-	/* font-size: 1.05rem; */
+	font-size: clamp(0.1rem, 3cqw, 2.2rem); /* Redimensiona dinamicamente */
 	white-space: pre;
-
-	/*  */
-	font-size: clamp(0.1rem, 3cqw, 1.05rem); /* Redimensiona dinamicamente */
 }
 
 .seccao-chorus .silaba {
@@ -564,22 +565,9 @@ button.btn-transparente:disabled,
 
 /* --- Página da folha --- */
 
-/* #folha-header-info {
-	display: flex;
-	flex-direction: row;
-} */
-
-#folha-header {
-	display: flex;
-	gap: 0.3rem;
-	justify-content: space-between;
-	align-items: flex-start;
-}
-
 #folha-meta {
 	font-size: 0.85rem;
 	color: var(--cor-texto-secundario);
-	margin-top: 0.2rem;
 }
 
 #folha-titulo-linha {
@@ -592,13 +580,6 @@ button.btn-transparente:disabled,
     align-self: center;
 	margin-bottom: 0.5rem;
 }
-
-/* #folha-header-acoes {
-	display: flex;
-	gap: 0.5rem;
-	align-self: flex-end;
-	align-items: center;
-} */
 
 /* || DROPDOWN */
 
@@ -619,7 +600,7 @@ button.btn-transparente:disabled,
 .dropdown li {
 	padding: 0.6rem 1rem;
 	cursor: pointer;
-	font-size: 0.95rem;
+	font-size: 1rem;
 	white-space: nowrap;
 }
 
@@ -648,11 +629,10 @@ button.btn-transparente:disabled,
 }
 
 .folha-momento-titulo {
-	font-size: 1rem;
+	font-size: 1.5rem;
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--cor-texto-secundario);
-	margin-bottom: 1rem;
 	padding-bottom: 0.4rem;
 	border-bottom: 1px solid var(--cor-texto-secundario);
 }
@@ -678,7 +658,7 @@ button.btn-transparente:disabled,
 	background: none;
 	color: var(--cor-contorno-secundario);
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 1rem;
 	margin-top: 0.5rem;
 }
 
@@ -691,7 +671,7 @@ button.btn-transparente:disabled,
 	background: none;
 	color: var(--cor-contorno-secundario);
 	cursor: pointer;
-	font-size: 0.9rem;
+	font-size: 1rem;
 	margin-top: 1rem;
 }
 
@@ -724,16 +704,16 @@ button.btn-transparente:disabled,
 
 .folha-cantico-titulo {
 	font-weight: bold;
-	font-size: 1rem;
+	font-size: 1.25rem;
 }
 
 .folha-cantico-tom {
-	font-size: 0.8rem;
+	font-size: 1rem;
 	color: var(--cor-texto-secundario);
 }
 
 .folha-cantico-notas {
-	font-size: 0.8rem;
+	font-size: 1rem;
 	color: var(--cor-texto-terciario);
 	font-style: italic;
 }
@@ -970,7 +950,7 @@ button.btn-transparente:disabled,
 }
 
 #overlay-preview-meta {
-	font-size: 0.85rem;
+	-size: 0.85rem;
 	color: var(--cor-texto-secundario);
 	margin-bottom: 1.5rem;
 }
@@ -980,6 +960,7 @@ button.btn-transparente:disabled,
 
 .toggle {
     display: flex;
+	font-size: 1rem;
     justify-content: space-between;
     align-items: center;
     width: 100%;
@@ -1045,11 +1026,6 @@ input:checked + .slider:before {
 	#cantico-conteudo {
 		/* Quando o ecrã fica pequeno, empilha os elementos colocando os botões em cima */
 		flex-flow: column nowrap;
-	}
-
-	.btn-main {
-		align-self: flex-end; /* Puxa os botões ativamente para a direita quando está em vista de coluna */
-		margin-bottom: 1rem;
 	}
 
 	#cantico-letra {
