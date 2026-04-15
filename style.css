@@ -600,6 +600,8 @@ button.btn-transparente:disabled,
 	align-items: center;
 } */
 
+/* || DROPDOWN */
+
 .dropdown {
 	position: absolute;	
 	top: calc(100% + 0.4rem); /* Coloca o dropdown logo abaixo do botão com um pequeno espaço */

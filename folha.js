@@ -391,11 +391,6 @@ function atualizarNavegacao(momentosFiltrados) {
 			navDropdown = document.createElement("ul");
 			navDropdown.id = "folha-nav-dropdown";
 			navDropdown.className = "dropdown oculto";
-
-			// Fica posicionado em relação ao nav-comp
-			navComp.style.position = "relative";
-			navDropdown.style.position = "absolute";
-
 			navComp.appendChild(navDropdown);
 
 			// Eventos para abrir e fechar o menu adicionados apenas ao criar
