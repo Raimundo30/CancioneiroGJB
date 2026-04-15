@@ -37,7 +37,7 @@
 	--font-size-f-meta: clamp(0.1rem, 3cqw, var(--font-size-h2));
 
 	--max-caracteres: 10;
-	--proporcao-font: 2;
+	--proporcao-font: 1.6;
 	
 	--font-size-label: clamp(0.1rem, 5cqw, var(--font-size-h3));
 	/* --font-size-acorde: clamp(0.1rem, 5cqw, 2rem); */
@@ -56,7 +56,7 @@
 }
 
 body {
-	font-family: Georgia, serif;
+	font-family: Georgia, serif, monospace;
 	background: var(--cor-fundo);
 	color: var(--cor-texto);
 	width: 100%;
