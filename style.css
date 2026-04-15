@@ -25,6 +25,28 @@
     --cor-fundo-btn-ativo: #2c2c2c;
     --cor-texto-btn-ativo: White;
     --cor-contorno-btn-ativo: var(--cor-fundo-btn-ativo);
+
+	--font-size-h1: 2.5rem;
+	--font-size-h2: 1.5rem;
+	--font-size-h3: 1.5rem;
+
+	--font-size-p-titulo: 1.5rem;
+	--font-size-p-meta: 1rem;
+
+	--font-size-f-titulo: clamp(0.1rem, 3cqw, var(--font-size-h1));
+	--font-size-f-meta: clamp(0.1rem, 3cqw, var(--font-size-h2));
+
+	--max-caracteres: 10;
+	--proporcao-font: 2;
+	
+	--font-size-label: clamp(0.1rem, 5cqw, var(--font-size-h3));
+	/* --font-size-acorde: clamp(0.1rem, 5cqw, 2rem); */
+	/* --font-size-silaba: clamp(0.1rem, 5cqw, 2.2rem); */
+	/* --font-size-acorde: min(2rem, var(--font-size-base)); */
+    /* --font-size-silaba: min(2.2rem, var(--font-size-base)); */
+
+	--font-size-painel-label: 1rem;
+	--font-size-btn: 1.2rem;
 }
 
 * {
@@ -66,15 +88,21 @@ header {
 }
 
 h1 {
-	font-size: 2.5rem;
+	font-size: var(--font-size-h1);
 	margin-bottom: 0.5rem;
 	color: var(--cor-texto);
 }
 
 h2 {
-	font-size: 2rem;
+	font-size: var(--font-size-h2);
 	margin-bottom: 0.5rem;
 	color: var(--cor-texto-secundario);
+}
+
+h3 {
+	font-size: var(--font-size-h3);
+	margin-bottom: 0.5rem;
+	color: var(--cor-texto-terciario);
 }
 
 .oculto {
@@ -86,7 +114,7 @@ h2 {
 #pesquisa {
 	width: 100%;
 	padding: 0.6rem 1rem;
-	font-size: 1.5rem;
+	font-size: var(--font-size-h2);
 	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
 	background: var(--cor-fundo-secundario);
@@ -107,12 +135,12 @@ h2 {
 }
 
 .cantico-titulo {
-	font-size: 1.25rem;
+	font-size: var(--font-size-p-titulo);
 	font-weight: bold;
 }
 
 .cantico-meta {
-	font-size: 1rem;
+	font-size: var(--font-size-p-meta);
 	color: var(--cor-texto-secundario);
 	margin-top: 0.2rem;
 }
@@ -130,7 +158,7 @@ h2 {
 	border-radius: 50%;
 	width: 2.5rem;
 	height: 2.5rem;
-	font-size: 1.5rem;
+	font-size: var(--font-size-btn);
 	cursor: pointer;
 	background: var(--cor-fundo-secundario);
 	z-index: 100;
@@ -167,7 +195,7 @@ h2 {
 #btn-fechar-painel {
 	background: none;
 	border: none;
-	font-size: 1.5rem;
+	font-size: var(--font-size-btn);
 	cursor: pointer;
 	color: var(--cor-contorno);
 }
@@ -178,7 +206,7 @@ h2 {
 
 .definicao-grupo label {
 	display: block;
-	font-size: 1rem;
+	font-size: var(--font-size-painel-label);
 	color: var(--cor-texto-secundario);
 	margin-bottom: 0.5rem;
 	text-transform: uppercase;
@@ -197,7 +225,7 @@ h2 {
 	border-radius: 4px;
 	background: var(--cor-fundo-secundario);
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
 }
 
 .opcao-toggle:hover {
@@ -231,7 +259,7 @@ h2 {
 }
 
 .painel-secao-titulo {
-	font-size: 1rem;
+	font-size: var(--font-size-painel-label);
 	color: var(--cor-texto-secundario);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
@@ -252,7 +280,7 @@ h2 {
 	border-radius: 4px;
 	width: 1.8rem;
 	height: 1.8rem;
-	font-size: 1.25rem;
+	font-size: var(--font-size-painel-label);
 	cursor: pointer;
 	line-height: 1;
 	color: var(--cor-texto-secundario);
@@ -269,7 +297,7 @@ h2 {
 }
 
 #painel-folhas-ordenacao .opcao-toggle {
-	font-size: 0.8rem;
+	font-size: var(--font-size-btn);
 	padding: 0.3rem 0.6rem;
 }
 
@@ -294,16 +322,16 @@ h2 {
 }
 
 .folha-painel-titulo {
-	font-size: 1rem;
+	font-size: var(--font-size-painel-label);
 }
 
 .folha-painel-data {
-	font-size: 1rem;
+	font-size: var(--font-size-painel-label);
 	color: var(--cor-texto-secundario);
 }
 
 .folha-painel-vazia {
-	font-size: 1rem;
+	font-size: var(--font-size-painel-label);
 	color: var(--cor-texto-secundario);
 	font-style: italic;
 	padding: 0.5rem 0;
@@ -319,7 +347,7 @@ h2 {
 	border: none;
 	color: var(--cor-texto-secundario);
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
 	padding: 0.2rem 0.4rem;
 }
 
@@ -328,7 +356,7 @@ h2 {
 	border: none;
 	color: var(--cor-texto-secundario);
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
 	padding: 0.2rem 0.4rem;
 }
 
@@ -345,7 +373,7 @@ h2 {
 	align-items: center;
 	justify-content: flex-start;
 	color: var(--cor-texto-secundario);
-	font-size: 1.25rem;
+	font-size: var(--font-size-h2);
 	margin-top: 0.3rem;
 }
 
@@ -388,7 +416,7 @@ button.btn-normal,
 	width: 1.8rem;
 	height: 1.8rem;
 	cursor: pointer;
-	font-size: 1.2rem;
+	font-size: var(--font-size-btn);
 	color: var(--cor-contorno-secundario);
 }
 
@@ -419,14 +447,14 @@ button.btn-normal:disabled,
 }
 
 .btn-voltar {
-	font-size: 0.95rem !important;
+	font-size: var(--font-size-btn) !important;
 	padding: 0 0.3rem;
 	width: auto !important;
 	white-space: nowrap;
 }
 
 #spn-transp-valor {
-	font-size: 0.95rem;
+	font-size: var(--font-size-btn);
 	font-weight: bold;
 	min-width: 2rem;
 	padding: 0 0.3rem;
@@ -443,7 +471,7 @@ button.btn-transparente,
 	width: 1.8rem;
 	height: 1.8rem;
 	cursor: pointer;
-	font-size: 1.2rem;
+	font-size: var(--font-size-btn);
 	color: var(--cor-contorno-secundario);
 }
 
@@ -495,7 +523,7 @@ button.btn-transparente:disabled,
 }
 
 .seccao-label {
-	font-size: clamp(0.1rem, 2.5cqw, 1.5rem);
+	font-size: var(--font-size-label);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--cor-texto-terciario);
@@ -510,14 +538,15 @@ button.btn-transparente:disabled,
 /* --- Linhas de letra --- */
 .linha-letra {
 	display: flex;
-	/* flex-wrap: wrap; */
 	line-height: 1;
 	margin-bottom: 0.15rem;
-
-	/*  */
 	flex-wrap: nowrap; /* Impede que as sílabas quebrem para a linha seguinte */
 	width: 100%; /* Garante que a linha ocupe toda a largura disponível */
 	max-width: 100%;
+
+	--tamanho-base: calc((100cqi / var(--max-caracteres, 10)) * var(--proporcao-font));
+	--font-size-acorde: min(2rem, var(--tamanho-base));
+	--font-size-silaba: min(2.2rem, var(--tamanho-base));
 }
 
 .linha-vazia {
@@ -527,7 +556,7 @@ button.btn-transparente:disabled,
 .linha-comentario {
 	font-style: italic;
 	color: var(--cor-texto-terciario);
-	font-size: 0.85rem;
+	font-size: var(--font-size-f-meta);
 	margin-bottom: 0.3rem;
 }
 
@@ -540,7 +569,7 @@ button.btn-transparente:disabled,
 
 .acorde {
 	font-family: monospace;
-	font-size: clamp(0.1rem, 2.5cqw, 2rem);
+	font-size: var(--font-size-acorde);
 	color: var(--cor-texto-destaque);
 	font-weight: bold;
 	white-space: pre;
@@ -553,7 +582,7 @@ button.btn-transparente:disabled,
 }
 
 .silaba {
-	font-size: clamp(0.1rem, 3cqw, 2.2rem); /* Redimensiona dinamicamente */
+	font-size: var(--font-size-silaba);
 	white-space: pre;
 }
 
@@ -566,7 +595,7 @@ button.btn-transparente:disabled,
 /* --- Página da folha --- */
 
 #folha-meta {
-	font-size: 0.85rem;
+	font-size: var(--font-size-f-meta);
 	color: var(--cor-texto-secundario);
 }
 
@@ -600,7 +629,7 @@ button.btn-transparente:disabled,
 .dropdown li {
 	padding: 0.6rem 1rem;
 	cursor: pointer;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
 	white-space: nowrap;
 }
 
@@ -629,7 +658,7 @@ button.btn-transparente:disabled,
 }
 
 .folha-momento-titulo {
-	font-size: 1.5rem;
+	font-size: var(--font-size-h2);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 	color: var(--cor-texto-secundario);
@@ -704,16 +733,16 @@ button.btn-transparente:disabled,
 
 .folha-cantico-titulo {
 	font-weight: bold;
-	font-size: 1.25rem;
+	font-size: var(--font-size-f-titulo);
 }
 
 .folha-cantico-tom {
-	font-size: 1rem;
+	font-size: var(--font-size-f-meta);
 	color: var(--cor-texto-secundario);
 }
 
 .folha-cantico-notas {
-	font-size: 1rem;
+	font-size: var(--font-size-f-meta);
 	color: var(--cor-texto-terciario);
 	font-style: italic;
 }
@@ -750,13 +779,13 @@ button.btn-transparente:disabled,
 }
 
 #modal-cabecalho h3 {
-	font-size: 1.1rem;
+	font-size: var(--font-size-h3);
 }
 
 #btn-fechar-modal {
 	background: none;
 	border: none;
-	font-size: 1.1rem;
+	font-size: var(--font-size-btn);
 	cursor: pointer;
 	color: var(--cor-contorno);
 }
@@ -767,7 +796,7 @@ button.btn-transparente:disabled,
 	gap: 0.5rem;
 	padding: 0.4rem 0;
 	cursor: pointer;
-	font-size: 0.95rem;
+	font-size: var(--font-size-btn);
 }
 
 .modal-seccao-item input {
@@ -824,7 +853,7 @@ button.btn-transparente:disabled,
 	background: var(--cor-fundo-secundario);
 	border: 1px solid var(--cor-contorno);
 	border-radius: 4px;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
 	font-family: inherit;
 }
 
@@ -884,17 +913,17 @@ button.btn-transparente:disabled,
 }
 
 .overlay-cantico-titulo {
-	font-size: 0.95rem;
+	font-size: var(--font-size-p-meta);
 	font-weight: bold;
 }
 
 .overlay-cantico-meta {
-	font-size: 0.8rem;
+	font-size: var(--font-size-p-meta);
 	color: var(--cor-texto-secundario);
 }
 
 .overlay-ja-adicionado {
-	font-size: 0.8rem;
+	font-size: var(--font-size-p-meta);
 	color: var(--cor-texto-secundario);
 }
 
@@ -902,7 +931,7 @@ button.btn-transparente:disabled,
 	padding: 1rem 1.5rem;
 	color: var(--cor-texto-secundario);
 	font-style: italic;
-	font-size: 0.9rem;
+	font-size: var(--font-size-p-meta);
 }
 
 /* ||| OVERLAY DE PREVIEW DO CÂNTICO ||| */
@@ -945,12 +974,12 @@ button.btn-transparente:disabled,
 }
 
 #overlay-preview-titulo {
-	font-size: 1.3rem;
+	font-size: var(--font-size-p-titulo);
 	margin-bottom: 0.3rem;
 }
 
 #overlay-preview-meta {
-	-size: 0.85rem;
+	font-size: var(--font-size-p-meta);
 	color: var(--cor-texto-secundario);
 	margin-bottom: 1.5rem;
 }
@@ -960,7 +989,7 @@ button.btn-transparente:disabled,
 
 .toggle {
     display: flex;
-	font-size: 1rem;
+	font-size: var(--font-size-btn);
     justify-content: space-between;
     align-items: center;
     width: 100%;

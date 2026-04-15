@@ -343,6 +343,32 @@ function renderizarLinha(tokens, mostrarAcordes, notacao, semitons) {
 }
 
 /**
+ * Calcula a largura de uma linha com base nos tokens e nas opções de exibição.
+ * A largura é determinada pelo número máximo de caracteres entre o texto e os acordes.
+ * @param {Array} tokens - Array de tokens {chord, text} do parser
+ * @param {boolean} mostrarAcordes
+ * @param {number} semitons - transposição a aplicar aos acordes para calcular a largura correta
+ * @param {string} notacao - "anglo" ou "latino", para calcular a largura dos acordes corretamente
+ * @returns {number} A largura da linha em número de caracteres (para usar como base para a largura CSS)
+ */
+function larguraLinha(tokens, mostrarAcordes, semitons, notacao) {
+	let largura = 0;
+	for (const token of tokens) {
+		let larguraTexto = token.text ? token.text.length : 0;
+
+		let larguraAcorde = 0;
+		if ( token.chord && mostrarAcordes) {
+			let acorde = transporAcorde(token.chord, semitons);
+
+			if (notacao === "latino") { acorde = converterAcorde(acorde, "latino");}
+			larguraAcorde = acorde.length;
+		}
+		largura += Math.max(larguraTexto, larguraAcorde);
+	}
+	return largura;
+}
+
+/**
  * Renderiza um cântico completo a partir dos dados do parser.
  * Cada secção é um <div> com classe "seccao" e tipo específico (ex: "seccao-verse").
  * As linhas de cada secção são renderizadas com renderizarLinha().
@@ -353,6 +379,8 @@ function renderizarLinha(tokens, mostrarAcordes, notacao, semitons) {
 function renderizarCantico(dados, semitons = 0) {
 	const notacao         = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes  = Cancioneiro.preferencias.obter("mostrarAcordes");
+
+	let maxCaracteres = 10;
 
 	const container = document.createElement("div");
 	container.innerHTML = ""; // limpa conteúdo anterior
@@ -378,6 +406,8 @@ function renderizarCantico(dados, semitons = 0) {
 				// Linha vazia — separador de parágrafo
 				div.innerHTML += '<div class="linha-vazia"></div>';
 			} else {
+				const largura = larguraLinha(linha, mostrarAcordes, semitons, notacao);
+				maxCaracteres = Math.max(maxCaracteres, largura);
 				div.innerHTML += renderizarLinha(linha, mostrarAcordes, notacao, semitons);
 			}
 		}
@@ -385,7 +415,12 @@ function renderizarCantico(dados, semitons = 0) {
 		container.appendChild(div);
 	}
 
-	return container.innerHTML ? container.innerHTML : "Erro a renderizar cântico.";
+	// Injeta o valor calculado como uma variável CSS no contentor
+	container.style.setProperty('--max-caracteres', maxCaracteres);
+	// Aconselhável ter um container-type para as cqi funcionarem corretamente se não estiver no CSS pai
+	container.style.containerType = "inline-size";
+
+	return container.innerHTML ? container.outerHTML : "Erro a renderizar cântico.";
 	// const container = document.getElementById("cantico-letra");
 	// container.innerHTML = "";
 	// container.appendChild(renderizarCantico(dadosCantico, canticoId));
