@@ -242,7 +242,7 @@ function parseChordPro(texto) {
 
 // Escala cromática em sustenidos e bemóis
 const ESCALA_SUSTENIDOS = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
-const ESCALA_BEMOIS     = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const ESCALA_BEMOIS     = ["C","D♭","D","E♭","E","F","G♭","G","A♭","A","B♭","B"];
 
 /**
  * Transpõe um acorde um número de semitons.
@@ -275,15 +275,15 @@ function transporAcorde(acorde, semitons) {
         return acorde.split("/").map(parte => transporAcorde(parte, semitons)).join("/");
     }
 	
-	// Encontra a nota base (pode ter # ou b)
-	const match = acorde.match(/^([A-G][#b]?)(.*)/);
+	// Encontra a nota base (pode ter # ou ♭)
+	const match = acorde.match(/^([A-G][#♭]?)(.*)/);
 	if (!match) return acorde;
 
 	const notaBase = match[1];
 	const sufixo   = match[2];
 
 	// Determina qual escala usar (preferir bemóis se a nota base já usa bemol)
-	const escala = notaBase.includes("b") ? ESCALA_BEMOIS : ESCALA_SUSTENIDOS;
+	const escala = notaBase.includes("♭") ? ESCALA_BEMOIS : ESCALA_SUSTENIDOS;
 
 	const indiceAtual = escala.indexOf(notaBase);
 	if (indiceAtual === -1) return acorde;
