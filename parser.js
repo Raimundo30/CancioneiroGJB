@@ -342,31 +342,52 @@ function renderizarLinha(tokens, mostrarAcordes, notacao, semitons) {
 	return html;
 }
 
+
 /**
- * Calcula a largura de uma linha com base nos tokens e nas opções de exibição.
- * A largura é determinada pelo número máximo de caracteres entre o texto e os acordes.
- * @param {Array} tokens - Array de tokens {chord, text} do parser
- * @param {boolean} mostrarAcordes
- * @param {number} semitons - transposição a aplicar aos acordes para calcular a largura correta
- * @param {string} notacao - "anglo" ou "latino", para calcular a largura dos acordes corretamente
- * @returns {number} A largura da linha em número de caracteres (para usar como base para a largura CSS)
+ * Ajusta o tamanho da letra de um cântico para que a linha mais longa se encaixe na largura do contentor.
+ * A função é chamada após renderizar o cântico e também ao redimensionar a janela.
+ *
+ * @param {HTMLElement} container - O elemento que contém o cântico renderizado
  */
-function larguraLinha(tokens, mostrarAcordes, semitons, notacao) {
-	let largura = 0;
-	for (const token of tokens) {
-		let larguraTexto = token.text ? token.text.length : 0;
+function ajustarTamanhoLetra(container) {
+	// 1. Define um tamanho base pequeno temporário para medir
+	container.style.setProperty('--font-size-acorde', '10px');
+	container.style.setProperty('--font-size-silaba', '10px');
+	container.style.setProperty('--font-size-label', '8px');
 
-		let larguraAcorde = 0;
-		if ( token.chord && mostrarAcordes) {
-			let acorde = transporAcorde(token.chord, semitons);
+	const containerWidth = container.clientWidth;
+	let maxLinhaWidth = 0;
 
-			if (notacao === "latino") { acorde = converterAcorde(acorde, "latino");}
-			larguraAcorde = acorde.length;
-		}
-		largura += Math.max(larguraTexto, larguraAcorde);
+	// 2. Encontra a largura real da maior linha
+	const linhas = container.querySelectorAll('.linha-letra');
+	linhas.forEach(linha => {
+		linha.style.width = 'max-content';
+		const w = linha.scrollWidth;
+		if (w > maxLinhaWidth) maxLinhaWidth = w;
+		linha.style.width = '';
+	});
+
+	// 3. Aplica a proporção (base 10) ajustada à largura disponível
+	if (maxLinhaWidth > 0) {
+		const ratio = containerWidth / maxLinhaWidth;
+		let novoTamanho = (10 * ratio) - 0.5;
+
+		// Lê a variável CSS ou assume 35px como defeito
+		const maxStr = getComputedStyle(document.documentElement).getPropertyValue('--font-size-max');
+		const maxVal = parseFloat(maxStr) || 35;
+
+		// Limite máximo para não ficar gigante em refrões curtos
+		novoTamanho = Math.min(novoTamanho, maxVal); 
+		// Limite mínimo de segurança
+        novoTamanho = Math.max(novoTamanho, 5); 
+
+		// Só aplica se não estiver vazio
+		container.style.setProperty('--font-size-acorde', novoTamanho + 'px');
+		container.style.setProperty('--font-size-silaba', novoTamanho + 'px');
+		container.style.setProperty('--font-size-label', (novoTamanho * 0.8) + 'px');
 	}
-	return largura;
 }
+
 
 /**
  * Renderiza um cântico completo a partir dos dados do parser.
@@ -380,9 +401,8 @@ function renderizarCantico(dados, semitons = 0) {
 	const notacao         = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes  = Cancioneiro.preferencias.obter("mostrarAcordes");
 
-	let maxCaracteres = 10;
-
 	const container = document.createElement("div");
+	container.className = "cantico-letra"; // GARANTE QUE AS VARIÁVEIS CSS SÃO RECALCULADAS NESTE NÍVEL
 	container.innerHTML = ""; // limpa conteúdo anterior
 
 	for (const seccao of dados.sections) {
@@ -406,19 +426,12 @@ function renderizarCantico(dados, semitons = 0) {
 				// Linha vazia — separador de parágrafo
 				div.innerHTML += '<div class="linha-vazia"></div>';
 			} else {
-				const largura = larguraLinha(linha, mostrarAcordes, semitons, notacao);
-				maxCaracteres = Math.max(maxCaracteres, largura);
 				div.innerHTML += renderizarLinha(linha, mostrarAcordes, notacao, semitons);
 			}
 		}
 
 		container.appendChild(div);
 	}
-
-	// Injeta o valor calculado como uma variável CSS no contentor
-	container.style.setProperty('--max-caracteres', maxCaracteres);
-	// Aconselhável ter um container-type para as cqi funcionarem corretamente se não estiver no CSS pai
-	container.style.containerType = "inline-size";
 
 	return container.innerHTML ? container.outerHTML : "Erro a renderizar cântico.";
 	// const container = document.getElementById("cantico-letra");

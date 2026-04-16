@@ -139,6 +139,12 @@ async function renderizarFolha() {
 			secDiv.appendChild(canticoDiv);
 		}
 
+		const container = secDiv.querySelector(".cantico-letra");
+		// Executa depois de renderizar
+		requestAnimationFrame(() => ajustarTamanhoLetra(container));
+		// Atualiza se a janela for redimensionada
+		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
+
 		// --- Botão adicionar cântico (modo editar) ---
 		if (editar === true) {
 			const btnAdicionar = document.createElement("button");
@@ -675,6 +681,12 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 
 		document.body.appendChild(overlay);
 
+		const container = document.getElementById("overlay-preview-letra");
+		// Executa depois de renderizar
+		requestAnimationFrame(() => ajustarTamanhoLetra(container));
+		// Atualiza se a janela for redimensionada
+		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
+
 		// Transposição
 		const tomPreview = document.querySelector("#preview-transp-comp #spn-transp-valor");
 		if (tomPreview) { tomPreview.textContent = `${tomApresentado(semitonsPreview)}`; }
@@ -729,7 +741,12 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 
 	function atualizarPreview() {
 		const letra = renderizarCantico(dados, semitonsPreview);
-		document.getElementById("overlay-preview-letra").innerHTML = letra;
+		const container = document.getElementById("overlay-preview-letra")
+		container.innerHTML = letra;
+		// Executa depois de renderizar
+		requestAnimationFrame(() => ajustarTamanhoLetra(container));
+		// Atualiza se a janela for redimensionada
+		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
 
 		const tomPreview = document.querySelector("#preview-transp-comp #spn-transp-valor");
 		if (tomPreview) { tomPreview.textContent = `${tomApresentado(semitonsPreview)}`; }

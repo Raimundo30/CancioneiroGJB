@@ -34,6 +34,12 @@ function atualizaCantico(dadosCantico, canticoId, tomOriginal) {
 	// Renderiza cântico
 	const container = document.getElementById("cantico-letra");
 	container.innerHTML = renderizarCantico(dadosCantico, semitons);
+	
+	// Executa depois de renderizar
+	requestAnimationFrame(() => ajustarTamanhoLetra(container));
+
+	// Atualiza se a janela for redimensionada
+	window.addEventListener('resize', () => ajustarTamanhoLetra(container));
 }
 
 // -----------------------------------------------------------------------------

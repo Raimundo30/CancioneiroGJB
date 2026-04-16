@@ -30,6 +30,8 @@
 	--font-size-h2: 1.5rem;
 	--font-size-h3: 1.5rem;
 
+	--font-size-max: 35px;
+
 	--font-size-p-titulo: 1.5rem;
 	--font-size-p-meta: 1rem;
 
@@ -39,7 +41,7 @@
 	--max-caracteres: 10;
 	--proporcao-font: 1.6;
 	
-	--font-size-label: clamp(0.1rem, 5cqw, var(--font-size-h3));
+	/* --font-size-label: clamp(0.1rem, 5cqw, var(--font-size-h3)); */
 	/* --font-size-acorde: clamp(0.1rem, 5cqw, 2rem); */
 	/* --font-size-silaba: clamp(0.1rem, 5cqw, 2.2rem); */
 	/* --font-size-acorde: min(2rem, var(--font-size-base)); */
@@ -147,22 +149,6 @@ h3 {
 
 
 /* || PAINEL DE DEFINIÇÕES */
-
-/* --- Botão de definições --- */
-#btn-definicoes {
-	position: fixed;
-	top: 1rem;
-	right: 1rem;
-	background: none;
-	border: 1px solid var(--cor-contorno);
-	border-radius: 50%;
-	width: 2.5rem;
-	height: 2.5rem;
-	font-size: var(--font-size-btn);
-	cursor: pointer;
-	background: var(--cor-fundo-secundario);
-	z-index: 100;
-}
 
 /* --- Painel de definições --- */
 #painel-definicoes {
@@ -512,10 +498,12 @@ button.btn-transparente:disabled,
 
 /* --- letra --- */
 
+.cantico-letra,
 #cantico-letra {
 	flex-grow: 2;
 	container-type: inline-size; /* Permite que os tamanhos baseiem-se na largura deste contentor */
-	min-width: 65%;
+	width: 100%;
+	max-width: 100%;
 }
 
 .seccao {
@@ -543,10 +531,6 @@ button.btn-transparente:disabled,
 	flex-wrap: nowrap; /* Impede que as sílabas quebrem para a linha seguinte */
 	width: 100%; /* Garante que a linha ocupe toda a largura disponível */
 	max-width: 100%;
-
-	--tamanho-base: calc((100cqi / var(--max-caracteres, 10)) * var(--proporcao-font));
-	--font-size-acorde: min(2rem, var(--tamanho-base));
-	--font-size-silaba: min(2.2rem, var(--tamanho-base));
 }
 
 .linha-vazia {
