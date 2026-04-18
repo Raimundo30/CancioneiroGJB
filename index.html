@@ -9,23 +9,42 @@
 
 	<body>
 
-		<header>
+		<header class="header-grid">
 			<h1>Cancioneiro</h1>
-			<input type="text" id="pesquisa" placeholder="Pesquisar cânticos...">
+			<button id="btn-definicoes" title="Definições" class="btn-header btn-normal">⚙</button>
 		</header>
 
 		<main>
-			<ul id="lista-canticos">
-				<!-- preenchido pelo JavaScript -->
-			</ul>
+			<!-- Folhas de cânticos -->
+			<div id="seccao-de-folhas">
+				<div id="header-folhas">
+					<h2>As minhas folhas</h2>
+					<button id="btn-nova-folha" class="btn-normal" title="Nova folha">+</button>
+					<div id="folhas-ordenacao">
+						<button id="btn-ordem-data" class="btn-normal btn-texto opcao-toggle">Por data</button>
+						<button id="btn-ordem-alfa" class="btn-normal btn-texto opcao-toggle">A-Z</button>
+					</div>
+				</div>
+
+				<div id="container-folhas"></div>
+				<!-- preenchido pelo mFolhas.JS -->
+
+			</div>
+
+			<!-- Secção de pesquisa -->
+			<div id="seccao-pesquisa">
+				<div id="container-pesquisa"></div>
+				<!-- preenchido pelo pesquisa.JS -->
+			</div>
 		</main>
 
 		<script src="preferencias.js"></script>
 		<script src="parser.js"></script>
 		<script src="folhas.js"></script>
-		<script src="painel-folhas.js"></script>
+		<script src="partilha.js"></script>
 		<script src="painel.js"></script>
 		<script src="definicoes.js"></script>
+		<script src="pesquisa.js"></script>
 		<script src="app.js"></script>
 
 	</body>

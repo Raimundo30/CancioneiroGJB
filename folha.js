@@ -8,7 +8,7 @@ let estadoFolha = {
 	folha: null,
 	indice: [],
 	canticosCache: {},
-    momentoAtivo: 0
+	momentoAtivo: 0
 };
 
 
@@ -140,10 +140,12 @@ async function renderizarFolha() {
 		}
 
 		const container = secDiv.querySelector(".cantico-letra");
-		// Executa depois de renderizar
-		requestAnimationFrame(() => ajustarTamanhoLetra(container));
-		// Atualiza se a janela for redimensionada
-		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
+		if (container) {
+			// Executa depois de renderizar
+			requestAnimationFrame(() => ajustarTamanhoLetra(container));
+			// Atualiza se a janela for redimensionada
+			window.addEventListener('resize', () => ajustarTamanhoLetra(container));
+		}
 
 		// --- Botão adicionar cântico (modo editar) ---
 		if (editar === true) {
@@ -530,109 +532,31 @@ function abrirOverlayAdicionar(momentoId) {
 				<h3>Adicionar cântico</h3>
 				<button id="btn-fechar-overlay">✕</button>
 			</div>
-			<input type="text" id="overlay-pesquisa"
-			placeholder="Pesquisar por título, autor ou categoria...">
-			<div id="overlay-filtros">
-				<button class="filtro-categoria ativo" data-categoria="">Todos</button>
-			</div>
-			<ul id="overlay-lista"></ul>
+			<div id="overlay-pesquisa-container" style="display: flex; flex-direction: column; overflow: hidden; padding: 1rem 1.5rem; flex: 1;"></div>
 		</div>
 	`;
 
 	document.body.appendChild(overlay);
 
-	const inputPesquisa = document.getElementById("overlay-pesquisa");
-	const listaEl       = document.getElementById("overlay-lista");
-	const filtrosEl     = document.getElementById("overlay-filtros");
-
-	const momento       = estadoFolha.folha.momentos.find(m => m.id === momentoId);
-	const jaAdicionados = new Set(momento?.canticos.map(c => c.canticoId) || []);
-
-	// Gera botões de categorias
-	const todasCategorias = new Set();
-	estadoFolha.indice.forEach(c => c.categorias?.forEach(cat => todasCategorias.add(cat)));
-	todasCategorias.forEach(cat => {
-		const btn = document.createElement("button");
-		btn.className = "filtro-categoria";
-		btn.dataset.categoria = cat;
-		btn.textContent = cat;
-		filtrosEl.appendChild(btn);
-	});
-
-	let categoriaAtiva = "";
-
-	function renderizarListaOverlay() {
-		const termo    = inputPesquisa.value.toLowerCase();
-		listaEl.innerHTML = "";
-
-		const filtrados = estadoFolha.indice.filter(c => {
-			const matchTexto = !termo ||
-				c.titulo.toLowerCase().includes(termo) ||
-				(c.autor || "").toLowerCase().includes(termo) ||
-				(c.categorias || []).some(cat => cat.toLowerCase().includes(termo));
-				const matchCategoria = !categoriaAtiva ||
-				(c.categorias || []).includes(categoriaAtiva);
-			return matchTexto && matchCategoria;
-		});
-
-		if (filtrados.length === 0) {
-			listaEl.innerHTML = "<li class='overlay-vazio'>Nenhum cântico encontrado.</li>";
-			return;
+	const pesquisa = new Cancioneiro.Pesquisa(
+		"overlay-pesquisa-container",
+		estadoFolha.indice,
+		(cantico) => {
+			abrirOverlayPreview(cantico.id, momentoId);
 		}
-
-		const notacao = Cancioneiro.preferencias.obter("notacao");
-
-		for (const cantico of filtrados) {
-			const jaEsta = jaAdicionados.has(cantico.id);
-			const tomApresentado = notacao === "latino"
-				? Cancioneiro.parser.converterAcorde(cantico.tom, "latino")
-				: cantico.tom;
-
-			const li = document.createElement("li");
-			li.className = `overlay-cantico-item ${jaEsta ? "ja-adicionado" : ""}`;
-			li.innerHTML = `
-				<div class="overlay-cantico-info">
-					<span class="overlay-cantico-titulo">${cantico.titulo}</span>
-					<span class="overlay-cantico-meta">${cantico.autor} · Tom: ${tomApresentado}</span>
-				</div>
-				${jaEsta ? '<span class="overlay-ja-adicionado">✓ Adicionado</span>' : ""}
-			`;
-
-			if (!jaEsta) {
-				li.addEventListener("click", () => {
-					abrirOverlayPreview(cantico.id, momentoId, () => {
-						overlay.remove();
-						renderizarFolha();
-					});
-				});
-			}
-
-			listaEl.appendChild(li);
-		}
-	}
-
-	inputPesquisa.addEventListener("input", renderizarListaOverlay);
-	inputPesquisa.focus();
-
-	filtrosEl.addEventListener("click", (e) => {
-		const btn = e.target.closest(".filtro-categoria");
-		if (!btn) return;
-		categoriaAtiva = btn.dataset.categoria;
-		filtrosEl.querySelectorAll(".filtro-categoria").forEach(b =>
-			b.classList.toggle("ativo", b === btn)
-		);
-		renderizarListaOverlay();
-	});
+	);
 
 	document.getElementById("btn-fechar-overlay").addEventListener("click", () => {
 		overlay.remove();
 	});
 
 	overlay.addEventListener("click", (e) => {
-		if (e.target === overlay) overlay.remove();
+		if (e.target === overlay) {
+			overlay.remove();
+		}
 	});
 
-	renderizarListaOverlay();
+	pesquisa.input.focus();
 }
 
 async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
@@ -665,10 +589,10 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 				<div id="overlay-preview-cabecalho">
 					<button id="btn-voltar-overlay" class="btn-transparente btn-voltar">← Voltar</button>
 					<div class="btn-header btn-normal">
+						<button id="btn-adicionar-do-preview" class="btn-texto">Adicionar</button>
 						${mostrarAcordes ? `
 							<transp-comp id="preview-transp-comp"></transp-comp>
 						` : ""}
-						<button id="btn-adicionar-do-preview" class="btn-texto">Adicionar</button>
 					</div>
 				</div>
 				<div id="overlay-preview-conteudo">
@@ -715,20 +639,20 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 
 		// Adicionar
 		document.getElementById("btn-adicionar-do-preview").addEventListener("click", () => {
-			Cancioneiro.folhas.adicionarCantico(estadoFolha.folha.id, momentoId, canticoId);
-			// Aplica transposição se diferente de 0
-			if (semitonsPreview !== 0) {
-				const folha   = Cancioneiro.folhas.obter(estadoFolha.folha.id);
-				const momento = folha.momentos.find(m => m.id === momentoId);
-				const entrada = momento?.canticos.find(c => c.canticoId === canticoId);
-				if (entrada) {
-					entrada.tom = semitonsPreview;
-					Cancioneiro.folhas.guardar(folha);
-				}
+			const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
+			if (momento && !momento.canticos.some(c => c.canticoId === canticoId)) {
+				momento.canticos.push({
+					canticoId: canticoId,
+					seccoes: null,
+					tom: semitonsPreview !== 0 ? semitonsPreview : null,
+					notas: ""
+				});
+				Cancioneiro.folhas.guardar(estadoFolha.folha);
+				renderizarFolha();
 			}
-			estadoFolha.folha = Cancioneiro.folhas.obter(estadoFolha.folha.id);
-			overlay.remove();
-			onAdicionar();
+			
+			document.getElementById("overlay-preview-cantico")?.remove();
+			document.getElementById("overlay-adicionar-cantico")?.remove();
 		});
 
 		overlay.addEventListener("click", (e) => {
@@ -768,6 +692,7 @@ function inicializarCabecalho() {
 	const tituloEl   = document.getElementById("folha-titulo");
 	const navComp    = document.getElementById("nav-comp");
 	const btnDefinicoes= document.getElementById("btn-folha-definicoes");
+	const btnPartilhar = document.getElementById("btn-partilhar-folha");
 	const dropdownDefinicoes = document.getElementById("folha-def-dropdown"); // Selecionado
 	const toggleEditar = document.getElementById("toggle-folha-editar");
 	const togglePagina = document.getElementById("toggle-folha-pagina");
@@ -803,6 +728,42 @@ function inicializarCabecalho() {
 			window.location.href = "index.html";
 		}
 	});
+
+	// Lógica Partilhar / Guardar Folha
+	const isShared = new URLSearchParams(window.location.search).has("share");
+	if (isShared) {
+		btnPartilhar.title = "Guardar nesta App";
+		btnPartilhar.textContent = "↓"; // ou "💾"
+		
+		btnPartilhar.addEventListener("click", () => {
+			const folhaClone = JSON.parse(JSON.stringify(estadoFolha.folha));
+			folhaClone.id = "f" + Date.now().toString(36);
+			folhaClone.editar = true; // Permite edição após guardar
+			
+			const folhasGerais = Cancioneiro.folhas.listar();
+			folhasGerais.push(folhaClone);
+			localStorage.setItem("cancioneiro_folhas", JSON.stringify(folhasGerais));
+			
+			alert("Folha guardada com sucesso!");
+			window.location.href = `folha.html?id=${folhaClone.id}`;
+		});
+		
+		// Ocultar e desativar o toggle de Editar
+		toggleEditar.closest(".toggle").classList.add("oculto");
+		toggleEditar.disabled = true;
+	} else {
+		btnPartilhar.title = "Partilhar folha";
+        btnPartilhar.addEventListener("click", async () => {
+            const linkBase = window.location.href.split('?')[0];
+            const codificado = await Cancioneiro.partilha.codificar(folha);
+            const linkPartilha = linkBase + "?share=" + codificado;
+            navigator.clipboard.writeText(linkPartilha).then(() => {
+                alert("Link copiado para a área de transferência!");
+            }).catch(() => {
+                prompt("Copie este link para partilhar:", linkPartilha);
+            });
+        });
+	}
 
 	// Toggle dropdown definições
 	btnDefinicoes.addEventListener("click", (e) => {
@@ -876,19 +837,25 @@ function inicializarCabecalho() {
 async function init() {
 	const params  = new URLSearchParams(window.location.search);
 	const folhaId = params.get("id");
+    const shareData = params.get("share");
 
-	if (!folhaId) {
-		document.getElementById("folha-titulo").textContent = "Folha não encontrada.";
-		return;
-	}
+	let folhaCarregada = null;
+	if (shareData) {
+        folhaCarregada = await Cancioneiro.partilha.descodificar(shareData);
+        if (folhaCarregada) {
+            folhaCarregada.id = "partilha";
+            folhaCarregada.editar = false; // Bloqueia edições na folha partilhada
+        }
+    } else if (folhaId) {
+        folhaCarregada = Cancioneiro.folhas.obter(folhaId);
+    }
 
-	const folha = Cancioneiro.folhas.obter(folhaId);
-	if (!folha) {
-		document.getElementById("folha-titulo").textContent = "Folha não encontrada.";
-		return;
-	}
+    if (!folhaCarregada) {
+        document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
+        return;
+    }
 
-	estadoFolha.folha  = folha;
+    estadoFolha.folha  = folhaCarregada;
 	estadoFolha.indice = await carregarIndice();
 
 	inicializarCabecalho();

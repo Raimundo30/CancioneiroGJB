@@ -306,7 +306,7 @@
 		"tom": "D",
 		"categorias": [
 			"Ação de Graças",
-			"Baptismo",
+			"Batismo",
 			"Crisma"
 		],
 		"ficheiro": "dados/canticos/corca.cho",
@@ -1332,9 +1332,7 @@
 		"subtitulo": "",
 		"autor": "",
 		"tom": "Em",
-		"categorias": [
-			"Tags"
-		],
+		"categorias": [],
 		"ficheiro": "dados/canticos/vou-te-mostrar.cho",
 		"partitura": null
 	}

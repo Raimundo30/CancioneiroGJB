@@ -7,7 +7,8 @@ window.Cancioneiro.preferencias = (function () {
 	const DEFEITOS = {
 		notacao: "anglo",
 		idioma: "pt",
-		mostrarAcordes: true   // ← novo, guardado em sessionStorage
+		mostrarAcordes: true,	// ← novo, guardado em sessionStorage
+		ordemFolhas: "data"		// "data" ou "alfa"
 	};
 
 	// --- Preferências globais (localStorage) ---

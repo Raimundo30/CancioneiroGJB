@@ -350,6 +350,8 @@ function renderizarLinha(tokens, mostrarAcordes, notacao, semitons) {
  * @param {HTMLElement} container - O elemento que contém o cântico renderizado
  */
 function ajustarTamanhoLetra(container) {
+	if (!container) return;
+	
 	// 1. Define um tamanho base pequeno temporário para medir
 	container.style.setProperty('--font-size-acorde', '10px');
 	container.style.setProperty('--font-size-silaba', '10px');

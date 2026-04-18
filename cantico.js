@@ -106,22 +106,21 @@ function registaEventos(canticoId, indice) {
 						<button id="btn-fechar-indice" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--cor-contorno);">✕</button>
 					</div>
 
-					 <!-- CORPO COM SCROLL (ocupa o resto do espaço) -->
-					<div id="painel-indice-corpo" style="flex-grow: 1; overflow-y: auto; overflow-x: hidden;">
-						<ul id="lista-indice" style="list-style: none; padding: 0; margin: 0;">
-							${indice.map(c => `
-								<li ${c.id === canticoId ? 'id="indice-item-atual"' : ''} style="margin-bottom: 0.5rem; ${c.id === canticoId ? 'font-weight: bold; background-color: var(--cor-fundo-secundario, #f0f0f0); padding: 5px; border-radius: 4px;' : 'padding: 5px;'}">
-									<a href="cantico.html?id=${c.id}" style="text-decoration: none; color: inherit; display: block;">
-										${(c.titulo || c.title) + (c.subtitulo ? ' (' + (c.subtitulo || c.subtitle) + ')' : '')}
-									</a>
-								</li>
-						`).join('')}
-					</ul>
+					<div id="painel-indice-pesquisa" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
 				</div>
 			`;
 
 			document.body.appendChild(painelIndice);
 			
+			// Inicializar pesquisa
+			const pesquisaIndice = new Cancioneiro.Pesquisa(
+				"painel-indice-pesquisa", 
+				indice, 
+				(cantico) => {
+					window.location.href = `cantico.html?id=${cantico.id}`;
+				}
+			);
+
 			// Fechar painel
 			function fecharPainel() {
 				painelIndice.classList.remove("painel-aberto");
@@ -132,11 +131,8 @@ function registaEventos(canticoId, indice) {
 			document.getElementById("btn-fechar-indice").addEventListener("click", fecharPainel);
 
 			overlayIndice.addEventListener("click", (e) => {
-                // Verifica de facto se se clicou exatamente neste "fundo", sem filhos envolvidos
-                if (e.target === overlayIndice) {
-                    fecharPainel();
-                }
-            });
+				if (e.target === overlayIndice) fecharPainel();
+			});
 		}
 
 			// Ao clicar no botão índice, abrimos o painel
@@ -144,8 +140,11 @@ function registaEventos(canticoId, indice) {
 		painelIndice.classList.remove("painel-fechado");
 		painelIndice.classList.add("painel-aberto");
 
-		const itemAtual = document.getElementById("indice-item-atual");
-		itemAtual.scrollIntoView({ behavior: 'instant', block: 'center' });
+		const itemAtual = document.getElementById("pesquisa-item-" + canticoId);
+		if (itemAtual) {
+			itemAtual.classList.add("cantico-atual");
+			itemAtual.scrollIntoView({ behavior: 'instant', block: 'center' });
+		}
 	});
 
 
