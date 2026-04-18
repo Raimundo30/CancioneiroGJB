@@ -261,19 +261,19 @@ function transporAcorde(acorde, semitons) {
 	acorde = acorde.trim();
 
 	// Se estiver entre parênteses (ex: "(B F G)"), extrai o interior e transpõe
-    if (acorde.startsWith("(") && acorde.endsWith(")")) {
-        return "(" + transporAcorde(acorde.slice(1, -1), semitons) + ")";
-    }
+	if (acorde.startsWith("(") && acorde.endsWith(")")) {
+		return "(" + transporAcorde(acorde.slice(1, -1), semitons) + ")";
+	}
 
 	// Se tiver múltiplos acordes separados por espaço (ex: "A D G")
-    if (acorde.includes(" ")) {
-        return acorde.split(" ").map(parte => transporAcorde(parte, semitons)).join(" ");
-    }
+	if (acorde.includes(" ")) {
+		return acorde.split(" ").map(parte => transporAcorde(parte, semitons)).join(" ");
+	}
 
 	// Se for acorde composto com várias barras (ex: "A/C#/G")
-    if (acorde.includes("/")) {
-        return acorde.split("/").map(parte => transporAcorde(parte, semitons)).join("/");
-    }
+	if (acorde.includes("/")) {
+		return acorde.split("/").map(parte => transporAcorde(parte, semitons)).join("/");
+	}
 	
 	// Encontra a nota base (pode ter # ou ♭)
 	const match = acorde.match(/^([A-G][#♭]?)(.*)/);
@@ -351,7 +351,7 @@ function renderizarLinha(tokens, mostrarAcordes, notacao, semitons) {
  */
 function ajustarTamanhoLetra(container) {
 	if (!container) return;
-	
+
 	// 1. Define um tamanho base pequeno temporário para medir
 	container.style.setProperty('--font-size-acorde', '10px');
 	container.style.setProperty('--font-size-silaba', '10px');
@@ -381,7 +381,7 @@ function ajustarTamanhoLetra(container) {
 		// Limite máximo para não ficar gigante em refrões curtos
 		novoTamanho = Math.min(novoTamanho, maxVal); 
 		// Limite mínimo de segurança
-        novoTamanho = Math.max(novoTamanho, 5); 
+		novoTamanho = Math.max(novoTamanho, 5); 
 
 		// Só aplica se não estiver vazio
 		container.style.setProperty('--font-size-acorde', novoTamanho + 'px');
@@ -399,7 +399,7 @@ function ajustarTamanhoLetra(container) {
  * @param {object} dados - Resultado do parseChordPro()
  * @returns {HTMLElement} Elemento HTML com o cântico renderizado
  */
-function renderizarCantico(dados, semitons = 0) {
+function renderizarCantico(dados, semitons = 0, seccoesPermitidas = null) {
 	const notacao         = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes  = Cancioneiro.preferencias.obter("mostrarAcordes");
 
@@ -408,6 +408,11 @@ function renderizarCantico(dados, semitons = 0) {
 	container.innerHTML = ""; // limpa conteúdo anterior
 
 	for (const seccao of dados.sections) {
+		if (seccoesPermitidas !== null) {
+			const labelSafe = seccao.label || "(sem etiqueta)";
+			if (!seccoesPermitidas.includes(labelSafe)) continue;
+		}
+		
 		const soAcordes = seccao.lines.every(linha => linha.length === 1 && linha[0].chord);
 		if (soAcordes && !mostrarAcordes) {
 			// Se a secção tem apenas acordes e a opção de mostrar acordes está desativada, oculta a secção inteira

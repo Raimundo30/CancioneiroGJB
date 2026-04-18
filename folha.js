@@ -106,7 +106,7 @@ async function renderizarFolha() {
 				? Cancioneiro.parser.converterAcorde(tomAtual, "latino")
 				: tomAtual;
 
-			const letra = renderizarCantico(dados, semitons);
+			const letra = renderizarCantico(dados, semitons, entrada.seccoes);
 
 			const canticoDiv = document.createElement("div");
 			canticoDiv.className = "folha-cantico cantico-conteudo";
