@@ -18,11 +18,11 @@
 			<!-- Folhas de cânticos -->
 			<div id="seccao-de-folhas">
 				<div id="header-folhas">
-					<h2>As minhas folhas</h2>
-					<button id="btn-nova-folha" class="btn-normal" title="Nova folha">+</button>
-					<div id="folhas-ordenacao">
-						<button id="btn-ordem-data" class="btn-normal btn-texto opcao-toggle">Por data</button>
-						<button id="btn-ordem-alfa" class="btn-normal btn-texto opcao-toggle">A-Z</button>
+					<h2>Folhas de Cânticos</h2>
+					<div class="btn-main btn-normal">
+						<button id="btn-nova-folha" title="Nova folha">+</button>
+						<button id="btn-ordem-data" class="btn-texto opcao-toggle">Por data</button>
+						<button id="btn-ordem-alfa" class="btn-texto opcao-toggle">A-Z</button>
 					</div>
 				</div>
 
@@ -33,19 +33,23 @@
 
 			<!-- Secção de pesquisa -->
 			<div id="seccao-pesquisa">
+				<div id="header-pesquisa">
+					<h2>Pesquisa de cânticos</h2>
+				</div>
+
 				<div id="container-pesquisa"></div>
 				<!-- preenchido pelo pesquisa.JS -->
 			</div>
 		</main>
 
-		<script src="preferencias.js"></script>
-		<script src="parser.js"></script>
-		<script src="folhas.js"></script>
-		<script src="partilha.js"></script>
-		<script src="painel.js"></script>
-		<script src="definicoes.js"></script>
-		<script src="pesquisa.js"></script>
-		<script src="app.js"></script>
+		<script type="module" src="db-init.js"></script>
+		<script src="preferencias.js" defer></script>
+		<script src="parser.js" defer></script>
+		<script src="folhas.js" defer></script>
+		<script src="painel.js" defer></script>
+		<script src="definicoes.js" defer></script>
+		<script src="pesquisa.js" defer></script>
+		<script src="app.js" defer></script>
 
 	</body>
 </html>

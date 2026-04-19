@@ -25,39 +25,10 @@
 			<div class="btn-header btn-normal">
 				<!-- Botão de definições -->
 				<button id="btn-definicoes" title="Definições">⚙</button>
-				<!-- Botão de definições -->
-				<button id="btn-folha-definicoes" title="Definições_old">⚙*</button>
 				<!-- Botão de partilha -->
-				<button id="btn-partilhar-folha" title="Partilhar folha">S</button>
+				<button id="btn-partilhar-folha" title="Partilhar folha">➦</button>
 				<!-- Componente de navegação -->
 				<nav-comp id="nav-comp" class="oculto"></nav-comp>
-				
-				<!-- Dropdown de definições -->
-                <div id="folha-def-dropdown" class="dropdown oculto">
-                    <div class="toggle">
-                        <span> Editar folha </span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-folha-editar">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div id="opt-folha-pagina" class="toggle oculto">
-                        <span> Ver por página </span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-folha-pagina">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-
-                    <div class="toggle">
-                        <span> Ocultar meta </span>
-                        <label class="switch">
-                            <input type="checkbox" id="toggle-folha-meta">
-                            <span class="slider round"></span>
-                        </label>
-                    </div>
-                </div>
 			</div>
 		</header>
 
@@ -65,15 +36,15 @@
 			<!-- preenchido pelo folha.js -->
 		</main>
 
-		<script src="preferencias.js"></script>
-		<script src="parser.js"></script>
-		<script src="folhas.js"></script>
-		<script src="partilha.js"></script>
-		<script src="painel.js"></script>
-		<script src="definicoes.js"></script>
-		<script src="pesquisa.js"></script>
-		<script src="folha.js"></script>
-		<script src="componentes.js"></script>
+		<script type="module" src="db-init.js"></script>
+		<script src="preferencias.js" defer></script>
+		<script src="parser.js" defer></script>
+		<script src="folhas.js" defer></script>
+		<script src="painel.js" defer></script>
+		<script src="definicoes.js" defer></script>
+		<script src="pesquisa.js" defer></script>
+		<script src="folha.js" defer></script>
+		<script src="componentes.js" defer></script>
 
 	</body>
 </html>

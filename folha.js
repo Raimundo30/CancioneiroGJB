@@ -11,14 +11,15 @@ let estadoFolha = {
 	momentoAtivo: 0
 };
 
+let isFolhaOnline = false;
+let authCodeSession = null;
 
 // -----------------------------------------------------------------------------
 // SECÇÃO 2: Carregamento de dados
 // -----------------------------------------------------------------------------
 
 async function carregarIndice() {
-	const resposta = await fetch("dados/index.json");
-	return await resposta.json();
+	return await window.Cancioneiro.dbApi.carregarIndice();
 }
 
 async function carregarCantico(canticoId) {
@@ -28,11 +29,52 @@ async function carregarCantico(canticoId) {
 	const meta = estadoFolha.indice.find(c => c.id === canticoId);
 	if (!meta) return null;
 
-	const resposta = await fetch(meta.ficheiro);
-	const texto    = await resposta.text();
-	const dados    = Cancioneiro.parser.parseChordPro(texto);
+	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
+	if (!docData) return null;
+	
+	const dados = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
 	estadoFolha.canticosCache[canticoId] = { meta, dados };
 	return estadoFolha.canticosCache[canticoId];
+}
+
+async function gravarAlteracoes() {
+	if (!isFolhaOnline) {
+		window.Cancioneiro.folhas.guardar(estadoFolha.folha);
+		return;
+	}
+
+	if (!authCodeSession) {
+		const codigoFornecido = prompt("Insere o código de autenticação para editares esta folha online:");
+		if (!codigoFornecido) return; 
+		
+		const sucesso = await atualizarNaBaseDeDados(estadoFolha.folha, codigoFornecido);
+		
+		if (sucesso) {
+			authCodeSession = codigoFornecido;
+			alert("Autenticado com sucesso. As próximas alterações serão gravadas automaticamente.");
+			return true;
+		} else {
+			alert("Código de autenticação incorreto.");
+			return false;
+		}
+	} else {
+		const sucesso = await atualizarNaBaseDeDados(estadoFolha.folha, authCodeSession);
+		if (!sucesso) {
+			alert("Sessão inválida. A folha não foi guardada.");
+			authCodeSession = null;
+			return false;
+		}
+		return true;
+	}
+}
+
+async function atualizarNaBaseDeDados(dadosFolha, codigo) {
+	try {
+		return await window.Cancioneiro.dbApi.atualizarFolhaPartilhada(dadosFolha.id, dadosFolha, codigo);
+	} catch (e) {
+		console.error("Erro a atualizar folha partilhada:", e);
+		return false;
+	}
 }
 
 // -----------------------------------------------------------------------------
@@ -196,7 +238,10 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) - 1) % 12;
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			// Só grava se offline ou (editar e online)
+			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
+				gravarAlteracoes();
+			}
 			renderizarFolha();
 		});
 	});
@@ -226,7 +271,10 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) + 1) % 12;
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			// Só grava se offline ou (editar e online)
+			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
+				gravarAlteracoes();
+			}
 			renderizarFolha();
 		});
 	});
@@ -245,7 +293,10 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = 0;
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			// Só grava se offline ou (editar e online)
+			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
+				gravarAlteracoes();
+			}
 			renderizarFolha();
 		});
 	});
@@ -259,6 +310,7 @@ function ligarEventos(momentosFiltrados) {
 			if (confirm("Remover este cântico da folha?")) {
 				Cancioneiro.folhas.removerCantico(folhaId, momentoId, canticoId);
 				estadoFolha.folha = Cancioneiro.folhas.obter(folhaId);
+				gravarAlteracoes();
 				renderizarFolha();
 			}
 		});
@@ -288,7 +340,7 @@ function ligarEventos(momentosFiltrados) {
 			const novoLabel = prompt("Novo nome do momento:", momento.label);
 			if (novoLabel && novoLabel.trim()) {
 				momento.label = novoLabel.trim();
-				Cancioneiro.folhas.guardar(estadoFolha.folha);
+				gravarAlteracoes();
 				renderizarFolha();
 			}
 		});
@@ -301,7 +353,7 @@ function ligarEventos(momentosFiltrados) {
 			if (idx <= 0) return;
 			const momentos = estadoFolha.folha.momentos;
 			[momentos[idx - 1], momentos[idx]] = [momentos[idx], momentos[idx - 1]];
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			gravarAlteracoes();
 			renderizarFolha();
 		});
 	});
@@ -313,7 +365,7 @@ function ligarEventos(momentosFiltrados) {
 			const momentos = estadoFolha.folha.momentos;
 			if (idx >= momentos.length - 1) return;
 			[momentos[idx], momentos[idx + 1]] = [momentos[idx + 1], momentos[idx]];
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			gravarAlteracoes();
 			renderizarFolha();
 		});
 	});
@@ -328,7 +380,7 @@ function ligarEventos(momentosFiltrados) {
 				estadoFolha.folha.momentos = estadoFolha.folha.momentos.filter(
 					m => m.id !== btn.dataset.id
 				);
-				Cancioneiro.folhas.guardar(estadoFolha.folha);
+				gravarAlteracoes();
 				renderizarFolha();
 			}
 		});
@@ -348,7 +400,7 @@ function ligarEventos(momentosFiltrados) {
 					label: label.trim(),
 					canticos: []
 				});
-				Cancioneiro.folhas.guardar(estadoFolha.folha);
+				gravarAlteracoes();
 				renderizarFolha();
 			}
 		});
@@ -509,7 +561,7 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 		entrada.seccoes = todasChecked ? null : selecionadas;
 		entrada.notas  = document.getElementById("modal-notas").value.trim();
 
-		Cancioneiro.folhas.guardar(folha);
+		gravarAlteracoes();
 		modal.remove();
 		renderizarFolha();
 	});
@@ -647,7 +699,7 @@ async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
 					tom: semitonsPreview !== 0 ? semitonsPreview : null,
 					notas: ""
 				});
-				Cancioneiro.folhas.guardar(estadoFolha.folha);
+				gravarAlteracoes();
 				renderizarFolha();
 			}
 			
@@ -691,12 +743,7 @@ function inicializarCabecalho() {
 	const folha      = estadoFolha.folha;
 	const tituloEl   = document.getElementById("folha-titulo");
 	const navComp    = document.getElementById("nav-comp");
-	const btnDefinicoes= document.getElementById("btn-folha-definicoes");
 	const btnPartilhar = document.getElementById("btn-partilhar-folha");
-	const dropdownDefinicoes = document.getElementById("folha-def-dropdown"); // Selecionado
-	const toggleEditar = document.getElementById("toggle-folha-editar");
-	const togglePagina = document.getElementById("toggle-folha-pagina");
-	const toggleMeta   = document.getElementById("toggle-folha-meta");
 	
 	tituloEl.textContent = folha.titulo;
 	document.title = folha.titulo;
@@ -710,123 +757,165 @@ function inicializarCabecalho() {
 	[dataFormatada, folha.notas].filter(Boolean).join(" · ");
 
 	// Editar título
-	document.getElementById("btn-editar-folha").addEventListener("click", () => {
+	document.getElementById("btn-editar-folha").addEventListener("click", async () => {
 		const novoTitulo = prompt("Novo título:", folha.titulo);
 		if (novoTitulo && novoTitulo.trim()) {
 			estadoFolha.folha.titulo = novoTitulo.trim();
-			Cancioneiro.folhas.guardar(estadoFolha.folha);
+			await gravarAlteracoes();
 			tituloEl.textContent = novoTitulo.trim();
 			document.title = novoTitulo.trim();
-			Cancioneiro.painelFolhas.renderizarLista();
 		}
 	});
 
 	// Apagar folha
-	document.getElementById("btn-apagar-folha").addEventListener("click", () => {
+	document.getElementById("btn-apagar-folha").addEventListener("click", async () => {
 		if (confirm("Tem a certeza que quer apagar esta folha? Esta ação não pode ser desfeita.")) {
-			Cancioneiro.folhas.apagar(folha.id);
+			if (isFolhaOnline) {
+				let codigo = authCodeSession;
+				if (!codigo) {
+					codigo = prompt("Insere o código de autenticação para apagares esta folha online:");
+					if (!codigo) return; // O utilizador cancelou
+				}
+				
+				const sucesso = await window.Cancioneiro.dbApi.apagarFolhaPartilhada(folha.id, codigo);
+				if (!sucesso) {
+					alert("Não foi possível apagar a folha. O código está incorreto.");
+					return; // Para a execução, não redireciona
+				}
+			} else {
+				Cancioneiro.folhas.apagar(folha.id);
+			}
+			
 			window.location.href = "index.html";
 		}
 	});
 
 	// Lógica Partilhar / Guardar Folha
-	const isShared = new URLSearchParams(window.location.search).has("share");
+	const isShared = isFolhaOnline; // Atualizado para usar a nova flag
 	if (isShared) {
 		btnPartilhar.title = "Guardar nesta App";
-		btnPartilhar.textContent = "↓"; // ou "💾"
+		btnPartilhar.textContent = "⬇"; // ou "💾"
 		
 		btnPartilhar.addEventListener("click", () => {
 			const folhaClone = JSON.parse(JSON.stringify(estadoFolha.folha));
-			folhaClone.id = "f" + Date.now().toString(36);
-			folhaClone.editar = true; // Permite edição após guardar
+			folhaClone.id = Cancioneiro.folhas.gerarId ? Cancioneiro.folhas.gerarId() : "f" + Date.now().toString(36);
+			folhaClone.editar = true;
 			
 			const folhasGerais = Cancioneiro.folhas.listar();
 			folhasGerais.push(folhaClone);
 			localStorage.setItem("cancioneiro_folhas", JSON.stringify(folhasGerais));
 			
-			alert("Folha guardada com sucesso!");
+			alert("Cópia guardada com sucesso nos teus dispositivos!");
 			window.location.href = `folha.html?id=${folhaClone.id}`;
 		});
 		
-		// Ocultar e desativar o toggle de Editar
-		toggleEditar.closest(".toggle").classList.add("oculto");
-		toggleEditar.disabled = true;
 	} else {
-		btnPartilhar.title = "Partilhar folha";
-        btnPartilhar.addEventListener("click", async () => {
-            const linkBase = window.location.href.split('?')[0];
-            const codificado = await Cancioneiro.partilha.codificar(folha);
-            const linkPartilha = linkBase + "?share=" + codificado;
-            navigator.clipboard.writeText(linkPartilha).then(() => {
-                alert("Link copiado para a área de transferência!");
-            }).catch(() => {
-                prompt("Copie este link para partilhar:", linkPartilha);
-            });
-        });
-	}
+		btnPartilhar.title = "Partilhar folha online";
+		btnPartilhar.addEventListener("click", async () => {
+			const senha = prompt("Cria uma senha secreta para permitir editar esta folha no futuro:");
+			if (!senha) return; // Utilizador cancelou
 
-	// Toggle dropdown definições
-	btnDefinicoes.addEventListener("click", (e) => {
-		dropdownDefinicoes.classList.toggle("oculto");
-	});
+			try {
+				// Guarda no Firebase
+				const novoId = await window.Cancioneiro.dbApi.criarFolhaPartilhada(folha, senha);
+				
+				// Apaga do armazenamento local para passar a ser 100% online
+				Cancioneiro.folhas.apagar(folha.id);
+				
+				const linkPartilha = window.location.href.split('?')[0] + "?id=" + novoId;
+				navigator.clipboard.writeText(linkPartilha).then(() => {
+					alert("Folha publicada na nuvem! Link copiado para a área de transferência.");
+				}).catch(() => {
+					alert("Folha publicada! Copie este link: " + linkPartilha);
+				});
 
-	// Fechar dropdown ao clicar fora
-	document.addEventListener("click", (e) => {
-		if (!dropdownDefinicoes.contains(e.target) && e.target !== btnDefinicoes) {
-			dropdownDefinicoes.classList.add("oculto");
-		}
-	});
-
-	// Lista de elementos a mostrar/ocultar consoante o modo editar/apresentar
-	const listaEditar = [
-		document.getElementById("btn-editar-folha"),
-		document.getElementById("btn-apagar-folha"),
-		document.getElementById("folha-momento-acoes"),
-		document.getElementById("btn-editar-entrada"),
-		document.getElementById("btn-apagar-cantico")
-	];
-
-	const listaApresentar = [
-		document.getElementById("opt-folha-pagina"),
-		navComp
-	];
-
-	function aplicarVisibilidadeCabecalho() {
-		const editar     = folha.editar !== false;
-		const verPaginas = folha.verPaginas === true;
-
-		if (editar) {
-			listaEditar.forEach(el => el?.classList.remove("oculto"));
-			listaApresentar.forEach(el => el?.classList.add("oculto"));
-		} else {
-			listaEditar.forEach(el => el?.classList.add("oculto"));
-			listaApresentar.forEach(el => el?.classList.remove("oculto"));
-			if (!verPaginas) {
-				navComp.classList.add("oculto");
+				// Redireciona para a nova folha online
+				window.location.href = linkPartilha;
+			} catch (error) {
+				console.error(error);
+				alert("Erro ao publicar a folha.");
 			}
-		}
+		});
 	}
-	
-	// Estado inicial dos switches
-	toggleEditar.checked = folha.editar !== false;
-	togglePagina.checked = folha.verPaginas === true;
-	aplicarVisibilidadeCabecalho();
 
-	// Toggle editar / apresentar
-	toggleEditar.addEventListener("change", () => {
-		folha.editar = toggleEditar.checked;
-		Cancioneiro.folhas.guardar(folha); // Grava a opção nesta folha específica
-		aplicarVisibilidadeCabecalho();
-		renderizarFolha();
-	});
+	// Como o painel carrega de forma assíncrona, configuramos as opções apenas quando este existir
+    function configurarTogglesPainel() {
+        const seccaoPainel = document.getElementById("painel-definicoes-folha");
+        if (!seccaoPainel) return;
 
-	// Toggle contínuo / individual
-	togglePagina.addEventListener("change", () => {
-		folha.verPaginas = togglePagina.checked;
-		Cancioneiro.folhas.guardar(folha); // Grava a opção nesta folha específica
-		aplicarVisibilidadeCabecalho();
-		renderizarFolha();
-	});
+        // Mostra a secção de opções da folha no painel
+        seccaoPainel.style.display = "block";
+
+        const toggleEditar = document.getElementById("toggle-folha-editar");
+        const togglePagina = document.getElementById("toggle-folha-pagina");
+        const toggleMeta   = document.getElementById("toggle-folha-meta");
+
+        // Lista de elementos a mostrar/ocultar consoante o modo editar/apresentar
+        const listaEditar = [
+            document.getElementById("btn-editar-folha"),
+            document.getElementById("btn-apagar-folha"),
+            document.getElementById("folha-momento-acoes"),
+            document.getElementById("btn-editar-entrada"),
+            document.getElementById("btn-apagar-cantico")
+        ];
+
+        const listaApresentar = [
+            document.getElementById("opt-folha-pagina"),
+            navComp
+        ];
+
+        function aplicarVisibilidadeCabecalho() {
+            const editar     = folha.editar !== false;
+            const verPaginas = folha.verPaginas === true;
+
+            if (editar) {
+                listaEditar.forEach(el => el?.classList.remove("oculto"));
+                listaApresentar.forEach(el => el?.classList.add("oculto"));
+            } else {
+                listaEditar.forEach(el => el?.classList.add("oculto"));
+                listaApresentar.forEach(el => el?.classList.remove("oculto"));
+                if (!verPaginas) {
+                    navComp.classList.add("oculto");
+                }
+            }
+        }
+        
+        // Estado inicial dos switches
+        toggleEditar.checked = folha.editar !== false;
+        togglePagina.checked = folha.verPaginas === true;
+        aplicarVisibilidadeCabecalho();
+
+        // Toggle editar / apresentar
+        toggleEditar.addEventListener("change", async () => {
+            const valorAnterior = folha.editar;
+            folha.editar = toggleEditar.checked;
+            
+            const sucesso = await gravarAlteracoes();
+            if (sucesso === false) {
+                folha.editar = valorAnterior; // Reverte se falhar
+                toggleEditar.checked = valorAnterior;
+                alert("Não foi possível alterar o modo de edição. Tente novamente.");
+                return;
+            }
+
+            aplicarVisibilidadeCabecalho();
+            renderizarFolha();
+        });
+
+        // Toggle contínuo / individual
+        togglePagina.addEventListener("change", async () => {
+            folha.verPaginas = togglePagina.checked;
+            // await gravarAlteracoes();
+            aplicarVisibilidadeCabecalho();
+            renderizarFolha();
+        });
+    }
+
+    if (window.Cancioneiro.painelPronto) {
+        configurarTogglesPainel();
+    } else {
+        document.addEventListener("painel-pronto", configurarTogglesPainel);
+    }
 }
 
 
@@ -837,25 +926,34 @@ function inicializarCabecalho() {
 async function init() {
 	const params  = new URLSearchParams(window.location.search);
 	const folhaId = params.get("id");
-    const shareData = params.get("share");
 
 	let folhaCarregada = null;
-	if (shareData) {
-        folhaCarregada = await Cancioneiro.partilha.descodificar(shareData);
-        if (folhaCarregada) {
-            folhaCarregada.id = "partilha";
-            folhaCarregada.editar = false; // Bloqueia edições na folha partilhada
-        }
-    } else if (folhaId) {
-        folhaCarregada = Cancioneiro.folhas.obter(folhaId);
-    }
+	isFolhaOnline = false;
 
-    if (!folhaCarregada) {
-        document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
-        return;
-    }
+	if (folhaId) {
+		// Tenta carregar localmente
+		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
 
-    estadoFolha.folha  = folhaCarregada;
+		// Se não existir localmente, tenta na nuvem (Firebase)
+		if (!folhaCarregada) {
+			folhaCarregada = await window.Cancioneiro.dbApi.carregarFolhaPartilhada(folhaId);
+			if (folhaCarregada) {
+				isFolhaOnline = true;
+				// Assegura que a ID da folha carregada corresponda ao parâmetro
+				folhaCarregada.id = folhaId; 
+				
+				// Desativa sempre o modo de edição ao carregar a página
+				folhaCarregada.editar = false;
+			}
+		}
+	}
+
+	if (!folhaCarregada) {
+		document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
+		return;
+	}
+
+	estadoFolha.folha  = folhaCarregada;
 	estadoFolha.indice = await carregarIndice();
 
 	inicializarCabecalho();

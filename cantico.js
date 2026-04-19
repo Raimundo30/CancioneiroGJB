@@ -197,32 +197,34 @@ function preencheHeader(dadosCantico, meta, tomOriginal) {
 // -----------------------------------------------------------------------------
 
 async function init() {
-	// Lê o id do cântico da URL (ex: cantico.html?id=001)
-	const params    = new URLSearchParams(window.location.search);
-	const canticoId = params.get("id");
+    // Lê o id do cântico da URL (ex: cantico.html?id=001)
+    const params    = new URLSearchParams(window.location.search);
+    const canticoId = params.get("id");
 
-	if (!canticoId) {
-		document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
-		return;
-	}
+    if (!canticoId) {
+        document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
+        return;
+    }
 
-	// Carrega o índice para obter o caminho do ficheiro .cho
-	const respostaIndice = await fetch("dados/index.json");
-	const indice         = await respostaIndice.json();
-	const meta           = indice.find(c => c.id === canticoId);
+    // Carrega o índice do Firestore
+    const indice = await window.Cancioneiro.dbApi.carregarIndice();
+    const meta   = indice.find(c => c.id === canticoId);
 
-	if (!meta) {
-		document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
-		return;
-	}
+    if (!meta) {
+        document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
+        return;
+    }
 
-	// Carrega o ficheiro .cho
-	const respostaCho = await fetch(meta.ficheiro + "?v=" + Date.now());
-	const textoCho    = await respostaCho.text();
+    // Carrega os detalhes do cântico do Firestore
+    const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
+    if (!docData) {
+        document.getElementById("cantico-titulo").textContent = "Erro ao carregar ficheiro.";
+        return;
+    }
 
-	// Faz parse
-	const dadosCantico = Cancioneiro.parser.parseChordPro(textoCho);
-	const tomOriginal  = dadosCantico.meta.key || meta.tom;
+    // Faz parse
+    const dadosCantico = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
+    const tomOriginal  = dadosCantico.meta.key || meta.tom;
 	const tomEl        = document.getElementById("cantico-tom");
 
 	preencheHeader(dadosCantico, meta, tomOriginal);
