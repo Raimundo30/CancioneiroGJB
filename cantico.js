@@ -167,6 +167,7 @@ function preencheHeader(dadosCantico, meta, tomOriginal) {
 	// Preenche o cabeçalho
 	const tituloEl = document.getElementById("cantico-titulo");
 	tituloEl.textContent    = dadosCantico.meta.title || meta.titulo;
+	document.title = dadosCantico.meta.title || meta.titulo;
 
 	const subtituloEl = document.getElementById("cantico-subtitulo");
 	if (dadosCantico.meta.subtitle || meta.subtitulo) {
