@@ -161,6 +161,14 @@ async function init() {
 	document.addEventListener("preferencia-alterada", () => {
 		pesquisa.renderizarLista();
 	});
+
+    // Google Analytics: envia evento de page_view
+    if (window.gtag) {
+        gtag('event', 'page_view', {
+            page_path: window.location.pathname + window.location.search,
+            page_title: document.title
+        });
+    }
 }
 
 init();

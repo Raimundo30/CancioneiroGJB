@@ -158,6 +158,14 @@ function registaEventos(canticoId, indice) {
 	document.getElementById("btn-transp-reset").addEventListener("click", () => {
 		Cancioneiro.preferencias.resetarTransposicao(canticoId);
 	});
+
+	// Editar cântico
+	const btnEditar = document.getElementById("btn-editar-cantico");
+	if (btnEditar) {
+		btnEditar.addEventListener("click", async () => {
+			await Cancioneiro.dbApi.acessarEditor(canticoId);
+		});
+	}
 }
 
 function preencheHeader(dadosCantico, meta, tomOriginal) {
@@ -198,34 +206,34 @@ function preencheHeader(dadosCantico, meta, tomOriginal) {
 // -----------------------------------------------------------------------------
 
 async function init() {
-    // Lê o id do cântico da URL (ex: cantico.html?id=001)
-    const params    = new URLSearchParams(window.location.search);
-    const canticoId = params.get("id");
+	// Lê o id do cântico da URL (ex: cantico.html?id=001)
+	const params    = new URLSearchParams(window.location.search);
+	const canticoId = params.get("id");
 
-    if (!canticoId) {
-        document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
-        return;
-    }
+	if (!canticoId) {
+		document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
+		return;
+	}
 
-    // Carrega o índice do Firestore
-    const indice = await window.Cancioneiro.dbApi.carregarIndice();
-    const meta   = indice.find(c => c.id === canticoId);
+	// Carrega o índice do Firestore
+	const indice = await window.Cancioneiro.dbApi.carregarIndice();
+	const meta   = indice.find(c => c.id === canticoId);
 
-    if (!meta) {
-        document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
-        return;
-    }
+	if (!meta) {
+		document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
+		return;
+	}
 
-    // Carrega os detalhes do cântico do Firestore
-    const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
-    if (!docData) {
-        document.getElementById("cantico-titulo").textContent = "Erro ao carregar ficheiro.";
-        return;
-    }
+	// Carrega os detalhes do cântico do Firestore
+	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
+	if (!docData) {
+		document.getElementById("cantico-titulo").textContent = "Erro ao carregar ficheiro.";
+		return;
+	}
 
-    // Faz parse
-    const dadosCantico = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
-    const tomOriginal  = dadosCantico.meta.key || meta.tom;
+	// Faz parse
+	const dadosCantico = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
+	const tomOriginal  = dadosCantico.meta.key || meta.tom;
 	const tomEl        = document.getElementById("cantico-tom");
 
 	preencheHeader(dadosCantico, meta, tomOriginal);
@@ -244,6 +252,14 @@ async function init() {
 	document.addEventListener("transposicao-alterada", () => {
 		atualizaCantico(dadosCantico, canticoId, tomOriginal);
 	});
+
+	// Google Analytics: envia evento de page_view para o GA4
+	if (window.gtag) {
+		gtag('event', 'page_view', {
+			page_path: window.location.pathname + window.location.search,
+			page_title: document.title
+		});
+	}
 }
 
 init();
