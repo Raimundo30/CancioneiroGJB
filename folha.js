@@ -962,4 +962,12 @@ async function init() {
 	document.addEventListener("preferencia-alterada", () => renderizarFolha());
 }
 
+// Google Analytics: envia evento de page_view para cada folha aberta
+if (window.gtag) {
+	gtag('event', 'page_view', {
+		page_path: window.location.pathname + window.location.search,
+		page_title: document.title
+	});
+}
+
 init();
