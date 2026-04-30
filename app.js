@@ -171,4 +171,12 @@ async function init() {
     }
 }
 
+// Google Analytics: envia evento de page_view
+if (window.gtag) {
+    gtag('event', 'page_view', {
+        page_path: window.location.pathname + window.location.search,
+        page_title: document.title
+    });
+}
+
 init();
