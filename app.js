@@ -163,13 +163,13 @@ async function init() {
 	});
 
     // Google Analytics: envia evento de page_view
-    //if (window.gtag) {
-    //    gtag('event', 'page_view', {
-    //        page_path: window.location.pathname,
-    //        page_title: document.title,
-    //        page_type: 'home'
-    //    });
-    //}
+    if (window.gtag) {
+        gtag('event', 'page_view', {
+            page_path: window.location.pathname,
+            page_title: document.title,
+            page_type: 'home'
+        });
+    }
 }
 
 init();
