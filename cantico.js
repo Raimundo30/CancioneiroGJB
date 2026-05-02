@@ -253,15 +253,21 @@ async function init() {
 		atualizaCantico(dadosCantico, canticoId, tomOriginal);
 	});
 
-	// Google Analytics: envia evento de page_view depois de carregar dados
+	// Google Analytics: envia evento de page_view para o GA4
 	if (window.gtag) {
 		gtag('event', 'page_view', {
-			page_path: `/cantico.html?id=${canticoId}`,
-			page_title: document.title,
-			cantico_id: canticoId,
-			cantico_titulo: dadosCantico.meta.title || meta.titulo
+			page_path: window.location.pathname + window.location.search,
+			page_title: document.title
 		});
 	}
+}
+
+// Google Analytics: envia evento de page_view para o GA4
+if (window.gtag) {
+	gtag('event', 'page_view', {
+		page_path: window.location.pathname + window.location.search,
+		page_title: document.title
+	});
 }
 
 init();
