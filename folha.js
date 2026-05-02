@@ -961,21 +961,16 @@ async function init() {
 
 	document.addEventListener("preferencia-alterada", () => renderizarFolha());
 
-	// Google Analytics: envia evento de page_view para cada folha aberta
+	// Google Analytics: envia evento de page_view depois de renderizar
 	if (window.gtag) {
 		gtag('event', 'page_view', {
-			page_path: window.location.pathname + window.location.search,
-			page_title: document.title
+			page_path: `/folha.html?id=${folhaId}`,
+			page_title: document.title,
+			folha_id: folhaId,
+			folha_titulo: estadoFolha.folha.titulo,
+			folha_online: isFolhaOnline
 		});
 	}
-}
-
-// Google Analytics: envia evento de page_view para cada folha aberta
-if (window.gtag) {
-	gtag('event', 'page_view', {
-		page_path: window.location.pathname + window.location.search,
-		page_title: document.title
-	});
 }
 
 init();
