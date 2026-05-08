@@ -1,4 +1,4 @@
-// folha.js — Lógica da página de uma folha de cânticos
+// folha.js — Lógica da página de visualização de uma folha de cânticos (modo apresentação)
 
 // -----------------------------------------------------------------------------
 // SECÇÃO 1: Estado da página
@@ -8,11 +8,74 @@ let estadoFolha = {
 	folha: null,
 	indice: [],
 	canticosCache: {},
-	momentoAtivo: 0
+	momentoAtivo: 0,
+	verPaginas: false,
+    ocultarMeta: false
 };
 
-let isFolhaOnline = false;
-let authCodeSession = null;
+const PREF_STORAGE_KEY = "prefs_folha_";
+
+function obterChavePrefs(folhaId) {
+	return `${PREF_STORAGE_KEY}${folhaId}`;
+}
+
+function carregarPrefsLocais(folhaId) {
+	try {
+		const dados = localStorage.getItem(obterChavePrefs(folhaId));
+		return dados ? JSON.parse(dados) : {};
+	} catch (e) {
+		console.warn("Erro ao carregar preferências locais:", e);
+		return {};
+	}
+}
+
+function guardarPrefsLocais(folha) {
+	const folhaId = folha.id;
+	const prefs = extrairPrefsAtuals(folha);
+
+	try {
+		localStorage.setItem(obterChavePrefs(folhaId), JSON.stringify(prefs));
+	} catch (e) {
+		console.warn("Erro ao guardar preferências locais:", e);
+	}
+}
+
+function extrairPrefsAtuals(folha) {
+	const prefs = {
+		verPaginas: folha.verPaginas || false,
+		ocultarMeta: folha.ocultarMeta || false,
+		transposicoes: {}
+	};
+
+	folha.momentos.forEach(momento => {
+		momento.canticos.forEach(cantico => {
+			if (cantico.tom !== undefined && cantico.tom !== 0) {
+				prefs.transposicoes[cantico.canticoId] = cantico.tom;
+			}
+		});
+	});
+
+	return prefs;
+}
+
+function aplicarPrefsLocais(folha, prefs) {
+	if (prefs.verPaginas !== undefined) {
+		folha.verPaginas = prefs.verPaginas;
+	}
+	if (prefs.ocultarMeta !== undefined) {
+		folha.ocultarMeta = prefs.ocultarMeta;
+	}
+
+	if (prefs.transposicoes) {
+		folha.momentos.forEach(momento => {
+			momento.canticos.forEach(cantico => {
+				if (prefs.transposicoes[cantico.canticoId] !== undefined) {
+					cantico.tom = prefs.transposicoes[cantico.canticoId];
+				}
+			});
+		});
+	}
+}
 
 // -----------------------------------------------------------------------------
 // SECÇÃO 2: Carregamento de dados
@@ -31,102 +94,41 @@ async function carregarCantico(canticoId) {
 
 	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
 	if (!docData) return null;
-	
+
 	const dados = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
 	estadoFolha.canticosCache[canticoId] = { meta, dados };
 	return estadoFolha.canticosCache[canticoId];
 }
 
-async function gravarAlteracoes() {
-	if (!isFolhaOnline) {
-		window.Cancioneiro.folhas.guardar(estadoFolha.folha);
-		return;
-	}
-
-	if (!authCodeSession) {
-		const codigoFornecido = prompt("Insere o código de autenticação para editares esta folha online:");
-		if (!codigoFornecido) return; 
-		
-		const sucesso = await atualizarNaBaseDeDados(estadoFolha.folha, codigoFornecido);
-		
-		if (sucesso) {
-			authCodeSession = codigoFornecido;
-			alert("Autenticado com sucesso. As próximas alterações serão gravadas automaticamente.");
-			return true;
-		} else {
-			alert("Código de autenticação incorreto.");
-			return false;
-		}
-	} else {
-		const sucesso = await atualizarNaBaseDeDados(estadoFolha.folha, authCodeSession);
-		if (!sucesso) {
-			alert("Sessão inválida. A folha não foi guardada.");
-			authCodeSession = null;
-			return false;
-		}
-		return true;
-	}
-}
-
-async function atualizarNaBaseDeDados(dadosFolha, codigo) {
-	try {
-		return await window.Cancioneiro.dbApi.atualizarFolhaPartilhada(dadosFolha.id, dadosFolha, codigo);
-	} catch (e) {
-		console.error("Erro a atualizar folha partilhada:", e);
-		return false;
-	}
-}
-
 // -----------------------------------------------------------------------------
-// SECÇÃO 3: Renderização da folha
+// SECÇÃO 3: Renderização da folha (modo apresentação)
 // -----------------------------------------------------------------------------
 
 async function renderizarFolha() {
-	const conteudo      = document.getElementById("folha-conteudo");
-	const notacao       = Cancioneiro.preferencias.obter("notacao");
+	const conteudo = document.getElementById("folha-conteudo");
+	const notacao = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
-	conteudo.innerHTML  = "";
+	conteudo.innerHTML = "";
 
 	const folha = estadoFolha.folha;
-	const editar = folha.editar !== false; 
 	const verPaginas = folha.verPaginas === true;
 
 	const momentosFiltrados = folha.momentos.filter(
-		m => editar === true || m.canticos.length > 0
+		m => m.canticos.length > 0
 	);
 
 	// Renderiza cada momento
 	for (let i = 0; i < momentosFiltrados.length; i++) {
 		const momento = momentosFiltrados[i];
-		const oculto = editar === false &&
-						verPaginas === true &&
-						i !== estadoFolha.momentoAtivo ? "oculto" : "";
+		const oculto = verPaginas === true && i !== estadoFolha.momentoAtivo ? "oculto" : "";
 		const secDiv = document.createElement("div");
 		secDiv.className = `folha-momento ${oculto}`;
 		secDiv.dataset.index = i;
 
-		// --- Cabeçalho do momento ---
+		// --- Cabeçalho do momento (sem botões de edição) ---
 		const cabMomento = document.createElement("div");
 		cabMomento.className = "folha-momento-cabecalho";
-
-		if (editar === true) {
-			const idxReal = folha.momentos.indexOf(momento);
-			cabMomento.innerHTML = `
-				<h2 class="folha-momento-titulo">${momento.label}</h2>
-				<div class="btn-main btn-transparente">
-					<button id="btn-renomear-momento" title="Renomear"
-						data-id="${momento.id}">✎</button>
-					<button id="btn-mover-momento-cima" title="Mover para cima"
-						data-idx="${idxReal}" ${idxReal === 0 ? 'disabled' : ''}>↑</button>
-					<button id="btn-mover-momento-baixo" title="Mover para baixo"
-						data-idx="${idxReal}" ${idxReal === folha.momentos.length - 1 ? 'disabled' : ''}>↓</button>
-					<button id="btn-apagar-momento" title="Apagar momento" class="btn-apagar"
-						data-id="${momento.id}">✕</button>
-				</div>
-			`;
-		} else {
-			cabMomento.innerHTML = `<h2 class="folha-momento-titulo">${momento.label}</h2>`;
-		}
+		cabMomento.innerHTML = `<h2 class="folha-momento-titulo">${momento.label}</h2>`;
 		secDiv.appendChild(cabMomento);
 
 		// --- Cânticos do momento ---
@@ -135,10 +137,9 @@ async function renderizarFolha() {
 			if (!canticoData) continue;
 
 			const { meta, dados } = canticoData;
-			const semitons    = entrada.tom || 0;
+			const semitons = entrada.tom || 0;
 			const tomOriginal = dados.meta.key || meta.tom;
-			const tomAtual    = transporAcorde(tomOriginal, semitons);
-			const notacao     = Cancioneiro.preferencias.obter("notacao");
+			const tomAtual = transporAcorde(tomOriginal, semitons);
 
 			const tomTexto = notacao === "latino"
 				? Cancioneiro.parser.converterAcorde(tomOriginal, "latino")
@@ -168,12 +169,6 @@ async function renderizarFolha() {
 						` : ""}
 						
 						<button onclick="window.open('cantico.html?id=${entrada.canticoId}', '_blank')">↗</button>
-						
-						${editar === true ? `
-							<button id="btn-editar-cantico" data-momento="${momento.id}"
-								data-cantico="${entrada.canticoId}" title="Editar">✎</button>
-							<button id="btn-apagar-cantico" title="Remover" class="btn-apagar">✕</button>
-						` : ""}
 					</div>
 				</div>
 				<div class="cantico-letra">${letra}</div>
@@ -183,52 +178,32 @@ async function renderizarFolha() {
 
 		const container = secDiv.querySelector(".cantico-letra");
 		if (container) {
-			// Executa depois de renderizar
 			requestAnimationFrame(() => ajustarTamanhoLetra(container));
-			// Atualiza se a janela for redimensionada
 			window.addEventListener('resize', () => ajustarTamanhoLetra(container));
-		}
-
-		// --- Botão adicionar cântico (modo editar) ---
-		if (editar === true) {
-			const btnAdicionar = document.createElement("button");
-			btnAdicionar.className = "btn-adicionar-cantico";
-			btnAdicionar.dataset.momento = momento.id;
-			btnAdicionar.textContent = "+ Adicionar cântico";
-			secDiv.appendChild(btnAdicionar);
 		}
 
 		conteudo.appendChild(secDiv);
 	}
 
-	// --- Botão adicionar momento (modo editar, no final) ---
-	if (editar === true) {
-		const btnAddMomento = document.createElement("button");
-		btnAddMomento.id = "btn-adicionar-momento";
-		btnAddMomento.textContent = "+ Adicionar momento";
-		conteudo.appendChild(btnAddMomento);
-	}
-
 	ligarEventos(momentosFiltrados);
 
 	// Renderiza navegação entre momentos se estiver em modo apresentar individual
-	if (!editar && verPaginas) {
+	if (verPaginas) {
 		atualizarNavegacao(momentosFiltrados);
 	}
 }
 
 
 // -----------------------------------------------------------------------------
-// SECÇÃO 4: Eventos
+// SECÇÃO 4: Eventos (transposição e navegação)
 // -----------------------------------------------------------------------------
+
 function obterEntrada(momentoId, canticoId) {
 	const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
 	return momento?.canticos.find(c => c.canticoId === canticoId) || null;
 }
 
 function ligarEventos(momentosFiltrados) {
-	const folhaId = estadoFolha.folha.id;
-
 	// Transposição inline
 	document.querySelectorAll("#btn-transp-menos").forEach(btn => {
 		const canticoDiv = btn.closest(".folha-cantico");
@@ -238,14 +213,11 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) - 1) % 12;
-			// Só grava se offline ou (editar e online)
-			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
-				gravarAlteracoes();
-			}
+			guardarPrefsLocais(estadoFolha.folha);
 			renderizarFolha();
 		});
 	});
-	
+
 	document.querySelectorAll("#spn-transp-valor").forEach(spn => {
 		const canticoDiv = spn.closest(".folha-cantico");
 		const canticoId = canticoDiv.dataset.canticoId;
@@ -254,15 +226,15 @@ function ligarEventos(momentosFiltrados) {
 		if (entrada) {
 			const canticoData = estadoFolha.canticosCache[canticoId];
 			const tomOriginal = canticoData.dados.meta.key || canticoData.meta.tom;
-			const semitons    = entrada.tom || 0;
-			const tomAtual    = transporAcorde(tomOriginal, semitons);
-			const notacao     = Cancioneiro.preferencias.obter("notacao");
+			const semitons = entrada.tom || 0;
+			const tomAtual = transporAcorde(tomOriginal, semitons);
+			const notacao = Cancioneiro.preferencias.obter("notacao");
 			spn.textContent = notacao === "latino"
 				? Cancioneiro.parser.converterAcorde(tomAtual, "latino")
 				: tomAtual;
 		}
 	});
-	
+
 	document.querySelectorAll("#btn-transp-mais").forEach(btn => {
 		const canticoDiv = btn.closest(".folha-cantico");
 		btn.addEventListener("click", () => {
@@ -271,10 +243,7 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) + 1) % 12;
-			// Só grava se offline ou (editar e online)
-			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
-				gravarAlteracoes();
-			}
+			guardarPrefsLocais(estadoFolha.folha);
 			renderizarFolha();
 		});
 	});
@@ -293,118 +262,10 @@ function ligarEventos(momentosFiltrados) {
 			const entrada = obterEntrada(momentoId, canticoId);
 			if (!entrada) return;
 			entrada.tom = 0;
-			// Só grava se offline ou (editar e online)
-			if (!isFolhaOnline || (estadoFolha.folha.editar === true && isFolhaOnline)) {
-				gravarAlteracoes();
-			}
+			guardarPrefsLocais(estadoFolha.folha);
 			renderizarFolha();
 		});
 	});
-
-	// Remover cântico
-	document.querySelectorAll("#btn-apagar-cantico").forEach(btn => {
-		const canticoDiv = btn.closest(".folha-cantico");
-		btn.addEventListener("click", () => {
-			const canticoId = canticoDiv.dataset.canticoId;
-			const momentoId = canticoDiv.dataset.momentoId;
-			if (confirm("Remover este cântico da folha?")) {
-				Cancioneiro.folhas.removerCantico(folhaId, momentoId, canticoId);
-				estadoFolha.folha = Cancioneiro.folhas.obter(folhaId);
-				gravarAlteracoes();
-				renderizarFolha();
-			}
-		});
-	});
-
-	// Editar entrada (secções + notas)
-	document.querySelectorAll("#btn-editar-cantico").forEach(btn => {
-		btn.addEventListener("click", () => {
-			abrirModalEditarEntrada(btn.dataset.momento, btn.dataset.cantico);
-		});
-	});
-
-	// Adicionar cântico
-	document.querySelectorAll(".btn-adicionar-cantico").forEach(btn => {
-		btn.addEventListener("click", () => {
-			abrirOverlayAdicionar(btn.dataset.momento);
-		});
-	});
-
-	// Botões de edição de momentos (renomear, mover, apagar)
-	// Renomear momento
-	document.querySelectorAll("#btn-renomear-momento").forEach(btn => {
-		
-		btn.addEventListener("click", () => {
-			const momento = estadoFolha.folha.momentos.find(m => m.id === btn.dataset.id);
-			if (!momento) return;
-			const novoLabel = prompt("Novo nome do momento:", momento.label);
-			if (novoLabel && novoLabel.trim()) {
-				momento.label = novoLabel.trim();
-				gravarAlteracoes();
-				renderizarFolha();
-			}
-		});
-	});
-
-	// Mover momento para cima
-	document.querySelectorAll("#btn-mover-momento-cima").forEach(btn => {
-		btn.addEventListener("click", () => {
-			const idx = parseInt(btn.dataset.idx);
-			if (idx <= 0) return;
-			const momentos = estadoFolha.folha.momentos;
-			[momentos[idx - 1], momentos[idx]] = [momentos[idx], momentos[idx - 1]];
-			gravarAlteracoes();
-			renderizarFolha();
-		});
-	});
-
-	// Mover momento para baixo
-	document.querySelectorAll("#btn-mover-momento-baixo").forEach(btn => {
-		btn.addEventListener("click", () => {
-			const idx = parseInt(btn.dataset.idx);
-			const momentos = estadoFolha.folha.momentos;
-			if (idx >= momentos.length - 1) return;
-			[momentos[idx], momentos[idx + 1]] = [momentos[idx + 1], momentos[idx]];
-			gravarAlteracoes();
-			renderizarFolha();
-		});
-	});
-
-	// Apagar momento
-	document.querySelectorAll("#btn-apagar-momento").forEach(btn => {
-		btn.addEventListener("click", () => {
-			console.log("Apagar momento", btn.dataset.id);
-			const momento = estadoFolha.folha.momentos.find(m => m.id === btn.dataset.id);
-			if (!momento) return;
-			if (confirm(`Apagar o momento "${momento.label}"?`)) {
-				estadoFolha.folha.momentos = estadoFolha.folha.momentos.filter(
-					m => m.id !== btn.dataset.id
-				);
-				gravarAlteracoes();
-				renderizarFolha();
-			}
-		});
-	});
-
-	// Adicionar momento
-	const btnAddMomento = document.getElementById("btn-adicionar-momento");
-	if (btnAddMomento) {
-		btnAddMomento.addEventListener("click", () => {
-			const label = prompt("Nome do novo momento:");
-			if (label && label.trim()) {
-				const novoId = label.trim().toLowerCase()
-					.replace(/\s+/g, "-")
-					.replace(/[^a-z0-9-]/g, "");
-				estadoFolha.folha.momentos.push({
-					id: novoId + "-" + Date.now().toString(36),
-					label: label.trim(),
-					canticos: []
-				});
-				gravarAlteracoes();
-				renderizarFolha();
-			}
-		});
-	}
 
 	// Navegação entre momentos (modo apresentar individual)
 	const btnAnterior = document.getElementById("btn-anterior");
@@ -413,10 +274,10 @@ function ligarEventos(momentosFiltrados) {
 	if (btnAnterior) {
 		btnAnterior.disabled = estadoFolha.momentoAtivo <= 0;
 		btnAnterior.onclick = () => {
-		if (estadoFolha.momentoAtivo > 0) {
-			estadoFolha.momentoAtivo--;
-			renderizarFolha();
-		}
+			if (estadoFolha.momentoAtivo > 0) {
+				estadoFolha.momentoAtivo--;
+				renderizarFolha();
+			}
 		};
 	}
 	if (btnSeguinte) {
@@ -431,21 +292,17 @@ function ligarEventos(momentosFiltrados) {
 }
 
 function atualizarNavegacao(momentosFiltrados) {
-	const navComp    = document.getElementById("nav-comp");
-	const btnIndice  = document.getElementById("btn-indice");
+	const navComp = document.getElementById("nav-comp");
+	const btnIndice = document.getElementById("btn-indice");
 
 	if (!navComp || !btnIndice) return;
 
 	const folha = estadoFolha.folha;
-	const editar = folha.editar !== false;
-	const verPaginas = folha.verPaginas === true;
+	const verPaginas = folha.verPaginas === true && momentosFiltrados.length > 1;
 
-	const verPaginasAtiva = editar === false && verPaginas === true && momentosFiltrados.length > 1;
-
-	if (verPaginasAtiva) {
+	if (verPaginas) {
 		navComp.classList.remove("oculto");
-		
-		// Cria o nav-dropdown dinamicamente se não existir
+
 		let navDropdown = document.getElementById("folha-nav-dropdown");
 		if (!navDropdown) {
 			navDropdown = document.createElement("ul");
@@ -453,7 +310,6 @@ function atualizarNavegacao(momentosFiltrados) {
 			navDropdown.className = "dropdown oculto";
 			navComp.appendChild(navDropdown);
 
-			// Eventos para abrir e fechar o menu adicionados apenas ao criar
 			btnIndice.addEventListener("click", (e) => {
 				navDropdown.classList.toggle("oculto");
 			});
@@ -465,7 +321,6 @@ function atualizarNavegacao(momentosFiltrados) {
 			});
 		}
 
-		// Preenche a lista com os momentos
 		navDropdown.innerHTML = "";
 		momentosFiltrados.forEach((m, i) => {
 			const li = document.createElement("li");
@@ -487,264 +342,282 @@ function atualizarNavegacao(momentosFiltrados) {
 	}
 }
 
-
 // -----------------------------------------------------------------------------
-// SECÇÃO 5: Modal de edição de entrada (tom + secções + notas)
-// -----------------------------------------------------------------------------
-
-async function abrirModalEditarEntrada(momentoId, canticoId) {
-	const folha   = estadoFolha.folha;
-	const momento = folha.momentos.find(m => m.id === momentoId);
-	const entrada = momento?.canticos.find(c => c.canticoId === canticoId);
-	if (!entrada) return;
-
-	const canticoData = await carregarCantico(canticoId);
-	if (!canticoData) return;
-
-	const { meta, dados } = canticoData;
-	const tomOriginal = dados.meta.key || meta.tom;
-	const semitons    = entrada.tom || 0;
-	const tomAtual    = transporAcorde(tomOriginal, semitons);
-
-	// Remove modal anterior se existir
-	document.getElementById("modal-editar-entrada")?.remove();
-
-	const modal = document.createElement("div");
-	modal.id = "modal-editar-entrada";
-	modal.innerHTML = `
-		<div id="modal-interior">
-			<div id="modal-cabecalho">
-				<h3>${dados.meta.title || meta.titulo}</h3>
-				<button id="btn-fechar-modal">✕</button>
-			</div>
-
-			<div class="form-grupo">
-				<label>Secções a incluir</label>
-				<div id="modal-seccoes">
-					${dados.sections.map(s => `
-						<label class="modal-seccao-item">
-							<input type="checkbox" value="${s.label}"
-								${!entrada.seccoes || entrada.seccoes.includes(s.label) ? "checked" : ""}>
-							${s.label || "(sem etiqueta)"}
-						</label>
-					`).join("")}
-				</div>
-			</div>
-
-			<div class="form-grupo">
-				<label>Notas</label>
-				<input type="text" id="modal-notas" value="${entrada.notas || ""}"
-					placeholder="Ex: Repetir refrão no final">
-			</div>
-
-			<div class="form-acoes">
-				<button id="btn-guardar-entrada">Guardar</button>
-				<button id="btn-cancelar-modal">Cancelar</button>
-			</div>
-		</div>
-	`;
-
-	document.body.appendChild(modal);
-
-	// Fechar
-	document.getElementById("btn-fechar-modal").addEventListener("click", () => modal.remove());
-	document.getElementById("btn-cancelar-modal").addEventListener("click", () => modal.remove());
-
-	// Guardar
-	document.getElementById("btn-guardar-entrada").addEventListener("click", () => {
-		const checkboxes = modal.querySelectorAll("#modal-seccoes input[type=checkbox]");
-		const todasChecked = [...checkboxes].every(cb => cb.checked);
-		const selecionadas = [...checkboxes]
-			.filter(cb => cb.checked)
-			.map(cb => cb.value);
-
-		entrada.seccoes = todasChecked ? null : selecionadas;
-		entrada.notas  = document.getElementById("modal-notas").value.trim();
-
-		gravarAlteracoes();
-		modal.remove();
-		renderizarFolha();
-	});
-}
-
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 6: Overlay de adicionar cântico
+// SECÇÃO 5A: Autenticação e edição
 // -----------------------------------------------------------------------------
 
-function abrirOverlayAdicionar(momentoId) {
-	document.getElementById("overlay-adicionar-cantico")?.remove();
+async function abrirEditor() {
+	const folha = estadoFolha.folha;
 
-	const overlay = document.createElement("div");
-	overlay.id = "overlay-adicionar-cantico";
-
-	overlay.innerHTML = `
-		<div id="overlay-interior">
-			<div id="overlay-cabecalho">
-				<h3>Adicionar cântico</h3>
-				<button id="btn-fechar-overlay">✕</button>
-			</div>
-			<div id="overlay-pesquisa-container" style="display: flex; flex-direction: column; overflow: hidden; padding: 1rem 1.5rem; flex: 1;"></div>
-		</div>
-	`;
-
-	document.body.appendChild(overlay);
-
-	const pesquisa = new Cancioneiro.Pesquisa(
-		"overlay-pesquisa-container",
-		estadoFolha.indice,
-		(cantico) => {
-			abrirOverlayPreview(cantico.id, momentoId);
-		}
-	);
-
-	document.getElementById("btn-fechar-overlay").addEventListener("click", () => {
-		overlay.remove();
-	});
-
-	overlay.addEventListener("click", (e) => {
-		if (e.target === overlay) {
-			overlay.remove();
-		}
-	});
-
-	pesquisa.input.focus();
-}
-
-async function abrirOverlayPreview(canticoId, momentoId, onAdicionar) {
-	document.getElementById("overlay-preview-cantico")?.remove();
-
-	const canticoData = await carregarCantico(canticoId);
-	if (!canticoData) return;
-
-	const { meta, dados } = canticoData;
-	const notacao         = Cancioneiro.preferencias.obter("notacao");
-	const mostrarAcordes  = Cancioneiro.preferencias.obter("mostrarAcordes");
-	const tomOriginal     = dados.meta.key || meta.tom;
-	let semitonsPreview   = 0;
-
-	const overlay = document.createElement("div");
-	overlay.id = "overlay-preview-cantico";
-
-	function tomApresentado(semitons) {
-		const tom = transporAcorde(tomOriginal, semitons);
-		return notacao === "latino"
-			? Cancioneiro.parser.converterAcorde(tom, "latino")
-			: tom;
+	// Se for folha privada, vai direto para o editor
+	if (folha.tipo === "privada") {
+		window.location.href = `editor-folha.html?id=${folha.id}`;
+		return;
 	}
 
-	function construirOverlay() {
-		const letra = renderizarCantico(dados, semitonsPreview);
+	// Se for partilhada ou pública, pede autenticação
+	const resultado = await window.Cancioneiro.dbApi.authFolha(folha.tipo, folha.id);
 
-		overlay.innerHTML = `
-			<div id="overlay-preview-interior">
-				<div id="overlay-preview-cabecalho">
-					<button id="btn-voltar-overlay" class="btn-transparente btn-voltar">← Voltar</button>
-					<div class="btn-header btn-normal">
-						<button id="btn-adicionar-do-preview" class="btn-texto">Adicionar</button>
-						${mostrarAcordes ? `
-							<transp-comp id="preview-transp-comp"></transp-comp>
-						` : ""}
-					</div>
-				</div>
-				<div id="overlay-preview-conteudo">
-					<h3 id="overlay-preview-titulo">${dados.meta.title || meta.titulo}</h3>
-					<div id="overlay-preview-meta">${meta.autor} · Tom: ${converterAcorde(tomOriginal, notacao)}</div>
-					<div id="overlay-preview-letra">${letra}</div>
-				</div>
-			</div>
-		`;
+	if (resultado.sucesso) {
+		window.location.href = `editor-folha.html?id=${folha.id}`;
+	} else {
+		alert(resultado.erro || "Não foi possível autenticar.");
+	}
+}
 
+// -----------------------------------------------------------------------------
+// SECÇÃO 5B: Partilha de folhas
+// -----------------------------------------------------------------------------
+async function abrirOverlayPartilha() {
+	const folha = estadoFolha.folha;
+
+	// Cria/obtém o overlay
+	let overlay = document.getElementById("overlay-partilha");
+	if (!overlay) {
+		overlay = document.createElement("div");
+		overlay.id = "overlay-partilha";
+		overlay.className = "overlay overlay-visivel";
 		document.body.appendChild(overlay);
 
-		const container = document.getElementById("overlay-preview-letra");
-		// Executa depois de renderizar
-		requestAnimationFrame(() => ajustarTamanhoLetra(container));
-		// Atualiza se a janela for redimensionada
-		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
-
-		// Transposição
-		const tomPreview = document.querySelector("#preview-transp-comp #spn-transp-valor");
-		if (tomPreview) { tomPreview.textContent = `${tomApresentado(semitonsPreview)}`; }
-
-		document.querySelector("#preview-transp-comp #btn-transp-menos")?.addEventListener("click", () => {
-			semitonsPreview = (semitonsPreview - 1 + 12) % 12;
-			atualizarPreview();
-		});
-		
-		document.querySelector("#preview-transp-comp #btn-transp-mais")?.addEventListener("click", () => {
-			semitonsPreview = (semitonsPreview + 1) % 12;
-			atualizarPreview();
-		});
-		
-		const btnReset = document.querySelector("#preview-transp-comp #btn-transp-reset");
-		btnReset?.addEventListener("click", () => {
-			semitonsPreview = 0;
-			atualizarPreview();
-		});
-		btnReset.disabled = semitonsPreview === 0;
-
-		// Voltar
-		document.getElementById("btn-voltar-overlay").addEventListener("click", () => {
-			overlay.remove();
-		});
-
-		// Adicionar
-		document.getElementById("btn-adicionar-do-preview").addEventListener("click", () => {
-			const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
-			if (momento && !momento.canticos.some(c => c.canticoId === canticoId)) {
-				momento.canticos.push({
-					canticoId: canticoId,
-					seccoes: null,
-					tom: semitonsPreview !== 0 ? semitonsPreview : null,
-					notas: ""
-				});
-				gravarAlteracoes();
-				renderizarFolha();
-			}
-			
-			document.getElementById("overlay-preview-cantico")?.remove();
-			document.getElementById("overlay-adicionar-cantico")?.remove();
-		});
-
 		overlay.addEventListener("click", (e) => {
-			if (e.target === overlay) {
-				overlay.remove();
-			}
+			if (e.target === overlay) fecharOverlayPartilha();
 		});
-	}
-	
-
-	function atualizarPreview() {
-		const letra = renderizarCantico(dados, semitonsPreview);
-		const container = document.getElementById("overlay-preview-letra")
-		container.innerHTML = letra;
-		// Executa depois de renderizar
-		requestAnimationFrame(() => ajustarTamanhoLetra(container));
-		// Atualiza se a janela for redimensionada
-		window.addEventListener('resize', () => ajustarTamanhoLetra(container));
-
-		const tomPreview = document.querySelector("#preview-transp-comp #spn-transp-valor");
-		if (tomPreview) { tomPreview.textContent = `${tomApresentado(semitonsPreview)}`; }
-	
-		const btnReset = document.querySelector("#preview-transp-comp #btn-transp-reset");
-		btnReset.disabled = semitonsPreview === 0;
+	} else {
+		overlay.classList.add("overlay-visivel");
 	}
 
-	construirOverlay();
+	// Cria/obtém o painel
+	let painel = document.getElementById("painel-partilha");
+	if (!painel) {
+		painel = document.createElement("div");
+		painel.id = "painel-partilha";
+		painel.className = "painel painel-aberto";
+		document.body.appendChild(painel);
+	} else {
+		painel.classList.add("painel-aberto");
+		painel.classList.remove("painel-fechado");
+	}
+
+	// Renderiza conteúdo
+	painel.innerHTML = `
+		<div class="painel-conteudo">
+			<div class="painel-cabecalho">
+				<h2>Partilhar Folha</h2>
+				<button id="btn-fechar-partilha" class="btn-fechar">✕</button>
+			</div>
+
+			<div class="painel-corpo">
+				<!-- Opções de tipo -->
+				<div class="opcao-partilha ${folha.tipo === "privada" ? "opcao-selecionada" : ""}">
+					<div class="opcao-info">
+						<h3>Privada</h3>
+						<p>Apenas você pode aceder</p>
+					</div>
+					<button class="btn-opcao-partilha" data-tipo="privada" 
+							${folha.tipo === "privada" ? "disabled" : ""}>
+						${folha.tipo === "privada" ? "Tipo atual" : "Tornar privada"}
+					</button>
+				</div>
+
+				<div class="opcao-partilha ${folha.tipo === "partilhada" ? "opcao-selecionada" : ""}">
+					<div class="opcao-info">
+						<h3>Partilhada</h3>
+						<p>Qualquer pessoa com link pode aceder e editar</p>
+					</div>
+					<button class="btn-opcao-partilha" data-tipo="partilhada" 
+							${folha.tipo === "partilhada" ? "disabled" : ""}>
+						${folha.tipo === "partilhada" ? "Tipo atual" : "Tornar partilhada"}
+					</button>
+				</div>
+
+				<div class="opcao-partilha ${folha.tipo === "publica" ? "opcao-selecionada" : ""}">
+					<div class="opcao-info">
+						<h3>Pública</h3>
+						<p>Qualquer pessoa pode ver (leitura apenas)</p>
+					</div>
+					<button class="btn-opcao-partilha" data-tipo="publica" 
+							${folha.tipo === "publica" ? "disabled" : ""}>
+						${folha.tipo === "publica" ? "Tipo atual" : "Tornar pública"}
+					</button>
+				</div>
+
+				<!-- Seção compartilhamento -->
+				${folha.tipo !== "privada" ? `
+					<div class="secao-compartilhamento">
+						<h3>Partilhar esta folha</h3>
+						
+						<div class="grupo-link">
+							<label>Link:</label>
+							<div class="link-container">
+								<input type="text" id="inp-link-partilha" readonly 
+									value="${gerarLinkPartilha(folha.id)}">
+								<button id="btn-copiar-link" class="btn-secundario">Copiar</button>
+							</div>
+						</div>
+
+						<div class="grupo-qrcode">
+							<label>QR Code:</label>
+							<div id="container-qrcode"></div>
+						</div>
+
+						${folha.tipo !== "publica" ? `
+							<div class="grupo-codigo-edicao">
+								<label>Código de edição:</label>
+								<div class="codigo-container">
+									<input type="text" id="inp-codigo-edicao" readonly 
+										value="${folha.codigoEdicao || "---"}">
+									<button id="btn-copiar-codigo" class="btn-secundario">Copiar</button>
+								</div>
+							</div>
+						` : ""}
+					</div>
+				` : ""}
+
+				<!-- Guardar cópia -->
+				${folha.tipo !== "privada" ? `
+					<div class="secao-copiar">
+						<h3>Guardar nesta App</h3>
+						<p>Cria uma cópia privada desta folha no seu dispositivo</p>
+						<button id="btn-copiar-folha-privada" class="btn-primario">⬇ Guardar cópia</button>
+					</div>
+				` : ""}
+			</div>
+		</div>
+	`;
+
+	// Eventos dos botões
+	ligarEventosPartilha();
 }
 
+function ligarEventosPartilha() {
+	// Fechar
+	document.getElementById("btn-fechar-partilha")?.addEventListener("click", fecharOverlayPartilha);
+
+	// Mudar tipo
+	document.querySelectorAll(".btn-opcao-partilha:not([disabled])").forEach(btn => {
+		btn.addEventListener("click", async () => {
+			await alterarTipoFolha(btn.dataset.tipo);
+			abrirOverlayPartilha();
+		});
+	});
+
+	const folha = estadoFolha.folha;
+	if (folha.tipo !== "privada") {
+		// Copiar link
+		document.getElementById("btn-copiar-link")?.addEventListener("click", () => {
+			const input = document.getElementById("inp-link-partilha");
+			input.select();
+			document.execCommand("copy");
+			alert("Link copiado!");
+		});
+
+		// QR Code
+		gerarQRCode(gerarLinkPartilha(folha.id));
+
+		// Copiar código
+		if (folha.tipo !== "publica") {
+			document.getElementById("btn-copiar-codigo")?.addEventListener("click", () => {
+				const input = document.getElementById("inp-codigo-edicao");
+				input.select();
+				document.execCommand("copy");
+				alert("Código copiado!");
+			});
+		}
+
+		// Guardar cópia
+		document.getElementById("btn-copiar-folha-privada")?.addEventListener("click", guardarCopiaPrivada);
+	}
+}
+
+function fecharOverlayPartilha() {
+	const overlay = document.getElementById("overlay-partilha");
+	const painel = document.getElementById("painel-partilha");
+
+	overlay?.classList.remove("overlay-visivel");
+	painel?.classList.remove("painel-aberto");
+	painel?.classList.add("painel-fechado");
+}
+
+function gerarLinkPartilha(folhaId) {
+	const baseUrl = window.location.origin + window.location.pathname.replace("folha.html", "");
+	return `${baseUrl}folha.html?id=${folhaId}`;
+}
+
+function gerarQRCode(url) {
+	const container = document.getElementById("container-qrcode");
+	if (!container) return;
+
+	const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+	const img = document.createElement("img");
+	img.src = qrcodeUrl;
+	img.alt = "QR Code";
+	img.className = "qrcode-imagem";
+
+	container.innerHTML = "";
+	container.appendChild(img);
+}
+
+async function alterarTipoFolha(novoTipo) {
+	const folha = estadoFolha.folha;
+
+	if (folha.tipo === novoTipo) return;
+
+	try {
+		const resultado = await window.Cancioneiro.dbApi.moverFolha(
+			folha.tipo,
+			novoTipo,
+			folha.id
+		);
+
+		if (!resultado.sucesso) {
+			alert("Erro ao alterar tipo: " + (resultado.erro || "Desconhecido"));
+			return;
+		}
+
+		estadoFolha.folha.tipo = novoTipo;
+
+		// Se foi gerado um novo código, atualiza o estado
+		//if (resultado.codigo) {
+		//	estadoFolha.folha.codigoEdicao = resultado.codigo;
+		//}
+
+		alert("Tipo de folha alterado com sucesso!");
+	} catch (error) {
+		console.error("Erro ao alterar tipo:", error);
+		alert("Erro: " + error.message);
+	}
+}
+
+function guardarCopiaPrivada() {
+	const folha = estadoFolha.folha;
+	const folhaClone = JSON.parse(JSON.stringify(folha));
+
+	// Remove campos de Firebase
+	delete folhaClone.id;
+	delete folhaClone.codigoHash;
+	delete folhaClone.codigoSalt;
+	delete folhaClone.codigoEdicao;
+	delete folhaClone.dataCriacao;
+	delete folhaClone.dataModificacao;
+	folhaClone.tipo = "privada";
+
+	// Cria e guarda localmente
+	const resultado = window.Cancioneiro.folhas.criar(folhaClone.titulo, folhaClone.data, folhaClone.notas);
+	resultado.momentos = folhaClone.momentos;
+	window.Cancioneiro.folhas.guardar(resultado);
+
+	alert("Cópia guardada com sucesso!");
+	window.location.href = `editor-folha.html?id=${resultado.id}`;
+}
 
 // -----------------------------------------------------------------------------
-// SECÇÃO 7: Cabeçalho
+// SECÇÃO 5: Cabeçalho (visualização apenas)
 // -----------------------------------------------------------------------------
 
 function inicializarCabecalho() {
-	const folha      = estadoFolha.folha;
-	const tituloEl   = document.getElementById("folha-titulo");
-	const navComp    = document.getElementById("nav-comp");
-	const btnPartilhar = document.getElementById("btn-partilhar-folha");
-	
+	const folha = estadoFolha.folha;
+	const tituloEl = document.getElementById("folha-titulo");
+
 	tituloEl.textContent = folha.titulo;
 	document.title = folha.titulo;
 
@@ -752,199 +625,90 @@ function inicializarCabecalho() {
 		? new Date(folha.data + "T00:00:00").toLocaleDateString("pt-PT", {
 			day: "numeric", month: "long", year: "numeric"
 		})
-	: "";
+		: "";
 	document.getElementById("folha-meta").textContent =
-	[dataFormatada, folha.notas].filter(Boolean).join(" · ");
+		[dataFormatada, folha.notas].filter(Boolean).join(" · ");
 
-	// Editar título
-	document.getElementById("btn-editar-folha").addEventListener("click", async () => {
-		const novoTitulo = prompt("Novo título:", folha.titulo);
-		if (novoTitulo && novoTitulo.trim()) {
-			estadoFolha.folha.titulo = novoTitulo.trim();
-			await gravarAlteracoes();
-			tituloEl.textContent = novoTitulo.trim();
-			document.title = novoTitulo.trim();
-		}
-	});
-
-	// Apagar folha
-	document.getElementById("btn-apagar-folha").addEventListener("click", async () => {
-		if (confirm("Tem a certeza que quer apagar esta folha? Esta ação não pode ser desfeita.")) {
-			if (isFolhaOnline) {
-				let codigo = authCodeSession;
-				if (!codigo) {
-					codigo = prompt("Insere o código de autenticação para apagares esta folha online:");
-					if (!codigo) return; // O utilizador cancelou
-				}
-				
-				const sucesso = await window.Cancioneiro.dbApi.apagarFolhaPartilhada(folha.id, codigo);
-				if (!sucesso) {
-					alert("Não foi possível apagar a folha. O código está incorreto.");
-					return; // Para a execução, não redireciona
-				}
-			} else {
-				Cancioneiro.folhas.apagar(folha.id);
-			}
-			
-			window.location.href = "index.html";
-		}
-	});
-
-	// Lógica Partilhar / Guardar Folha
-	const isShared = isFolhaOnline; // Atualizado para usar a nova flag
-	if (isShared) {
-		btnPartilhar.title = "Guardar nesta App";
-		btnPartilhar.textContent = "⬇"; // ou "💾"
-		
-		btnPartilhar.addEventListener("click", () => {
-			const folhaClone = JSON.parse(JSON.stringify(estadoFolha.folha));
-			folhaClone.id = Cancioneiro.folhas.gerarId ? Cancioneiro.folhas.gerarId() : "f" + Date.now().toString(36);
-			folhaClone.editar = true;
-			
-			const folhasGerais = Cancioneiro.folhas.listar();
-			folhasGerais.push(folhaClone);
-			localStorage.setItem("cancioneiro_folhas", JSON.stringify(folhasGerais));
-			
-			alert("Cópia guardada com sucesso nos teus dispositivos!");
-			window.location.href = `folha.html?id=${folhaClone.id}`;
-		});
-		
-	} else {
-		btnPartilhar.title = "Partilhar folha online";
-		btnPartilhar.addEventListener("click", async () => {
-			const senha = prompt("Cria uma senha secreta para permitir editar esta folha no futuro:");
-			if (!senha) return; // Utilizador cancelou
-
-			try {
-				// Guarda no Firebase
-				const novoId = await window.Cancioneiro.dbApi.criarFolhaPartilhada(folha, senha);
-				
-				// Apaga do armazenamento local para passar a ser 100% online
-				Cancioneiro.folhas.apagar(folha.id);
-				
-				const linkPartilha = window.location.href.split('?')[0] + "?id=" + novoId;
-				navigator.clipboard.writeText(linkPartilha).then(() => {
-					alert("Folha publicada na nuvem! Link copiado para a área de transferência.");
-				}).catch(() => {
-					alert("Folha publicada! Copie este link: " + linkPartilha);
-				});
-
-				// Redireciona para a nova folha online
-				window.location.href = linkPartilha;
-			} catch (error) {
-				console.error(error);
-				alert("Erro ao publicar a folha.");
-			}
-		});
+	// Botão de editar
+	const btnEditar = document.getElementById("btn-editar-folha");
+	if (btnEditar) {
+		btnEditar.addEventListener("click", abrirEditor);
 	}
 
-	// Como o painel carrega de forma assíncrona, configuramos as opções apenas quando este existir
-    function configurarTogglesPainel() {
-        const seccaoPainel = document.getElementById("painel-definicoes-folha");
-        if (!seccaoPainel) return;
-
-        // Mostra a secção de opções da folha no painel
-        seccaoPainel.style.display = "block";
-
-        const toggleEditar = document.getElementById("toggle-folha-editar");
-        const togglePagina = document.getElementById("toggle-folha-pagina");
-        const toggleMeta   = document.getElementById("toggle-folha-meta");
-
-        // Lista de elementos a mostrar/ocultar consoante o modo editar/apresentar
-        const listaEditar = [
-            document.getElementById("btn-editar-folha"),
-            document.getElementById("btn-apagar-folha"),
-            document.getElementById("folha-momento-acoes"),
-            document.getElementById("btn-editar-entrada"),
-            document.getElementById("btn-apagar-cantico")
-        ];
-
-        const listaApresentar = [
-            document.getElementById("opt-folha-pagina"),
-            navComp
-        ];
-
-        function aplicarVisibilidadeCabecalho() {
-            const editar     = folha.editar !== false;
-            const verPaginas = folha.verPaginas === true;
-
-            if (editar) {
-                listaEditar.forEach(el => el?.classList.remove("oculto"));
-                listaApresentar.forEach(el => el?.classList.add("oculto"));
-            } else {
-                listaEditar.forEach(el => el?.classList.add("oculto"));
-                listaApresentar.forEach(el => el?.classList.remove("oculto"));
-                if (!verPaginas) {
-                    navComp.classList.add("oculto");
-                }
-            }
-        }
-        
-        // Estado inicial dos switches
-        toggleEditar.checked = folha.editar !== false;
-        togglePagina.checked = folha.verPaginas === true;
-        aplicarVisibilidadeCabecalho();
-
-        // Toggle editar / apresentar
-        toggleEditar.addEventListener("change", async () => {
-            const valorAnterior = folha.editar;
-            folha.editar = toggleEditar.checked;
-            
-            const sucesso = await gravarAlteracoes();
-            if (sucesso === false) {
-                folha.editar = valorAnterior; // Reverte se falhar
-                toggleEditar.checked = valorAnterior;
-                alert("Não foi possível alterar o modo de edição. Tente novamente.");
-                return;
-            }
-
-            aplicarVisibilidadeCabecalho();
-            renderizarFolha();
+	// Botão de partilhar
+	const btnPartilhar = document.getElementById("btn-partilhar-folha");
+	if (btnPartilhar) {
+		btnPartilhar.addEventListener("click", () => {
+			abrirOverlayPartilha();
         });
+	}
+	// Abre overlay com as três opções: Privada, Partilhada, Pública
+	// tipo atual está bloqueado
+	// Botão para criar cópia da folha na app (privada)
+	// ao primir partilhada ou pública, tenta autenticar
+		// com a autenticação sucedida, move folha para o tipo correspondente
+	// Caso seja partilhada ou pública:
+		// mostra link com opção para copiar e QR code
+		// Caso admin esteja autenticado, mostra código de edição
 
-        // Toggle contínuo / individual
-        togglePagina.addEventListener("change", async () => {
-            folha.verPaginas = togglePagina.checked;
-            // await gravarAlteracoes();
-            aplicarVisibilidadeCabecalho();
-            renderizarFolha();
-        });
-    }
 
-    if (window.Cancioneiro.painelPronto) {
-        configurarTogglesPainel();
-    } else {
-        document.addEventListener("painel-pronto", configurarTogglesPainel);
-    }
+	function configurarTogglesPainel() {
+		const seccaoPainel = document.getElementById("painel-definicoes-folha");
+		if (!seccaoPainel) return;
+
+		seccaoPainel.style.display = "block";
+
+		// Toggle "Ver por página"
+		const toggleVerPaginas = document.getElementById("toggle-folha-verPaginas");
+		if (toggleVerPaginas) {
+			toggleVerPaginas.checked = folha.verPaginas === true;
+			toggleVerPaginas.addEventListener("change", () => {
+				folha.verPaginas = toggleVerPaginas.checked;
+				guardarPrefsLocais(folha);
+				renderizarFolha();
+			});
+		}
+
+		// Toggle "Ocultar meta"
+		const toggleMeta = document.getElementById("toggle-folha-meta");
+		if (toggleMeta) {
+			toggleMeta.checked = folha.ocultarMeta === true;
+			toggleMeta.addEventListener("change", () => {
+				folha.ocultarMeta = toggleMeta.checked;
+				guardarPrefsLocais(folha);
+				const metaEl = document.getElementById("folha-meta");
+				if (metaEl) {
+					metaEl.style.display = folha.ocultarMeta ? "none" : "block";
+				}
+			});
+		}
+
+		// Toggle "Ocultar meta"
+	}
+
+	if (window.Cancioneiro.painelPronto) {
+		configurarTogglesPainel();
+	} else {
+		document.addEventListener("painel-pronto", configurarTogglesPainel);
+	}
 }
 
-
 // -----------------------------------------------------------------------------
-// SECÇÃO 8: Inicialização
+// SECÇÃO 6: Inicialização
 // -----------------------------------------------------------------------------
 
 async function init() {
-	const params  = new URLSearchParams(window.location.search);
+	const params = new URLSearchParams(window.location.search);
 	const folhaId = params.get("id");
 
 	let folhaCarregada = null;
-	isFolhaOnline = false;
 
 	if (folhaId) {
-		// Tenta carregar localmente
 		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
 
-		// Se não existir localmente, tenta na nuvem (Firebase)
 		if (!folhaCarregada) {
-			folhaCarregada = await window.Cancioneiro.dbApi.carregarFolhaPartilhada(folhaId);
-			if (folhaCarregada) {
-				isFolhaOnline = true;
-				// Assegura que a ID da folha carregada corresponda ao parâmetro
-				folhaCarregada.id = folhaId; 
-				
-				// Desativa sempre o modo de edição ao carregar a página
-				folhaCarregada.editar = false;
-			}
+			if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("publica", folhaId));
+			else if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("partilhada", folhaId));
 		}
 	}
 
@@ -953,7 +717,20 @@ async function init() {
 		return;
 	}
 
-	estadoFolha.folha  = folhaCarregada;
+	estadoFolha.folha = folhaCarregada;
+
+	if (estadoFolha.folha.tipo === "partilhada") {
+		const folhasPartilhadas = JSON.parse(localStorage.getItem(Cancioneiro.folhas.KEY_PARTILHADAS) || "[]");
+		if (!folhasPartilhadas.includes(folhaId)) {
+			folhasPartilhadas.push(folhaId);
+		}
+		localStorage.setItem(Cancioneiro.folhas.KEY_PARTILHADAS, JSON.stringify(folhasPartilhadas));
+	}
+
+	// 🆕 Carregar preferências locais
+	const prefsLocais = carregarPrefsLocais(folhaId);
+	aplicarPrefsLocais(estadoFolha.folha, prefsLocais);
+
 	estadoFolha.indice = await carregarIndice();
 
 	inicializarCabecalho();
@@ -961,14 +738,12 @@ async function init() {
 
 	document.addEventListener("preferencia-alterada", () => renderizarFolha());
 
-	// Google Analytics: envia evento de page_view depois de renderizar
 	if (window.gtag) {
 		gtag('event', 'page_view', {
 			page_path: `/folha.html?id=${folhaId}`,
 			page_title: document.title,
 			folha_id: folhaId,
-			folha_titulo: estadoFolha.folha.titulo,
-			folha_online: isFolhaOnline
+			folha_titulo: estadoFolha.folha.titulo
 		});
 	}
 }
