@@ -8,6 +8,7 @@
 			<button id="btn-fechar-painel">✕</button>
 		</div>
 
+
 		<!-- Secção de definições gerais -->
 		<div id="painel-definicoes-gerais">
 			<div class="definicao-grupo">
@@ -17,7 +18,7 @@
 					<button class="opcao-toggle" data-pref="mostrarAcordes" data-valor="false">Ocultar</button>
 				</div>
 			</div>
-  			<div class="definicao-grupo">
+			<div class="definicao-grupo">
 				<label>Notação de acordes</label>
 				<div class="opcoes-toggle">
 					<button class="opcao-toggle" data-pref="notacao" data-valor="anglo">CDEFGAB</button>
@@ -30,22 +31,12 @@
 		<div id="painel-definicoes-folha" style="display: none;">
 			<hr class="painel-separador">
 			<div class="painel-secao-titulo">Vista da Folha</div>
-			
-			<div class="definicao-grupo">
-				<div class="toggle">
-					<span>Editar folha</span>
-					<label class="switch">
-						<input type="checkbox" id="toggle-folha-editar">
-						<span class="slider round"></span>
-					</label>
-				</div>
-			</div>
 
-			<div class="definicao-grupo" id="opt-folha-pagina" class="oculto">
+			<div class="definicao-grupo">
 				<div class="toggle">
 					<span>Ver por página</span>
 					<label class="switch">
-						<input type="checkbox" id="toggle-folha-pagina">
+						<input type="checkbox" id="toggle-folha-verPaginas">
 						<span class="slider round"></span>
 					</label>
 				</div>
@@ -60,6 +51,10 @@
 					</label>
 				</div>
 			</div>
+		</div>
+
+		<div id="admin">
+			<button class="btn-normal btn-texto" id="btn-admin">Admin</button>
 		</div>
 
 	</div>

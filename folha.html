@@ -1,61 +1,53 @@
 <!DOCTYPE html>
 
 <html lang="pt">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Folha de Cânticos</title>
-		<link rel="stylesheet" href="style.css">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Folha de Cânticos</title>
+	<link rel="stylesheet" href="style.css">
 
-		<!-- Google tag (gtag.js) -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WRP9RXLEM"></script>
-		<script>
+	<!-- Google tag (gtag.js) -->
+	<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WRP9RXLEM"></script>
+	<script>
 		window.dataLayer = window.dataLayer || [];
-		function gtag(){dataLayer.push(arguments);}
+		function gtag() { dataLayer.push(arguments); }
 		gtag('js', new Date());
 
 		gtag('config', 'G-1WRP9RXLEM');
-		</script>
+	</script>
 
-	</head>
+</head>
 
-	<body>
-		<header class="header-grid">
-			<div class="header-info">
-				<!-- <a href="index.html" id="btn-voltar">← Voltar</a> -->
-				<button onclick="location.reload();location.href='index.html'" class="btn-transparente btn-voltar">← Voltar</button>
-				<div id="folha-titulo-linha">
-					<h1 id="folha-titulo"></h1>
-					<div class="btn-header btn-normal">
-						<button id="btn-apagar-folha" title="Apagar folha" class="btn-apagar">✕</button>
-						<button id="btn-editar-folha" title="Editar folha">✎</button>
-					</div>
-				</div>
-				<div id="folha-meta"></div>
+<body>
+	<header class="header-grid">
+		<div class="header-info">
+			<button onclick="location.href='../'" class="btn-transparente btn-voltar">← Voltar</button>
+			<div id="folha-titulo-linha">
+				<h1 id="folha-titulo"></h1>
 			</div>
+			<div id="folha-meta"></div>
+		</div>
 
-			<div class="btn-header btn-normal">
-				<!-- Botão de definições -->
-				<button id="btn-definicoes" title="Definições">⚙</button>
-				<!-- Botão de partilha -->
-				<button id="btn-partilhar-folha" title="Partilhar folha">➦</button>
-				<!-- Componente de navegação -->
-				<nav-comp id="nav-comp" class="oculto"></nav-comp>
-			</div>
-		</header>
+		<div class="btn-header btn-normal">
+			<button id="btn-definicoes" title="Definições">⚙</button>
+			<button id="btn-partilhar-folha" title="Partilhar folha">➦</button>
+			<button id="btn-editar-folha" title="Editar folha">✎</button>
+			<nav-comp id="nav-comp" class="oculto"></nav-comp>
+		</div>
+	</header>
 
-		<main id="folha-conteudo">
-			<!-- preenchido pelo folha.js -->
-		</main>
+	<main id="folha-conteudo">
+		<!-- preenchido pelo folha.js -->
+	</main>
 
-		<script type="module" src="db-init.js"></script>
-		<script src="preferencias.js" defer></script>
-		<script src="componentes.js" defer></script>
-		<script src="pesquisa.js" defer></script>
-		<script src="painel.js" defer></script>
-		<script src="parser.js" defer></script>
-		<script src="folhas.js" defer></script>
-		<script src="folha.js" defer></script>
-		<script src="cantico.js" defer></script>
-	</body>
+	<script type="module" src="db-init.js"></script>
+	<script src="preferencias.js" defer></script>
+	<script src="componentes.js" defer></script>
+	<script src="pesquisa.js" defer></script>
+	<script src="painel.js" defer></script>
+	<script src="parser.js" defer></script>
+	<script src="folhas.js" defer></script>
+	<script src="folha.js" defer></script>
+</body>
 </html>

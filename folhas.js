@@ -16,11 +16,12 @@ window.Cancioneiro.folhas = (function () {
 	{ id: "final",               label: "Final" }
 	];
 
-	const CHAVE_STORAGE = "cancioneiro_folhas";
+	const KEY_PRIVADAS = "folhas_privadas";
+	const KEY_PARTILHADAS = "folhas_partilhadas";
 
 	function carregarTodas() {
 		try {
-			const guardado = localStorage.getItem(CHAVE_STORAGE);
+			const guardado = localStorage.getItem(KEY_PRIVADAS);
 			return guardado ? JSON.parse(guardado) : [];
 		} catch {
 			return [];
@@ -28,15 +29,52 @@ window.Cancioneiro.folhas = (function () {
 	}
 
 	function guardarTodas(folhas) {
-		localStorage.setItem(CHAVE_STORAGE, JSON.stringify(folhas));
+		localStorage.setItem(KEY_PRIVADAS, JSON.stringify(folhas));
 	}
 
 	function gerarId() {
-		return "f" + Date.now().toString(36);
+		return "f" + ([1e7] + -1e3 + -4e3 + -8e3 + -1e11)
+			.replace(/[018]/g, c =>
+				(c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+			);
 	}
 
 	function listar() {
-		return carregarTodas();
+		// DEBUG DEVIDO A UPDATE: Migra folhas antigas e normaliza tipo: "privada"
+		const folhasAntigas = localStorage.getItem("cancioneiro_folhas");
+		if (folhasAntigas) {
+			const parsedAntigas = JSON.parse(folhasAntigas).map(f => ({
+				...f,
+				tipo: "privada"
+			}));
+
+			// Carregar as que já existem em KEY_PRIVADAS
+			const existentes = localStorage.getItem(KEY_PRIVADAS);
+			const parsedExistentes = existentes ? JSON.parse(existentes) : [];
+
+			// Fazer MERGE (juntar) em vez de sobrescrever
+			const merged = [...parsedExistentes, ...parsedAntigas];
+			localStorage.setItem(KEY_PRIVADAS, JSON.stringify(merged));
+			localStorage.removeItem("cancioneiro_folhas");
+		}
+		// FIM DO DEBUG
+
+		// Carregar privadas e normalizar
+		const guardado_privado = localStorage.getItem(KEY_PRIVADAS);
+		const parsed_privado = guardado_privado ? JSON.parse(guardado_privado) : [];
+		const lista_privada = parsed_privado.map(f => ({
+			...f,
+			tipo: "privada"
+		}));
+
+		// Carregar partilhadas
+		const guardado_partilhado = localStorage.getItem(KEY_PARTILHADAS);
+		const lista_partilhada = guardado_partilhado ? JSON.parse(guardado_partilhado).map(f => f) : [];
+
+		return {
+			privada: lista_privada,
+			partilhada: lista_partilhada
+		};
 	}
 
 	function obter(id) {
@@ -47,6 +85,7 @@ window.Cancioneiro.folhas = (function () {
 		const folhas = carregarTodas();
 		const novaFolha = {
 			id: gerarId(),
+            tipo: "privada",
 			titulo: titulo || "Nova folha",
 			data: data || "",
 			notas: notas || "",
@@ -113,6 +152,8 @@ window.Cancioneiro.folhas = (function () {
 	}
 
 	return {
+		KEY_PRIVADAS: KEY_PRIVADAS,
+        KEY_PARTILHADAS: KEY_PARTILHADAS,
 		listar,
 		obter,
 		criar,
