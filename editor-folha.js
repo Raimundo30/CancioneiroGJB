@@ -656,6 +656,17 @@ async function init() {
 
 	document.addEventListener("preferencia-alterada", () => renderizarFolha());
 
+	const btnVoltar = document.getElementById("btn-voltar");
+	if (btnVoltar) {
+		const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
+			? '/CancioneiroGJB/'
+			: '/';
+		btnVoltar.addEventListener("click", () => {
+			if (folhaId) window.location.href = `${BASE_URL}folha.html?id=${folhaId}`;
+			else window.location.href = BASE_URL;
+		});
+	}
+
 	if (window.gtag) {
 		gtag('event', 'page_view', {
 			page_path: `/editor-folha.html?id=${folhaId}`,

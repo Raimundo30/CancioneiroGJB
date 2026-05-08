@@ -738,6 +738,14 @@ async function init() {
 
 	document.addEventListener("preferencia-alterada", () => renderizarFolha());
 
+	// Botão voltar
+	const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
+		? '/CancioneiroGJB/'
+		: '/';
+	document.getElementById("btn-voltar").addEventListener("click", () => {
+		window.location.href = BASE_URL;
+	});
+
 	if (window.gtag) {
 		gtag('event', 'page_view', {
 			page_path: `/folha.html?id=${folhaId}`,

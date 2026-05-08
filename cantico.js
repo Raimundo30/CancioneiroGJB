@@ -258,6 +258,14 @@ async function init() {
 		atualizaCantico(dadosCantico, canticoId, tomOriginal);
 	});
 
+	// Botão voltar
+	const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
+		? '/CancioneiroGJB/'
+		: '/';
+	document.getElementById("btn-voltar").addEventListener("click", () => {
+		window.location.href = BASE_URL;
+	});
+
 	// Google Analytics: envia evento de page_view depois de carregar dados
 	if (window.gtag) {
 		gtag('event', 'page_view', {

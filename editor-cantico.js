@@ -1032,11 +1032,14 @@ async function init() {
 	const btnVoltar = document.getElementById("btn-voltar");
 	const params = new URLSearchParams(window.location.search);
 	const canticoId = params.get("id");
-	
+
 	if (btnVoltar) {
+		const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
+			? '/CancioneiroGJB/'
+			: '/';
 		btnVoltar.addEventListener("click", () => {
-			if (canticoId) window.location.href = `cantico.html?id=${canticoId}`;
-			else window.location.href = "index.html";
+			if (canticoId) window.location.href = `${BASE_URL}cantico.html?id=${canticoId}`;
+			else window.location.href = BASE_URL;
 		});
 	}
 
