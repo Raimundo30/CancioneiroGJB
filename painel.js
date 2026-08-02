@@ -27,6 +27,7 @@ document.addEventListener("painel-pronto", () => {
 	const btnAbrir = document.getElementById("btn-definicoes");
 	const btnFechar = document.getElementById("btn-fechar-painel");
 	const btnAdmin = document.getElementById("btn-admin");
+	const btnFullscreen = document.getElementById("btn-fullscreen");
 
 	function abrirPainel() {
 		painel.classList.remove("painel-fechado");
@@ -55,6 +56,55 @@ document.addEventListener("painel-pronto", () => {
 		atualizarBotoes();
 	});
 
+	// Lógica do botão novo cântico
+	const btnNovoCantico = document.getElementById("btn-novo-cantico");
+	if (btnNovoCantico) {
+		btnNovoCantico.addEventListener("click", () => {
+			if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
+				window.location.href = "editor-cantico.html";
+			} else {
+				alert("Apenas administradores podem criar novos cânticos");
+			}
+		});
+	}
+
+	// Lógica do botão fullscreen
+	btnFullscreen.addEventListener("click", async () => {
+		try {
+			if (!document.fullscreenElement) {
+				// Solicita fullscreen
+				const elem = document.documentElement;
+
+				if (elem.requestFullscreen) {
+					await elem.requestFullscreen();
+				} else if (elem.webkitRequestFullscreen) {
+					// Safari e versões antigas de Chrome
+					await elem.webkitRequestFullscreen();
+				} else if (elem.msRequestFullscreen) {
+					// IE 11
+					await elem.msRequestFullscreen();
+				} else if (elem.mozRequestFullScreen) {
+					// Firefox
+					await elem.mozRequestFullScreen();
+				}
+			} else {
+				// Sai de fullscreen
+				if (document.exitFullscreen) {
+					await document.exitFullscreen();
+				} else if (document.webkitExitFullscreen) {
+					await document.webkitExitFullscreen();
+				} else if (document.msExitFullscreen) {
+					await document.msExitFullscreen();
+				} else if (document.mozCancelFullScreen) {
+					await document.mozCancelFullScreen();
+				}
+			}
+			atualizarBotoes();
+		} catch (e) {
+			console.error("Erro ao alternar fullscreen:", e);
+		}
+	});
+
 	// Lógica dos botões de toggle
 	document.querySelectorAll(".opcao-toggle").forEach(btn => {
 		btn.addEventListener("click", () => {
@@ -75,10 +125,20 @@ document.addEventListener("painel-pronto", () => {
 			btn.classList.toggle("ativo", String(atual) === String(valor));
 		});
 
+        // --- Admin ---
 		if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
 			btnAdmin.textContent = "Admin: ON";
 		} else {
 			btnAdmin.textContent = "Admin: OFF";
+		}
+
+		// --- Fullscreen ---
+		if (document.fullscreenElement) {
+			btnFullscreen.textContent = "Fullscreen: ON";
+			btnFullscreen.classList.add("ativo");
+		} else {
+			btnFullscreen.textContent = "Fullscreen: OFF";
+			btnFullscreen.classList.remove("ativo");
 		}
 	}
 

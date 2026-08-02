@@ -919,6 +919,7 @@ async function guardarCantico() {
 			subtitulo: canticoCache.meta.subtitle || "",
 			autor: canticoCache.meta.author || "",
 			tom: canticoCache.meta.key || "",
+			capo: canticoCache.meta.capo || "",
 			conteudoChordPro: chordProContent,
 			dataModificacao: new Date().toISOString()
 		};
@@ -947,28 +948,17 @@ async function guardarCantico() {
 				});
 			}
 		} else {
-			//// Cria um novo cântico
-			//const newId = await window.Cancioneiro.dbApi.criarCantico({
-			//	...canticoData,
-			//	categorias: canticoCache.meta.categorias || [],
-			//	dataCriacao: new Date().toISOString()
-			//});
+            // Cria um novo cântico
+			const newId = await window.Cancioneiro.dbApi.criarCantico({
+				...canticoData,
+				categorias: canticoCache.meta.categorias || [],
+				dataCriacao: new Date().toISOString()
+			});
 
-			//canticoCache.id = newId;
-
-			//msgStatus.textContent = "✓ Cântico criado com sucesso!";
-			//msgStatus.style.color = "#4CAF50";
-
-			//// Muda a URL para refletir o novo ID
-			//window.history.replaceState({}, document.title, `editor-cantico.html?id=${newId}`);
-
-			//// Registra no Analytics
-			//if (window.gtag) {
-			//	gtag('event', 'cantico_criado', {
-			//		cantico_id: newId,
-			//		cantico_titulo: canticoCache.meta.title
-			//	});
-			//}
+			canticoCache.id = newId;
+			msgStatus.textContent = "✓ Cântico criado com sucesso!";
+			msgStatus.style.color = "#4CAF50";
+			window.history.replaceState({}, document.title, `editor-cantico.html?id=${newId}`);
 		}
 
 		// Reabilita o botão após 2 segundos
