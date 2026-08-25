@@ -188,9 +188,7 @@ async function renderizarFolha() {
 	ligarEventos(momentosFiltrados);
 
 	// Renderiza navegação entre momentos se estiver em modo apresentar individual
-	if (verPaginas) {
-		atualizarNavegacao(momentosFiltrados);
-	}
+	atualizarNavegacao(momentosFiltrados);
 }
 
 
