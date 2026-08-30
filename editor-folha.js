@@ -1,50 +1,86 @@
 // editor-folha.js — Lógica da página de edição de uma folha de cânticos
 
-// -----------------------------------------------------------------------------
-// SECÇÃO 1: Estado da página
-// -----------------------------------------------------------------------------
+async function renderEditorFolha(folhaId) {
+	const app = document.getElementById("app");
+	if (!app) return;
 
-let estadoFolha = {
-	folha: null,
-	indice: [],
-	canticosCache: {},
-	momentoAtivo: 0
-};
+	app.innerHTML = `
+		<header class="header-grid">
+			<div class="header-info">
+				<button id="btn-voltar" class="btn-transparente btn-voltar">← Voltar</button>
+				<div id="folha-titulo-linha">
+					<h1 id="folha-titulo"></h1>
+					<div class="btn-header btn-normal">
+						<button id="btn-editar-folha" title="Editar título">✎</button>
+					</div>
+				</div>
+				<div id="folha-meta"></div>
+			</div>
 
-// -----------------------------------------------------------------------------
-// SECÇÃO 2: Carregamento e gravação de dados
-// -----------------------------------------------------------------------------
+			<div class="btn-header btn-normal">
+				<button id="btn-definicoes" title="Definições">⚙</button>
+				<button id="btn-apagar-folha" title="Apagar folha" class="btn-apagar">🗑️</button>
+				<button id="btn-visualizar-folha" title="Visualizar Folha">👁️</button>
+				<nav-comp id="nav-comp" class="oculto"></nav-comp>
+			</div>
+		</header>
 
-async function carregarIndice() {
-	return await window.Cancioneiro.dbApi.carregarIndice();
+		<main id="folha-conteudo">
+			<!-- preenchido pelo editor-folha.js -->
+		</main>
+	`;
+
+	await initEditorFolha(folhaId);
 }
 
-async function carregarCantico(canticoId) {
-	if (estadoFolha.canticosCache[canticoId]) {
-		return estadoFolha.canticosCache[canticoId];
+async function initEditorFolha(folhaId) {
+	let folhaCarregada = null;
+	const estadoFolha = obterEstadoFolha();
+
+	if (folhaId) {
+		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
+
+		if (!folhaCarregada) {
+			if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("publica", folhaId));
+			else if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("partilhada", folhaId));
+		}
 	}
-	const meta = estadoFolha.indice.find(c => c.id === canticoId);
-	if (!meta) return null;
 
-	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
-	if (!docData) return null;
-
-	const dados = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
-	estadoFolha.canticosCache[canticoId] = { meta, dados };
-	return estadoFolha.canticosCache[canticoId];
-}
-
-async function gravarAlteracoes() {
-	if (estadoFolha.folha.tipo === "privada") {
-		window.Cancioneiro.folhas.guardar(estadoFolha.folha);
+	if (!folhaCarregada) {
+		document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
 		return;
 	}
 
-	try {
-		return await window.Cancioneiro.dbApi.atualizarFolha(estadoFolha.folha);
-	} catch (e) {
-		console.error("Erro a atualizar folha partilhada:", e);
-		return false;
+	if (folhaCarregada.tipo !== "privada") {
+		const authResult = await window.Cancioneiro.dbApi.authFolha(folhaCarregada.tipo, folhaCarregada.id);
+		if (!authResult || !authResult.sucesso) {
+			alert(authResult?.erro || "Não foi possível autenticar esta folha.");
+			navigate("/folha", { id: folhaCarregada.id });
+			return;
+		}
+	}
+
+	estadoFolha.folha = folhaCarregada;
+	estadoFolha.indice = await carregarIndice();
+
+	inicializarCabecalhoEditorFolha();
+	await renderizarEditorFolha();
+
+	document.addEventListener("preferencia-alterada", () => renderizarEditorFolha());
+	
+	// Botão voltar
+	document.getElementById("btn-voltar").addEventListener("click", () => {
+		if (folhaId) navigate("/folha", { id: folhaId });
+		else navigate("/home");
+	});
+
+	if (window.gtag) {
+		gtag('event', 'page_view', {
+			page_path: `/editor-folha?id=${folhaId}`,
+			page_title: document.title,
+			folha_id: folhaId,
+			folha_titulo: estadoFolha.folha.titulo
+		});
 	}
 }
 
@@ -52,7 +88,8 @@ async function gravarAlteracoes() {
 // SECÇÃO 3: Renderização da folha (modo edição)
 // -----------------------------------------------------------------------------
 
-async function renderizarFolha() {
+async function renderizarEditorFolha() {
+	const estadoFolha = obterEstadoFolha();
 	const conteudo = document.getElementById("folha-conteudo");
 	const notacao = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
@@ -160,7 +197,7 @@ async function renderizarFolha() {
 	btnAddMomento.textContent = "+ Adicionar momento";
 	conteudo.appendChild(btnAddMomento);
 
-	ligarEventos(momentosFiltrados);
+	ligarEventosEditorFolha(momentosFiltrados);
 }
 
 
@@ -168,12 +205,14 @@ async function renderizarFolha() {
 // SECÇÃO 4: Eventos de edição
 // -----------------------------------------------------------------------------
 
-function obterEntrada(momentoId, canticoId) {
-	const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
-	return momento?.canticos.find(c => c.canticoId === canticoId) || null;
-}
+// function obterEntrada(momentoId, canticoId) {
+// 	const estadoFolha = obterEstadoFolha();
+// 	const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
+// 	return momento?.canticos.find(c => c.canticoId === canticoId) || null;
+// }
 
-function ligarEventos(momentosFiltrados) {
+function ligarEventosEditorFolha(momentosFiltrados) {
+	const estadoFolha = obterEstadoFolha();
 	const folhaId = estadoFolha.folha.id;
 
 	// Transposição inline
@@ -186,7 +225,7 @@ function ligarEventos(momentosFiltrados) {
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) - 1) % 12;
 			gravarAlteracoes();
-			renderizarFolha();
+			renderizarEditorFolha();
 		});
 	});
 
@@ -216,7 +255,7 @@ function ligarEventos(momentosFiltrados) {
 			if (!entrada) return;
 			entrada.tom = ((entrada.tom || 0) + 1) % 12;
 			gravarAlteracoes();
-			renderizarFolha();
+			renderizarEditorFolha();
 		});
 	});
 
@@ -231,7 +270,7 @@ function ligarEventos(momentosFiltrados) {
 		btn.addEventListener("click", () => {
 			entrada.tom = 0;
 			gravarAlteracoes();
-			renderizarFolha();
+			renderizarEditorFolha();
 		});
 	});
 
@@ -245,7 +284,7 @@ function ligarEventos(momentosFiltrados) {
 				Cancioneiro.folhas.removerCantico(folhaId, momentoId, canticoId);
 				estadoFolha.folha = Cancioneiro.folhas.obter(folhaId);
 				gravarAlteracoes();
-				renderizarFolha();
+				renderizarEditorFolha();
 			}
 		});
 	});
@@ -273,7 +312,7 @@ function ligarEventos(momentosFiltrados) {
 			if (novoLabel && novoLabel.trim()) {
 				momento.label = novoLabel.trim();
 				gravarAlteracoes();
-				renderizarFolha();
+				renderizarEditorFolha();
 			}
 		});
 	});
@@ -286,7 +325,7 @@ function ligarEventos(momentosFiltrados) {
 			const momentos = estadoFolha.folha.momentos;
 			[momentos[idx - 1], momentos[idx]] = [momentos[idx], momentos[idx - 1]];
 			gravarAlteracoes();
-			renderizarFolha();
+			renderizarEditorFolha();
 		});
 	});
 
@@ -298,7 +337,7 @@ function ligarEventos(momentosFiltrados) {
 			if (idx >= momentos.length - 1) return;
 			[momentos[idx], momentos[idx + 1]] = [momentos[idx + 1], momentos[idx]];
 			gravarAlteracoes();
-			renderizarFolha();
+			renderizarEditorFolha();
 		});
 	});
 
@@ -312,7 +351,7 @@ function ligarEventos(momentosFiltrados) {
 					m => m.id !== btn.dataset.id
 				);
 				gravarAlteracoes();
-				renderizarFolha();
+				renderizarEditorFolha();
 			}
 		});
 	});
@@ -332,7 +371,7 @@ function ligarEventos(momentosFiltrados) {
 					canticos: []
 				});
 				gravarAlteracoes();
-				renderizarFolha();
+				renderizarEditorFolha();
 			}
 		});
 	}
@@ -343,6 +382,7 @@ function ligarEventos(momentosFiltrados) {
 // -----------------------------------------------------------------------------
 
 async function abrirModalEditarEntrada(momentoId, canticoId) {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 	const momento = folha.momentos.find(m => m.id === momentoId);
 	const entrada = momento?.canticos.find(c => c.canticoId === canticoId);
@@ -407,7 +447,7 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 
 		gravarAlteracoes();
 		modal.remove();
-		renderizarFolha();
+		renderizarEditorFolha();
 	});
 }
 
@@ -416,6 +456,7 @@ async function abrirModalEditarEntrada(momentoId, canticoId) {
 // -----------------------------------------------------------------------------
 
 function abrirOverlayAdicionar(momentoId) {
+	const estadoFolha = obterEstadoFolha();
 	document.getElementById("overlay-adicionar-cantico")?.remove();
 
 	const overlay = document.createElement("div");
@@ -455,6 +496,7 @@ function abrirOverlayAdicionar(momentoId) {
 }
 
 async function abrirOverlayPreview(canticoId, momentoId) {
+	const estadoFolha = obterEstadoFolha();
 	document.getElementById("overlay-preview-cantico")?.remove();
 
 	const canticoData = await carregarCantico(canticoId);
@@ -538,7 +580,7 @@ async function abrirOverlayPreview(canticoId, momentoId) {
 					notas: ""
 				});
 				gravarAlteracoes();
-				renderizarFolha();
+				renderizarEditorFolha();
 			}
 
 			document.getElementById("overlay-preview-cantico")?.remove();
@@ -573,7 +615,8 @@ async function abrirOverlayPreview(canticoId, momentoId) {
 // SECÇÃO 7: Cabeçalho (edição completa)
 // -----------------------------------------------------------------------------
 
-function inicializarCabecalho() {
+function inicializarCabecalhoEditorFolha() {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 	const tituloEl = document.getElementById("folha-titulo");
 	const navComp = document.getElementById("nav-comp");
@@ -614,67 +657,12 @@ function inicializarCabecalho() {
 				}
 			}
 
-			window.location.href = "./";
+			navigate("/");
 		}
 	});
 
     // Visualizar folha (modo leitura)
 	document.getElementById("btn-visualizar-folha").addEventListener("click", () => {
-		window.location.href = `folha.html?id=${folha.id}`;
+		navigate("/folha", { id: folha.id });
 	});
 }
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 8: Inicialização
-// -----------------------------------------------------------------------------
-
-async function init() {
-	const params = new URLSearchParams(window.location.search);
-	const folhaId = params.get("id");
-
-	let folhaCarregada = null;
-
-	if (folhaId) {
-		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
-
-		if (!folhaCarregada) {
-			if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("publica", folhaId));
-			else if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("partilhada", folhaId));
-		}
-	}
-
-	if (!folhaCarregada) {
-		document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
-		return;
-	}
-
-	estadoFolha.folha = folhaCarregada;
-	estadoFolha.indice = await carregarIndice();
-
-	inicializarCabecalho();
-	await renderizarFolha();
-
-	document.addEventListener("preferencia-alterada", () => renderizarFolha());
-
-	const btnVoltar = document.getElementById("btn-voltar");
-	if (btnVoltar) {
-		const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
-			? '/CancioneiroGJB/'
-			: '/';
-		btnVoltar.addEventListener("click", () => {
-			if (folhaId) window.location.href = `${BASE_URL}folha.html?id=${folhaId}`;
-			else window.location.href = BASE_URL;
-		});
-	}
-
-	if (window.gtag) {
-		gtag('event', 'page_view', {
-			page_path: `/editor-folha.html?id=${folhaId}`,
-			page_title: document.title,
-			folha_id: folhaId,
-			folha_titulo: estadoFolha.folha.titulo
-		});
-	}
-}
-
-init();

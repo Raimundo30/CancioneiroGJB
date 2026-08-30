@@ -1,66 +1,39 @@
 <!DOCTYPE html>
 
 <html lang="pt">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Cancioneiro</title>
-	<link rel="stylesheet" href="style.css">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Cancioneiro</title>
+		<link rel="stylesheet" href="style.css">
 
-	<!-- Google tag (gtag.js) -->
-	<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WRP9RXLEM"></script>
-	<script>
-		window.dataLayer = window.dataLayer || [];
-		function gtag() { dataLayer.push(arguments); }
-		gtag('js', new Date());
+		<!-- Google tag (gtag.js) -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=G-1WRP9RXLEM"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag() { dataLayer.push(arguments); }
+			gtag('js', new Date());
 
-		gtag('config', 'G-1WRP9RXLEM');
-	</script>
-	<!-- End Google tag (gtag.js) -->
-</head>
+			gtag('config', 'G-1WRP9RXLEM');
+		</script>
+		<!-- End Google tag (gtag.js) -->
+	</head>
 
-<body>
+	<body>
+		<div id="app"></div>
 
-	<header class="header-grid">
-		<h1>Cancioneiro</h1>
-		<button id="btn-definicoes" title="Definições" class="btn-header btn-normal">⚙</button>
-	</header>
-
-	<main>
-		<!-- Folhas de cânticos -->
-		<div id="seccao-de-folhas">
-			<div id="header-folhas">
-				<h2>Folhas de Cânticos</h2>
-				<div class="btn-main btn-normal">
-					<button id="btn-nova-folha" title="Nova folha">+</button>
-					<button id="btn-ordem-data" class="btn-texto opcao-toggle">Por data</button>
-					<button id="btn-ordem-alfa" class="btn-texto opcao-toggle">A-Z</button>
-				</div>
-			</div>
-
-			<div id="container-folhas"></div>
-			<!-- preenchido pelo app.JS -->
-
-		</div>
-
-		<!-- Secção de pesquisa -->
-		<div id="seccao-pesquisa">
-			<div id="header-pesquisa">
-				<h2>Pesquisa de cânticos</h2>
-			</div>
-
-			<div id="container-pesquisa"></div>
-			<!-- preenchido pelo pesquisa.JS -->
-		</div>
-	</main>
-
-	<script type="module" src="db-init.js"></script>
-	<script src="preferencias.js" defer></script>
-	<script src="pesquisa.js" defer></script>
-	<script src="painel.js" defer></script>
-	<script src="parser.js" defer></script>
-	<script src="folhas.js" defer></script>
-	<script src="app.js" defer></script>
-
-</body>
+		<script type="module" src="db-init.js"></script>
+		<script src="preferencias.js" defer></script>
+		<script src="pesquisa.js" defer></script>
+		<script src="painel.js" defer></script>
+		<script src="parser.js" defer></script>
+		<script src="folhas.js" defer></script>
+		<script src="folha.js" defer></script>
+		<script src="cantico.js" defer></script>
+		<script src="editor-folha.js" defer></script>
+		<script src="editor-cantico.js" defer></script>
+		<script src="app.js" defer></script>
+		<script src="router.js" defer></script>
+		<script src="componentes.js" defer></script>
+	</body>
 </html>

@@ -204,9 +204,10 @@ window.Cancioneiro.dbApi = {
 
 		try {
 			// Valida o código
-			if (!await this.authFolha(tipo, id)) {
-				return false; // Código incorreto
-			}
+			const authResult = await this.authFolha(tipo, id);
+			if (!authResult || !authResult.sucesso) {
+                return false;
+            }
 
 			// Atualiza a folha
 			folhaData.dataModificacao = new Date().toISOString();
@@ -226,9 +227,10 @@ window.Cancioneiro.dbApi = {
 
 		try {
 			// Valida o código
-			if (!await this.authFolha(tipo, id)) {
-				return false; // Código incorreto
-			}
+			const authResult = await this.authFolha(tipo, id);
+            if (!authResult || !authResult.sucesso) {
+                return false;
+            }
 
 			// Apaga a folha
 			const docRef = doc(db, TIPOS_FOLHAS[tipo], id);
@@ -252,9 +254,10 @@ window.Cancioneiro.dbApi = {
 
 		try {
 			// Valida o código atual se a folha tem autenticação
-			if (!await this.authFolha(tipo, id)) {
-				return { sucesso: false, erro: "Código atual incorreto" };
-			}
+			const authResult = await this.authFolha(tipo, id);
+            if (!authResult || !authResult.sucesso) {
+                return { sucesso: false, erro: authResult?.erro || "Código atual incorreto" };
+            }
 
 			// Gera novo hash com novo salt
 			const novoSalt = AuthUtils.gerarSalt();
@@ -299,7 +302,7 @@ window.Cancioneiro.dbApi = {
 			// Verifica Permissões
 			if (tipoOrigem === "partilhada") {
 				const authResult = await this.authFolha(tipoOrigem, id);
-				if (!authResult.sucesso) throw new Error("Autenticação falhou");
+				if (!authResult.sucesso) alert("Autenticação falhou");
 
 				codigo = authResult.codigo;
 				if (!codigo) throw new Error("Código de autenticação não encontrado");
@@ -307,7 +310,7 @@ window.Cancioneiro.dbApi = {
 			}
 			if (tipoOrigem === "publica" || tipoDestino === "publica") {
 				const authResult = await this.authAdmin();
-				if (!authResult.sucesso) throw new Error("Autenticação falhou");
+				if (!authResult.sucesso) alert("Autenticação falhou");
 
 				codigo = this.getCodigoFolha(id);
 			}
@@ -315,16 +318,16 @@ window.Cancioneiro.dbApi = {
 			// Carregar folha da origem
 			if (tipoOrigem === "privada") {
 				folha = window.Cancioneiro.folhas.obter(id);
-				if (!folha) throw new Error(`Folha privada ${id} não encontrada`);
+				if (!folha) alert(`Folha privada ${id} não encontrada`);
 
 				// Pede ao utilizador para definir um código de edição para a folha
 				while (!codigo || codigo.trim().length < 4) {
 					codigo = prompt("Defina um código de edição para a folha (mínimo 4 caracteres):");
-					if (codigo === null) throw new Error("Código não fornecido");
+					if (codigo === null) alert("Código não fornecido");
 				}
 			} else { // tipoOrigem === PARTILHADA ou PÚBLICA
 				folha = await this.carregarFolha(tipoOrigem, id);
-				if (!folha) throw new Error(`Folha ${id} não encontrada`);
+				if (!folha) alert(`Folha ${id} não encontrada`);
 			}
 
 			// Preparar dados para guardar no destino
@@ -485,6 +488,10 @@ window.Cancioneiro.dbApi = {
 	 * Armazena o código em sessionStorage (expira ao fechar a tab)
 	 */
 	authFolha: async function (tipo, id) {
+		if (!TIPOS_FOLHAS[tipo]) {
+            return { sucesso: false, erro: "Tipo de folha inválido" };
+        }
+		
 		// 0. Verifica se está autenticado como Admin
 		if (this.isAdminAuthenticated()) {
 			return { sucesso: true, codigo: this.getCodigoFolha(id) };
@@ -504,17 +511,20 @@ window.Cancioneiro.dbApi = {
 
 		// 2. Se não tem em cache, pede ao utilizador
 		const codigo = prompt("Insira o código de autenticação para esta folha:");
-		if (!codigo) return { sucesso: false, erro: "Código não fornecido" };
+		if (!codigo || !codigo.trim()) {
+            return { sucesso: false, erro: "Código não fornecido" };
+        }
+
+		const codigoTrim = codigo.trim();
 
 		try {
 			// 3. Valida o código
-			if (await this._validarCodigo(tipo, id, codigo)) {
+			if (await this._validarCodigo(tipo, id, codigoTrim)) {
 				// Armazena em sessionStorage (expira ao fechar a tab)
-				sessionStorage.setItem(`folha-${id}`, codigo);
-				return { sucesso: true, codigo: codigo };
-			} else {
-				return { sucesso: false, erro: "Código incorreto" };
+				sessionStorage.setItem(`folha-${id}`, codigoTrim);
+				return { sucesso: true, codigo: codigoTrim };
 			}
+			return { sucesso: false, erro: "Código incorreto" };
 		} catch (error) {
 			console.error("Erro na autenticação da folha:", error);
 			return { sucesso: false, erro: "Erro ao autenticar. Tenta novamente." };

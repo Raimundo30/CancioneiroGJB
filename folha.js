@@ -1,17 +1,91 @@
 // folha.js — Lógica da página de visualização de uma folha de cânticos (modo apresentação)
 
+async function renderFolha(folhaId) {
+	const app = document.getElementById("app");
+	if (!app) return;
+	
+	app.innerHTML = `
+		<header class="header-grid">
+		<div class="header-info">
+			<button id="btn-voltar" class="btn-transparente btn-voltar">← Voltar</button>
+			<div id="folha-titulo-linha">
+			<h1 id="folha-titulo"></h1>
+			</div>
+			<div id="folha-meta"></div>
+		</div>
+	
+		<div class="btn-header btn-normal">
+			<button id="btn-definicoes" title="Definições">⚙</button>
+			<button id="btn-exportar-folha" title="Exportar folha">⤓</button>
+			<button id="btn-partilhar-folha" title="Partilhar folha">➦</button>
+			<button id="btn-editar-folha" title="Editar folha">✎</button>
+			<nav-comp id="nav-comp" class="VerPaginas oculto"></nav-comp>
+		</div>
+		</header>
+	
+		<main id="folha-conteudo"></main>
+	`;
+	
+	await initFolha(folhaId);
+}
+
+async function initFolha(folhaId) {
+	let folhaCarregada = null;
+	const estadoFolha = obterEstadoFolha();
+
+	if (folhaId) {
+		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
+
+		if (!folhaCarregada) {
+			if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("publica", folhaId));
+			else if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("partilhada", folhaId));
+		}
+	}
+
+	if (!folhaCarregada) {
+		document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
+		return;
+	}
+
+	estadoFolha.folha = folhaCarregada;
+
+	if (estadoFolha.folha.tipo === "partilhada") {
+		const folhasPartilhadas = JSON.parse(localStorage.getItem(Cancioneiro.folhas.KEY_PARTILHADAS) || "[]");
+		if (!folhasPartilhadas.includes(folhaId)) {
+			folhasPartilhadas.push(folhaId);
+		}
+		localStorage.setItem(Cancioneiro.folhas.KEY_PARTILHADAS, JSON.stringify(folhasPartilhadas));
+	}
+
+	// 🆕 Carregar preferências locais
+	const prefsLocais = carregarPrefsLocais(folhaId);
+	aplicarPrefsLocais(estadoFolha.folha, prefsLocais);
+
+	estadoFolha.indice = await carregarIndice();
+
+	inicializarCabecalhoFolha();
+	await renderizarFolha();
+
+	document.addEventListener("preferencia-alterada", () => renderizarFolha());
+
+	// Botão voltar
+	document.getElementById("btn-voltar").addEventListener("click", () => {
+		navigate("/home");
+	});
+
+	if (window.gtag) {
+		gtag('event', 'page_view', {
+			page_path: `/folha?id=${folhaId}`,
+			page_title: document.title,
+			folha_id: folhaId,
+			folha_titulo: estadoFolha.folha.titulo
+		});
+	}
+}
+
 // -----------------------------------------------------------------------------
 // SECÇÃO 1: Estado da página
 // -----------------------------------------------------------------------------
-
-let estadoFolha = {
-	folha: null,
-	indice: [],
-	canticosCache: {},
-	momentoAtivo: 0,
-	verPaginas: false,
-	ocultarMeta: false
-};
 
 const PREF_STORAGE_KEY = "prefs_folha_";
 
@@ -81,30 +155,13 @@ function aplicarPrefsLocais(folha, prefs) {
 // SECÇÃO 2: Carregamento de dados
 // -----------------------------------------------------------------------------
 
-async function carregarIndice() {
-	return await window.Cancioneiro.dbApi.carregarIndice();
-}
-
-async function carregarCantico(canticoId) {
-	if (estadoFolha.canticosCache[canticoId]) {
-		return estadoFolha.canticosCache[canticoId];
-	}
-	const meta = estadoFolha.indice.find(c => c.id === canticoId);
-	if (!meta) return null;
-
-	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
-	if (!docData) return null;
-
-	const dados = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
-	estadoFolha.canticosCache[canticoId] = { meta, dados };
-	return estadoFolha.canticosCache[canticoId];
-}
 
 // -----------------------------------------------------------------------------
 // SECÇÃO 3: Renderização da folha (modo apresentação)
 // -----------------------------------------------------------------------------
 
 async function renderizarFolha() {
+	const estadoFolha = obterEstadoFolha();
 	const conteudo = document.getElementById("folha-conteudo");
 	const notacao = Cancioneiro.preferencias.obter("notacao");
 	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
@@ -112,6 +169,16 @@ async function renderizarFolha() {
 
 	const folha = estadoFolha.folha;
 	const verPaginas = folha.verPaginas === true;
+
+	const navComp = document.getElementById("nav-comp .VerPaginas");
+	if (navComp) {
+		if (verPaginas) {
+			navComp.classList.remove("oculto");
+		}
+		else {
+			navComp.classList.add("oculto");
+		}
+	}
 
 	const momentosFiltrados = folha.momentos.filter(
 		m => m.canticos.length > 0
@@ -197,11 +264,16 @@ async function renderizarFolha() {
 // -----------------------------------------------------------------------------
 
 function obterEntrada(momentoId, canticoId) {
+	const estadoFolha = obterEstadoFolha();
 	const momento = estadoFolha.folha.momentos.find(m => m.id === momentoId);
 	return momento?.canticos.find(c => c.canticoId === canticoId) || null;
 }
 
 function ligarEventos(momentosFiltrados) {
+	const nav = document.getElementById("nav-comp");
+	if (!nav) return;
+
+	const estadoFolha = obterEstadoFolha();
 	// Transposição inline
 	document.querySelectorAll("#btn-transp-menos").forEach(btn => {
 		const canticoDiv = btn.closest(".folha-cantico");
@@ -266,8 +338,8 @@ function ligarEventos(momentosFiltrados) {
 	});
 
 	// Navegação entre momentos (modo apresentar individual)
-	const btnAnterior = document.getElementById("btn-anterior");
-	const btnSeguinte = document.getElementById("btn-seguinte");
+	const btnAnterior = nav?.querySelector("button#btn-anterior");
+	const btnSeguinte = nav?.querySelector("button#btn-seguinte");
 
 	if (btnAnterior) {
 		btnAnterior.disabled = estadoFolha.momentoAtivo <= 0;
@@ -290,6 +362,7 @@ function ligarEventos(momentosFiltrados) {
 }
 
 function atualizarNavegacao(momentosFiltrados) {
+	const estadoFolha = obterEstadoFolha();
 	const navComp = document.getElementById("nav-comp");
 	const btnIndice = document.getElementById("btn-indice");
 
@@ -345,11 +418,12 @@ function atualizarNavegacao(momentosFiltrados) {
 // -----------------------------------------------------------------------------
 
 async function abrirEditor() {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 
 	// Se for folha privada, vai direto para o editor
 	if (folha.tipo === "privada") {
-		window.location.href = `editor-folha.html?id=${folha.id}`;
+		navigate("/editor-folha", { id: folha.id });
 		return;
 	}
 
@@ -357,7 +431,7 @@ async function abrirEditor() {
 	const resultado = await window.Cancioneiro.dbApi.authFolha(folha.tipo, folha.id);
 
 	if (resultado.sucesso) {
-		window.location.href = `editor-folha.html?id=${folha.id}`;
+		navigate("/editor-folha", { id: folha.id });
 	} else {
 		alert(resultado.erro || "Não foi possível autenticar.");
 	}
@@ -367,6 +441,7 @@ async function abrirEditor() {
 // SECÇÃO 5B: Partilha de folhas
 // -----------------------------------------------------------------------------
 async function abrirOverlayPartilha() {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 
 	// Cria/obtém o overlay
@@ -488,6 +563,7 @@ async function abrirOverlayPartilha() {
 }
 
 function ligarEventosPartilha() {
+	const estadoFolha = obterEstadoFolha();
 	// Fechar
 	document.getElementById("btn-fechar-partilha")?.addEventListener("click", fecharOverlayPartilha);
 
@@ -537,8 +613,8 @@ function fecharOverlayPartilha() {
 }
 
 function gerarLinkPartilha(folhaId) {
-	const baseUrl = window.location.origin + window.location.pathname.replace("folha.html", "");
-	return `${baseUrl}folha.html?id=${folhaId}`;
+	const baseUrl = window.location.origin + window.location.pathname.replace("folha", "");
+	return `${baseUrl}folha?id=${folhaId}`;
 }
 
 function gerarQRCode(url) {
@@ -556,6 +632,7 @@ function gerarQRCode(url) {
 }
 
 async function alterarTipoFolha(novoTipo) {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 
 	if (folha.tipo === novoTipo) return;
@@ -587,6 +664,7 @@ async function alterarTipoFolha(novoTipo) {
 }
 
 function guardarCopiaPrivada() {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 	const folhaClone = JSON.parse(JSON.stringify(folha));
 
@@ -605,7 +683,7 @@ function guardarCopiaPrivada() {
 	window.Cancioneiro.folhas.guardar(resultado);
 
 	alert("Cópia guardada com sucesso!");
-	window.location.href = `editor-folha.html?id=${resultado.id}`;
+	navigate("/editor-folha", { id: resultado.id });
 }
 
 // -----------------------------------------------------------------------------
@@ -657,39 +735,81 @@ async function garantirBibliotecasExportacao(formato) {
 	}
 }
 
+function ehIntroducaoSecao(seccao) {
+    const label = (seccao?.label || "").trim().toLowerCase();
+    return label.includes("introducao") || label.includes("introdução") || label.includes("intro");
+}
+
+function renderizarSecoesParaExport(seccoes, mostrarAcordes, notacao, semitons, incluirTitulos) {
+    const container = document.createElement("div");
+    container.className = "cantico-letra";
+
+    for (const seccao of seccoes) {
+        const div = document.createElement("div");
+        div.className = `seccao seccao-${seccao.type}`;
+
+        if (incluirTitulos && seccao.label) {
+            div.innerHTML += `<div class="seccao-label">${seccao.label}</div>`;
+        }
+
+        for (const linha of seccao.lines) {
+            if (linha === null) {
+                div.innerHTML += '<div class="linha-vazia"></div>';
+            } else {
+                div.innerHTML += renderizarLinha(linha, mostrarAcordes, notacao, semitons);
+            }
+        }
+
+        container.appendChild(div);
+    }
+
+    return container.outerHTML;
+}
+
 function renderizarCanticoParaExport(dados, semitons = 0, seccoesPermitidas = null, opcoes = {}) {
-	const notacao = Cancioneiro.preferencias.obter("notacao");
-	const mostrarAcordes = opcoes.incluirAcordes === true;
-	const incluirTitulos = opcoes.incluirTitulosSeccao === true;
+    const notacao = Cancioneiro.preferencias.obter("notacao");
+    const mostrarAcordes = opcoes.incluirAcordes === true;
+    const incluirTitulos = opcoes.incluirTitulosSeccao === true;
 
-	const container = document.createElement("div");
-	container.className = "cantico-letra";
+    const sections = (dados.sections || []).filter((seccao) => {
+        if (!seccoesPermitidas) return true;
+        const labelSafe = seccao.label || "(sem etiqueta)";
+        return seccoesPermitidas.includes(labelSafe);
+    });
 
-	for (const seccao of dados.sections) {
-		if (seccoesPermitidas !== null) {
-			const labelSafe = seccao.label || "(sem etiqueta)";
-			if (!seccoesPermitidas.includes(labelSafe)) continue;
-		}
+    const introducao = sections.filter(ehIntroducaoSecao);
+    const estrofes = sections.filter(seccao => !ehIntroducaoSecao(seccao));
 
-		const div = document.createElement("div");
-		div.className = `seccao seccao-${seccao.type}`;
+    if (estrofes.length >= 3) {
+        const linhasTotal = estrofes.reduce((acc, seccao) => acc + (seccao.lines?.length || 0), 0);
 
-		if (incluirTitulos && seccao.label) {
-			div.innerHTML += `<div class="seccao-label">${seccao.label}</div>`;
-		}
+        if (linhasTotal >= 12) {
+            const iniciais = estrofes.slice(0, 2);
+            const restantes = estrofes.slice(2);
 
-		for (const linha of seccao.lines) {
-			if (linha === null) {
-				div.innerHTML += '<div class="linha-vazia"></div>';
-			} else {
-				div.innerHTML += renderizarLinha(linha, mostrarAcordes, notacao, semitons);
-			}
-		}
+            const meio = Math.ceil(restantes.length / 2);
+            const esquerda = restantes.slice(0, meio);
+            const direita = restantes.slice(meio);
 
-		container.appendChild(div);
-	}
+            const htmlIntroducao = introducao.length
+                ? renderizarSecoesParaExport(introducao, mostrarAcordes, notacao, semitons, incluirTitulos)
+                : "";
+            const htmlIniciais = renderizarSecoesParaExport(iniciais, mostrarAcordes, notacao, semitons, incluirTitulos);
+            const htmlEsquerda = renderizarSecoesParaExport(esquerda, mostrarAcordes, notacao, semitons, incluirTitulos);
+            const htmlDireita = renderizarSecoesParaExport(direita, mostrarAcordes, notacao, semitons, incluirTitulos);
 
-	return container.outerHTML;
+            return `
+                ${htmlIntroducao ? `<div class="cantico-introducao">${htmlIntroducao}</div>` : ""}
+                <div class="cantico-primeiras">${htmlIniciais}</div>
+                <div class="cantico-duas-colunas">
+                    <div class="cantico-coluna">${htmlEsquerda}</div>
+                    <div class="cantico-coluna">${htmlDireita}</div>
+                </div>
+            `;
+        }
+    }
+
+    return renderizarSecoesParaExport(sections, mostrarAcordes, notacao, semitons, incluirTitulos);
 }
 
 function criarPaginaExportacao(item, index, total, opcoes, tituloFolha, dataCabecalho) {
@@ -709,6 +829,23 @@ function criarPaginaExportacao(item, index, total, opcoes, tituloFolha, dataCabe
 
 	const page = document.createElement("div");
 	page.className = "export-page";
+	page.style.cssText = `
+		width: 595px;
+		min-height: 842px;
+		height: 842px;
+		box-sizing: border-box;
+		margin: 0;
+		padding: 42px 40px 30px;
+		background: #fff;
+		color: #000;
+		font-family: Arial, sans-serif;
+		font-size: 16px;
+		line-height: 1.45;
+		text-align: left;
+		display: block;
+		position: relative;
+		overflow: hidden;
+	`;
 	page.innerHTML = `
 		<div class="export-cabecalho">
 			<div>${tituloFolha || "Folha de Cânticos"}</div>
@@ -725,7 +862,71 @@ function criarPaginaExportacao(item, index, total, opcoes, tituloFolha, dataCabe
 
 		<div class="export-rodape">${index + 1}/${total}</div>
 	`;
+
+	ajustarEscalaCorpoExportacao(page);
+
 	return page;
+}
+
+function ajustarEscalaCorpoExportacao(page) {
+    const corpo = page.querySelector(".export-corpo");
+    if (!corpo) return;
+
+    const blocos = corpo.querySelectorAll(".cantico-letra, .cantico-introducao, .cantico-primeiras, .cantico-duas-colunas");
+    if (!blocos.length) return;
+
+    const pageStyle = getComputedStyle(page);
+    const alturaPagina = page.clientHeight || 842;
+    const paddingTop = parseFloat(pageStyle.paddingTop || "0");
+    const paddingBottom = parseFloat(pageStyle.paddingBottom || "0");
+
+    const cabecalho = page.querySelector(".export-cabecalho");
+    const momento = page.querySelector(".export-momento");
+    const titulo = page.querySelector(".export-titulo");
+    const meta = page.querySelector(".export-meta");
+    const rodape = page.querySelector(".export-rodape");
+
+    const alturaCabecalho = cabecalho ? cabecalho.getBoundingClientRect().height : 0;
+    const alturaMomento = momento ? momento.getBoundingClientRect().height : 0;
+    const alturaTitulo = titulo ? titulo.getBoundingClientRect().height : 0;
+    const alturaMeta = meta ? meta.getBoundingClientRect().height : 0;
+    const alturaRodape = rodape ? rodape.getBoundingClientRect().height : 0;
+
+    const alturaConsumida =
+        paddingTop +
+        paddingBottom +
+        alturaCabecalho +
+        alturaMomento +
+        alturaTitulo +
+        alturaMeta +
+        alturaRodape +
+        18;
+
+    const alturaDisponivel = Math.max(120, alturaPagina - alturaConsumida);
+    const alturaReal = corpo.scrollHeight || corpo.offsetHeight || 0;
+
+    if (!alturaReal || alturaReal <= alturaDisponivel) {
+        blocos.forEach((bloco) => {
+            bloco.style.fontSize = "";
+            bloco.style.lineHeight = "";
+        });
+        corpo.style.overflow = "visible";
+        corpo.style.height = "";
+        return;
+    }
+
+    const escala = Math.max(0.7, Math.min(1, alturaDisponivel / alturaReal));
+
+    blocos.forEach((bloco) => {
+        const fontBase = parseFloat(getComputedStyle(bloco).fontSize || "16");
+        const lineBase = parseFloat(getComputedStyle(bloco).lineHeight || "23");
+
+        bloco.style.fontSize = `${fontBase * escala}px`;
+        bloco.style.lineHeight = `${lineBase * escala}px`;
+    });
+
+    corpo.style.overflow = "hidden";
+    corpo.style.height = `${Math.ceil(alturaReal * escala)}px`;
 }
 
 function descarregarBlob(blob, nomeFicheiro) {
@@ -741,35 +942,75 @@ function descarregarBlob(blob, nomeFicheiro) {
 
 function obterOpcoesCanvasExport() {
 	return {
-		scale: 2,
-		backgroundColor: "#ffffff",
-		useCORS: true,
-		onclone: (doc) => {
-			// Evita erro do html2canvas com color()/color-mix() do tema global
-			const style = doc.createElement("style");
-			style.textContent = `
-				:root {
-					--cor-primaria: #000 !important;
-					--cor-secundaria: #f8f8ff !important;
-					--cor-destaque: #ff6400 !important;
-					--cor-fundo: #fff !important;
-					--cor-fundo-secundario: #fff !important;
-					--cor-hover: #eee !important;
-					--cor-texto: #000 !important;
-					--cor-texto-secundario: #555 !important;
-					--cor-texto-terciario: #777 !important;
-					--cor-contorno: #cfcfcf !important;
-					--cor-contorno-secundario: #d9d9d9 !important;
-				}
-				#export-root, #export-root * {
-					text-shadow: none !important;
-					box-shadow: none !important;
-				}
-				#export-root .acorde { color: #ff6400 !important; }
-			`;
-			doc.head.appendChild(style);
-		}
-	};
+        scale: 2,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        onclone: (doc) => {
+            const style = doc.createElement("style");
+            style.textContent = `
+                :root {
+                    --cor-primaria: #000 !important;
+                    --cor-secundaria: #f8f8ff !important;
+                    --cor-destaque: #ff6400 !important;
+                    --cor-fundo: #fff !important;
+                    --cor-fundo-secundario: #fff !important;
+                    --cor-hover: #eee !important;
+                    --cor-texto: #000 !important;
+                    --cor-texto-secundario: #555 !important;
+                    --cor-texto-terciario: #777 !important;
+                    --cor-contorno: #cfcfcf !important;
+                    --cor-contorno-secundario: #d9d9d9 !important;
+                }
+
+                #export-root,
+                #export-root * {
+                    text-shadow: none !important;
+                    box-shadow: none !important;
+                }
+
+                #export-root .export-page {
+                    width: 595px !important;
+                    height: 842px !important;
+                    box-sizing: border-box !important;
+                    padding: 42px 40px 30px !important;
+                    margin: 0 !important;
+                    text-align: left !important;
+                    overflow: hidden !important;
+                }
+
+                #export-root .export-corpo {
+                    position: relative !important;
+                    display: block !important;
+                    width: 100% !important;
+                    overflow: hidden !important;
+                }
+
+                #export-root .cantico-primeiras,
+                #export-root .cantico-duas-colunas,
+                #export-root .cantico-coluna,
+                #export-root .cantico-letra {
+                    width: 100% !important;
+                    text-align: left !important;
+                }
+
+                #export-root .cantico-duas-colunas {
+                    display: grid !important;
+                    grid-template-columns: 1fr 1fr !important;
+                    column-gap: 24px !important;
+                    align-items: start !important;
+                }
+
+                #export-root .cantico-coluna {
+                    display: block !important;
+                }
+
+                #export-root .acorde {
+                    color: #ff6400 !important;
+                }
+            `;
+            doc.head.appendChild(style);
+        }
+    };
 }
 
 async function exportarPaginasPDF(paginas, nomeBase) {
@@ -811,6 +1052,7 @@ async function exportarPaginasPNGZip(paginas, itens, nomeBase) {
 }
 
 async function exportarFolha(formato, opcoes) {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 	const momentosFiltrados = folha.momentos.filter(m => m.canticos.length > 0);
 
@@ -847,7 +1089,9 @@ async function exportarFolha(formato, opcoes) {
 		paginas.forEach(p => root.appendChild(p));
 
 		await new Promise(r => requestAnimationFrame(r));
-		root.querySelectorAll(".cantico-letra").forEach(c => ajustarTamanhoLetra(c));
+		paginas.forEach(p => ajustarEscalaCorpoExportacao(p));
+
+		await new Promise(r => setTimeout(r, 30));
 
 		if (formato === "pdf") {
 			await exportarPaginasPDF(paginas, folha.titulo || "folha");
@@ -978,7 +1222,8 @@ function abrirOverlayExportacao() {
 // SECÇÃO 6: Cabeçalho (visualização apenas)
 // -----------------------------------------------------------------------------
 
-function inicializarCabecalho() {
+function inicializarCabecalhoFolha() {
+	const estadoFolha = obterEstadoFolha();
 	const folha = estadoFolha.folha;
 	const tituloEl = document.getElementById("folha-titulo");
 
@@ -1021,114 +1266,3 @@ function inicializarCabecalho() {
 		btnExportar.addEventListener("click", abrirOverlayExportacao);
 	}
 }
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 6: Inicialização
-// -----------------------------------------------------------------------------
-
-async function init() {
-	const params = new URLSearchParams(window.location.search);
-	const folhaId = params.get("id");
-
-	let folhaCarregada = null;
-
-	if (folhaId) {
-		folhaCarregada = Cancioneiro.folhas.obter(folhaId);
-
-		if (!folhaCarregada) {
-			if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("publica", folhaId));
-			else if (folhaCarregada = await window.Cancioneiro.dbApi.carregarFolha("partilhada", folhaId));
-		}
-	}
-
-	if (!folhaCarregada) {
-		document.getElementById("folha-titulo").textContent = "Folha não encontrada ou link inválido.";
-		return;
-	}
-
-	estadoFolha.folha = folhaCarregada;
-
-	if (estadoFolha.folha.tipo === "partilhada") {
-		const folhasPartilhadas = JSON.parse(localStorage.getItem(Cancioneiro.folhas.KEY_PARTILHADAS) || "[]");
-		if (!folhasPartilhadas.includes(folhaId)) {
-			folhasPartilhadas.push(folhaId);
-		}
-		localStorage.setItem(Cancioneiro.folhas.KEY_PARTILHADAS, JSON.stringify(folhasPartilhadas));
-	}
-
-	// 🆕 Carregar preferências locais
-	const prefsLocais = carregarPrefsLocais(folhaId);
-	aplicarPrefsLocais(estadoFolha.folha, prefsLocais);
-
-	function sincronizarTogglesPainel() {
-		const toggleVerPaginas = document.getElementById("toggle-verPaginas");
-		const toggleMeta = document.getElementById("toggle-meta");
-
-		if (toggleVerPaginas) {
-			toggleVerPaginas.checked = estadoFolha.folha.verPaginas === true;
-		}
-
-		if (toggleMeta) {
-			toggleMeta.checked = estadoFolha.folha.ocultarMeta === true;
-		}
-	}
-
-	function aplicarAlteracaoPainel(evento) {
-		if (!estadoFolha.folha) return;
-
-		const { chave, valor } = evento.detail;
-
-		if (chave === "verPaginas") {
-			estadoFolha.folha.verPaginas = valor;
-			estadoFolha.momentoAtivo = 0;
-		}
-
-		if (chave === "ocultarMeta") {
-			estadoFolha.folha.ocultarMeta = valor;
-		}
-
-		guardarPrefsLocais(estadoFolha.folha);
-		renderizarFolha();
-	}
-
-	document.addEventListener(
-		"folha-preferencia-alterada",
-		aplicarAlteracaoPainel
-	);
-
-	if (window.Cancioneiro.painelPronto) {
-		sincronizarTogglesPainel();
-	} else {
-		document.addEventListener(
-			"painel-pronto",
-			sincronizarTogglesPainel,
-			{ once: true }
-		);
-	}
-
-	estadoFolha.indice = await carregarIndice();
-
-	inicializarCabecalho();
-	await renderizarFolha();
-
-	document.addEventListener("preferencia-alterada", () => renderizarFolha());
-
-	// Botão voltar
-	const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
-		? '/CancioneiroGJB/'
-		: '/';
-	document.getElementById("btn-voltar").addEventListener("click", () => {
-		window.location.href = BASE_URL;
-	});
-
-	if (window.gtag) {
-		gtag('event', 'page_view', {
-			page_path: `/folha.html?id=${folhaId}`,
-			page_title: document.title,
-			folha_id: folhaId,
-			folha_titulo: estadoFolha.folha.titulo
-		});
-	}
-}
-
-init();

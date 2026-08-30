@@ -6,7 +6,7 @@ window.Cancioneiro.painelPronto = false;
 (async function () {
 	try {
 		const resposta = await fetch("painel.html");
-		const html     = await resposta.text();
+		const html = await resposta.text();
 
 		const container = document.createElement("div");
 		container.innerHTML = html;
@@ -19,178 +19,232 @@ window.Cancioneiro.painelPronto = false;
 	}
 })();
 
-// Lógica do painel de definições
-
-document.addEventListener("painel-pronto", () => {
+function configurarPainelDefinicoes() {
 	const painel = document.getElementById("painel-definicoes");
 	const overlay = document.getElementById("overlay-definicoes");
+	if (!painel || !overlay) return;
 
-	// Determinar se estamos numa página de folha ou de cântico
-	const ehFolha = window.location.pathname
-        .toLowerCase()
-        .endsWith("folha.html");
+	const route = typeof getRoute === "function" ? getRoute() : { path: "/" };
+	const ehFolha = route.path === "/folha";
+	const ehCantico = route.path === "/cantico";
 
-    const ehCantico = window.location.pathname
-        .toLowerCase()
-        .endsWith("cantico.html");
-
-    function configurarVisibilidadeOpcoes() {
+	function atualizarVisibilidadeOpcoes() {
 		document.querySelectorAll("#painel-definicoes .folha, #painel-definicoes .cantico")
-		.forEach(elemento => {
-			const pertenceFolha = elemento.classList.contains("folha");
-			const pertenceCantico = elemento.classList.contains("cantico");
+			.forEach((elemento) => {
+				const pertenceFolha = elemento.classList.contains("folha");
+				const pertenceCantico = elemento.classList.contains("cantico");
 
-			const visivel = (pertenceFolha && ehFolha) || (pertenceCantico && ehCantico);
+				const visivel = (pertenceFolha && ehFolha) || (pertenceCantico && ehCantico);
+				elemento.style.display = visivel
+					? (elemento.classList.contains("toggle") ? "flex" : "block")
+					: "none";
+			});
+	}
 
-			elemento.style.display = visivel
-				? elemento.classList.contains("toggle") ? "flex" : "block"
-				: "none";
-		});
-    }
-	configurarVisibilidadeOpcoes();
-
-	// Lógica do botão abrir
-	const btnAbrir = document.getElementById("btn-definicoes");
-	btnAbrir.addEventListener("click", abrirPainel);
 	function abrirPainel() {
+		const painel = document.getElementById("painel-definicoes");
+		const overlay = document.getElementById("overlay-definicoes");
+		if (!painel || !overlay) return;
+
 		atualizarBotoes();
+		atualizarVisibilidadeOpcoes();
+
 		painel.classList.remove("painel-fechado");
 		painel.classList.add("painel-aberto");
 		overlay.classList.add("overlay-visivel");
 	}
-	
-	// Lógica do botão fechar
-	const btnFechar = document.getElementById("btn-fechar-painel");
-	btnFechar.addEventListener("click", fecharPainel);
-	overlay.addEventListener("click", fecharPainel);
+
 	function fecharPainel() {
+		const painel = document.getElementById("painel-definicoes");
+		const overlay = document.getElementById("overlay-definicoes");
+		if (!painel || !overlay) return;
+
 		painel.classList.remove("painel-aberto");
 		painel.classList.add("painel-fechado");
 		overlay.classList.remove("overlay-visivel");
 	}
 
-	// Lógica do botão admin
-	const toggleAdmin = document.getElementById("toggle-admin");
-	toggleAdmin.addEventListener("click", async () => {
-		if (toggleAdmin.checked) {
-			const resultado = await window.Cancioneiro.dbApi.authAdmin();
-	
-			if (!resultado.sucesso) {
-				toggleAdmin.checked = false;
-			}
-		} else {
-			await window.Cancioneiro.dbApi.logoutAdmin();
+	function atualizarBotoes() {
+		document.querySelectorAll(".opcao-toggle[data-pref][data-valor]").forEach((btn) => {
+			const chave = btn.dataset.pref;
+			const valor = btn.dataset.valor;
+			const atual = Cancioneiro.preferencias.obter(chave);
+			btn.classList.toggle("ativo", String(atual) === String(valor));
+		});
+
+		const toggleAdmin = document.getElementById("toggle-admin");
+		const adminAutenticado = window.Cancioneiro.dbApi.isAdminAuthenticated();
+
+		if (toggleAdmin) {
+			toggleAdmin.checked = adminAutenticado;
 		}
-		atualizarBotoes();
+
+		if (adminAutenticado) {
+			document.querySelectorAll(".admin").forEach((elemento) => {
+				elemento.classList.remove("oculto");
+			});
+		} else {
+			document.querySelectorAll(".admin").forEach((elemento) => {
+				elemento.classList.add("oculto");
+			});
+		}
+
+		const toggleFullscreen = document.getElementById("toggle-fullscreen");
+		if (toggleFullscreen) {
+			toggleFullscreen.checked = Boolean(document.fullscreenElement);
+		}
+
+		const estadoFolha = obterEstadoFolha();
+		const toggleVerPaginas = document.getElementById("toggle-verPaginas");
+		if (toggleVerPaginas) {
+			toggleVerPaginas.checked = Boolean(estadoFolha.folha && estadoFolha.folha.verPaginas);
+		}
+
+		const toggleMeta = document.getElementById("toggle-meta");
+		if (toggleMeta) {
+			toggleMeta.checked = Boolean(estadoFolha.folha && estadoFolha.folha.ocultarMeta);
+		}
+	}
+
+	// Evita múltiplos binds
+	if (!painel.dataset.bindado) {
+		painel.dataset.bindado = "true";
+
+		document.addEventListener("click", (e) => {
+			const abrir = e.target.closest("#btn-definicoes");
+			if (abrir) {
+				abrirPainel();
+				return;
+			}
+
+			const fechar = e.target.closest("#btn-fechar-painel");
+			if (fechar) {
+				fecharPainel();
+				return;
+			}
+
+			if (e.target === overlay) {
+				fecharPainel();
+			}
+		});
+
+		document.addEventListener("hashchange", () => {
+			configurarPainelDefinicoes();
+		});
+	}
+
+	atualizarVisibilidadeOpcoes();
+	atualizarBotoes();
+
+	// Eventos dos toggles (só uma vez)
+	document.querySelectorAll(".opcao-toggle[data-pref][data-valor]").forEach((btn) => {
+		btn.onclick = () => {
+			const chave = btn.dataset.pref;
+			const valor = btn.dataset.valor;
+			Cancioneiro.preferencias.definir(chave, valor);
+			atualizarBotoes();
+		};
 	});
 
-	// Lógica do botão novo cântico (apenas visível para admins)
+	const toggleAdmin = document.getElementById("toggle-admin");
+	if (toggleAdmin && !toggleAdmin.dataset.bindado) {
+		toggleAdmin.dataset.bindado = "true";
+		toggleAdmin.addEventListener("click", async () => {
+			if (toggleAdmin.checked) {
+				const resultado = await window.Cancioneiro.dbApi.authAdmin();
+				if (!resultado.sucesso) {
+					toggleAdmin.checked = false;
+				}
+			} else {
+				await window.Cancioneiro.dbApi.logoutAdmin();
+			}
+			atualizarBotoes();
+		});
+	}
+
+	const toggleFullscreen = document.getElementById("toggle-fullscreen");
+	if (toggleFullscreen && !toggleFullscreen.dataset.bindado) {
+		toggleFullscreen.dataset.bindado = "true";
+		toggleFullscreen.addEventListener("change", async () => {
+			try {
+				if (toggleFullscreen.checked) {
+					await document.documentElement.requestFullscreen();
+				} else if (document.fullscreenElement) {
+					await document.exitFullscreen();
+				}
+			} catch (erro) {
+				console.error("Erro ao alternar fullscreen:", erro);
+				toggleFullscreen.checked = Boolean(document.fullscreenElement);
+			}
+			atualizarBotoes();
+		});
+	}
+
+	const toggleVerPaginas = document.getElementById("toggle-verPaginas");
+	if (toggleVerPaginas && !toggleVerPaginas.dataset.bindado) {
+		toggleVerPaginas.dataset.bindado = "true";
+		toggleVerPaginas.addEventListener("change", () => {
+			const valor = Boolean(toggleVerPaginas.checked);
+			const estadoFolha = obterEstadoFolha();
+	
+			if (estadoFolha && estadoFolha.folha) {
+				estadoFolha.folha.verPaginas = valor;
+			}
+			if (estadoFolha) {
+				estadoFolha.verPaginas = valor;
+			}
+	
+			if (estadoFolha && estadoFolha.folha) {
+				guardarPrefsLocais(estadoFolha.folha);
+			}
+	
+			document.dispatchEvent(new CustomEvent("preferencia-alterada", {
+				detail: {
+					chave: "verPaginas",
+					valor: valor
+				}
+			}));
+		});
+	}
+
+	const toggleMeta = document.getElementById("toggle-meta");
+	if (toggleMeta && !toggleMeta.dataset.bindado) {
+		toggleMeta.dataset.bindado = "true";
+		toggleMeta.addEventListener("change", () => {
+			const estadoFolha = obterEstadoFolha();
+
+			if (estadoFolha && estadoFolha.folha) {
+				estadoFolha.folha.ocultarMeta = valor;
+			}
+			if (estadoFolha) {
+				estadoFolha.ocultarMeta = valor;
+			}
+	
+			if (estadoFolha && estadoFolha.folha) {
+				guardarPrefsLocais(estadoFolha.folha);
+			}
+
+			document.dispatchEvent(new CustomEvent("preferencia-alterada", {
+				detail: {
+					chave: "ocultarMeta",
+					valor: toggleMeta.checked
+				}
+			}));
+		});
+	}
+
 	const btnNovoCantico = document.getElementById("btn-novo-cantico");
-	if (btnNovoCantico) {
+	if (btnNovoCantico && !btnNovoCantico.dataset.bindado) {
+		btnNovoCantico.dataset.bindado = "true";
 		btnNovoCantico.addEventListener("click", () => {
 			if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
-				window.location.href = "editor-cantico.html";
+				navigate("/editor-cantico");
 			} else {
 				alert("Apenas administradores podem criar novos cânticos");
 			}
 		});
 	}
+}
 
-	// Lógica do botão apagar cântico (apenas visível para admins)
-	const btnApagarCantico = document.getElementById("btn-apagar-cantico");
-	if (btnApagarCantico) {
-		// btnApagarCantico.addEventListener("click", async () => {
-		// 	if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
-		// 		const confirmacao = confirm("Tem certeza que deseja apagar este cântico?");
-		// 		if (confirmacao) {
-		// 			await window.Cancioneiro.dbApi.apagarCantico();
-		// 		}
-		// 	} else {
-		// 		alert("Apenas administradores podem apagar cânticos");
-		// 	}
-		// });
-	}
-
-	// Lógica do botão fullscreen
-	const toggleFullscreen = document.getElementById("toggle-fullscreen");
-	toggleFullscreen.addEventListener("change", async () => {
-		try {
-			if (toggleFullscreen.checked) {
-				await document.documentElement.requestFullscreen();
-			} else if (document.fullscreenElement) {
-				await document.exitFullscreen();
-			}
-		} catch (erro) {
-			console.error("Erro ao alternar fullscreen:", erro);
-			toggleFullscreen.checked = Boolean(document.fullscreenElement);
-		}
-	
-		atualizarBotoes();
-	});
-
-	// Lógica do botão "Ver por página" (apenas visível em folhas)
-	const toggleVerPaginas = document.getElementById("toggle-verPaginas");
-	if (toggleVerPaginas) {
-        toggleVerPaginas.addEventListener("change", () => {
-            document.dispatchEvent(new CustomEvent("folha-preferencia-alterada", {
-                detail: {
-                    chave: "verPaginas",
-                    valor: toggleVerPaginas.checked
-                }
-            }));
-        });
-    }
-
-	// Lógica do botão "Ocultar meta" (apenas visível em folhas)
-	const toggleMeta = document.getElementById("toggle-meta");
-    if (toggleMeta) {
-        toggleMeta.addEventListener("change", () => {
-            document.dispatchEvent(new CustomEvent("folha-preferencia-alterada", {
-                detail: {
-                    chave: "ocultarMeta",
-                    valor: toggleMeta.checked
-                }
-            }));
-        });
-    }
-
-	// Lógica dos botões de toggle
-	document.querySelectorAll(".opcao-toggle").forEach(btn => {
-		btn.addEventListener("click", () => {
-			const chave = btn.dataset.pref;
-			const valor = btn.dataset.valor;
-			Cancioneiro.preferencias.definir(chave, valor);
-			atualizarBotoes();
-		});
-	});
-
-	// Sincroniza o visual dos botões com as preferências atuais
-	function atualizarBotoes() {
-		document.querySelectorAll(".opcao-toggle[data-pref][data-valor]").forEach(btn => {
-			const chave = btn.dataset.pref;
-			const valor = btn.dataset.valor;
-			const atual = Cancioneiro.preferencias.obter(chave);
-
-			btn.classList.toggle("ativo", String(atual) === String(valor));
-		});
-
-		// --- Admin ---
-		const adminAutenticado = window.Cancioneiro.dbApi.isAdminAuthenticated();
-
-		toggleAdmin.checked = adminAutenticado;
-		document.querySelectorAll("#novo-cantico, #apagar-cantico").forEach(elemento => {
-			elemento.style.display = adminAutenticado &&
-			(
-				(elemento.id === "novo-cantico" && (ehFolha || ehCantico)) ||
-				(elemento.id === "apagar-cantico" && ehCantico)
-			)
-				? "block"
-				: "none";
-		});
-
-		// --- Fullscreen ---
-		toggleFullscreen.checked = Boolean(document.fullscreenElement);
-	}
-
-	atualizarBotoes();
-});
+document.addEventListener("painel-pronto", configurarPainelDefinicoes);
+document.addEventListener("hashchange", configurarPainelDefinicoes);

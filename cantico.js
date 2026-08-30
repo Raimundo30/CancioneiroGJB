@@ -1,219 +1,52 @@
 // cantico.js — Lógica da página de visualização de um cântico
 
-// -----------------------------------------------------------------------------
-// SECÇÃO 2: Renderização da letra
-// -----------------------------------------------------------------------------
+async function renderCantico(canticoIdParam) {
+	const app = document.getElementById("app");
+	if (!app) return;
 
-/**
- * Renderiza o cântico completo no elemento #cantico-letra.
- *
- * @param {object} dadosCantico - Resultado do parseChordPro()
- * @param {string} canticoId
- */
-function atualizaCantico(dadosCantico, canticoId, tomOriginal) {
-	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
-	const notacao        = Cancioneiro.preferencias.obter("notacao");
-	const semitons       = Cancioneiro.preferencias.obterTransposicao(canticoId);
-
-	// Renderiza transposição
-	const tomApresentado = notacao === "latino"
-		? Cancioneiro.parser.converterAcorde(transporAcorde(tomOriginal, semitons), "latino")
-		: transporAcorde(tomOriginal, semitons);
-	const transp = document.getElementById("transp-comp");
-	if (mostrarAcordes) {
-		transp.classList.remove("oculto");
-		document.getElementById("spn-transp-valor").textContent = `${tomApresentado}`;
-	} else {
-		transp.classList.add("oculto");
-	}
-
-	// Renderiza botão de Reset
-	const btnReset = document.getElementById("btn-transp-reset");
-	btnReset.disabled = semitons === 0;
-
-	// Renderiza cântico
-	const container = document.getElementById("cantico-letra");
-	container.innerHTML = renderizarCantico(dadosCantico, semitons);
+	const { params } = getRoute();
+	const canticoId = canticoIdParam || params.get("id");
 	
-	// Executa depois de renderizar
-	requestAnimationFrame(() => ajustarTamanhoLetra(container));
-
-	// Atualiza se a janela for redimensionada
-	window.addEventListener('resize', () => ajustarTamanhoLetra(container));
-}
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 3: funções de inicialização e eventos
-// -----------------------------------------------------------------------------
-
-function registaEventos(canticoId, indice) {
-	// Navegação
-	const currentIndex = indice.findIndex(c => c.id === canticoId);
-	const btnAnterior  = document.getElementById("btn-anterior");
-	const btnSeguinte  = document.getElementById("btn-seguinte");
-	const btnIndice    = document.getElementById("btn-indice");
-
-	// Botão Anterior
-	if (currentIndex <= 0) {
-		btnAnterior.disabled = true;
-	} else {
-		btnAnterior.addEventListener("click", () => {
-		const prevId = indice[currentIndex - 1].id;
-		window.location.href = `cantico.html?id=${prevId}`;
-		});
-	}
-
-	// Botão Seguinte
-	if (currentIndex === -1 || currentIndex >= indice.length - 1) {
-		btnSeguinte.disabled = true;
-	} else {
-		btnSeguinte.addEventListener("click", () => {
-			const nextId = indice[currentIndex + 1].id;
-			window.location.href = `cantico.html?id=${nextId}`;
-		});
-	}
-
-	// Botão Índice
-	btnIndice.addEventListener("click", () => {
-		let painelIndice = document.getElementById("painel-indice");
-		let overlayIndice = document.getElementById("overlay-indice");
-		
-		// Criar o painel caso ele ainda não exista na página
-		if (!painelIndice) {
-			overlayIndice = document.createElement("div");
-			overlayIndice.id = "overlay-indice";
-			overlayIndice.className = "overlay";
-			overlayIndice.style = `
-				display: none; 
-				position: fixed; 
-				inset: 0; 
-				background: rgba(0,0,0,0.5); /* Se preferires invisível, mete transparent */
-				z-index: 150;
-			`;
-			document.body.appendChild(overlayIndice);
-
-			painelIndice = document.createElement("div");
-			painelIndice.id = "painel-indice";
-			painelIndice.className = "painel-fechado";
-
-			// Criar o conteúdo e listar os cânticos 
-			painelIndice.innerHTML = `
-				<div id="painel-indice-interior" style="display: flex; flex-direction: column; height: 100%; padding: 1.5rem;">
-					
-					<!-- CABEÇALHO (sempre fixo no topo) -->
-					<div id="painel-indice-cabecalho" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0;">
-						<h2 style="margin: 0;">Índice</h2>
-						<button id="btn-fechar-indice" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--cor-contorno);">✕</button>
-					</div>
-
-					<div id="painel-indice-pesquisa" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
+	app.innerHTML = `
+		<header class="header-grid">
+			<div class="header-info">
+				<button id="btn-voltar" class="btn-transparente btn-voltar">← Voltar</button>
+				
+				<h1 id="cantico-titulo">A carregar...</h1>
+				<h2 id="cantico-subtitulo"></h2>
+				
+				<div id="cantico-meta">
+					<span id="cantico-autor"></span>
+					<span id="cantico-tom"></span>
+					<span id="cantico-categorias"></span>					
 				</div>
-			`;
+			</div>
 
-			document.body.appendChild(painelIndice);
-			
-			// Inicializar pesquisa
-			const pesquisaIndice = new Cancioneiro.Pesquisa(
-				"painel-indice-pesquisa", 
-				indice, 
-				(cantico) => {
-					window.location.href = `cantico.html?id=${cantico.id}`;
-				}
-			);
+			<div class="btn-header btn-normal">
+				<button id="btn-definicoes" title="Definições">⚙</button>
+				<button id="btn-exportar-cantico" title="Exportar cântico">⤓</button>
+				<button id="btn-partilhar-cantico" title="Partilhar cântico">➦</button>
+				<button id="btn-editar-cantico" title="Editar cântico" class="admin oculto">✎</button>
+				<nav-comp id="nav-comp"></nav-comp>
+			</div>
+		</header>
 
-			// Fechar painel
-			function fecharPainel() {
-				painelIndice.classList.remove("painel-aberto");
-				painelIndice.classList.add("painel-fechado");
-				overlayIndice.style.display = "none";
-			}
+		<main id="cantico-conteudo">
+			<div class="btn-main btn-normal">
+				<!-- Componente de transposição -->
+				<transp-comp id="transp-comp" class="oculto"></transp-comp>
+			</div>
+			<div id="cantico-letra"> <!-- Preenchido pelo cantico.js --> </div>
+		</main>
+	`;
 
-			document.getElementById("btn-fechar-indice").addEventListener("click", fecharPainel);
-
-			overlayIndice.addEventListener("click", (e) => {
-				if (e.target === overlayIndice) fecharPainel();
-			});
-		}
-
-			// Ao clicar no botão índice, abrimos o painel
-		overlayIndice.style.display = "block";
-		painelIndice.classList.remove("painel-fechado");
-		painelIndice.classList.add("painel-aberto");
-
-		const itemAtual = document.getElementById("pesquisa-item-" + canticoId);
-		if (itemAtual) {
-			itemAtual.classList.add("cantico-atual");
-			itemAtual.scrollIntoView({ behavior: 'instant', block: 'center' });
-		}
-	});
-
-
-	// Transposição
-	document.getElementById("btn-transp-mais").addEventListener("click", () => {
-		Cancioneiro.preferencias.alterarTransposicao(canticoId, + 1);
-	});
-	document.getElementById("btn-transp-menos").addEventListener("click", () => {
-		Cancioneiro.preferencias.alterarTransposicao(canticoId, - 1);
-	});
-	document.getElementById("btn-transp-reset").addEventListener("click", () => {
-		Cancioneiro.preferencias.resetarTransposicao(canticoId);
-	});
-
-	// Editar cântico
-	const btnEditar = document.getElementById("btn-editar-cantico");
-	if (btnEditar) {
-		btnEditar.addEventListener("click", async () => {
-            const auth = await window.Cancioneiro.dbApi.authAdmin();
-			if (auth.sucesso) {
-				window.location.href = `editor-cantico.html?id=${canticoId}`;
-			} else {
-                alert("Autenticação necessária para editar cânticos.");
-			}
-		});
-	}
+	await initCantico(canticoId);
 }
 
-function preencheHeader(dadosCantico, meta, tomOriginal) {
-	const canticoMeta = document.getElementById("cantico-meta");
-	const notacao     = Cancioneiro.preferencias.obter("notacao");
-
-	// Preenche o cabeçalho
-	const tituloEl = document.getElementById("cantico-titulo");
-	tituloEl.textContent    = dadosCantico.meta.title || meta.titulo;
-	document.title = dadosCantico.meta.title || meta.titulo;
-
-	const subtituloEl = document.getElementById("cantico-subtitulo");
-	if (dadosCantico.meta.subtitle || meta.subtitulo) {
-		subtituloEl.textContent = `${"(" + (dadosCantico.meta.subtitle || meta.subtitulo) + ")"}`;
-	}
-	
-	const autorEl = document.getElementById("cantico-autor");
-	autorEl.textContent = dadosCantico.meta.author || meta.autor;
-	canticoMeta.appendChild(autorEl);
-	
-	const tomEl = document.getElementById("cantico-tom");
-	tomEl.textContent = `Tom: ${converterAcorde(tomOriginal, notacao)}`;
-	if (autorEl.textContent !== "" && tomEl.textContent !== "") {
-		canticoMeta.appendChild(document.createTextNode(" · "));
-	}
-	canticoMeta.appendChild(tomEl);
-	
-	const categoriasEl = document.getElementById("cantico-categorias");
-	categoriasEl.textContent = meta.categorias ? meta.categorias.join(" · ") : "";
-	if ((autorEl.textContent !== "" || tomEl.textContent !== "") && categoriasEl.textContent !== "") {
-		canticoMeta.appendChild(document.createTextNode(" · "));
-	}
-	canticoMeta.appendChild(categoriasEl);
-}
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 4: Inicialização
-// -----------------------------------------------------------------------------
-
-async function init() {
+async function initCantico(canticoIdParam) {
 	// Lê o id do cântico da URL (ex: cantico.html?id=001)
-	const params    = new URLSearchParams(window.location.search);
-	const canticoId = params.get("id");
+	const { params } = getRoute();
+	const canticoId = canticoIdParam || params.get("id");
 
 	if (!canticoId) {
 		document.getElementById("cantico-titulo").textContent = "Cântico não encontrado.";
@@ -259,17 +92,14 @@ async function init() {
 	});
 
 	// Botão voltar
-	const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
-		? '/CancioneiroGJB/'
-		: '/';
 	document.getElementById("btn-voltar").addEventListener("click", () => {
-		window.location.href = BASE_URL;
+		navigate("/");
 	});
 
 	// Google Analytics: envia evento de page_view depois de carregar dados
 	if (window.gtag) {
 		gtag('event', 'page_view', {
-			page_path: `/cantico.html?id=${canticoId}`,
+			page_path: `/cantico?id=${canticoId}`,
 			page_title: document.title,
 			cantico_id: canticoId,
 			cantico_titulo: dadosCantico.meta.title || meta.titulo
@@ -277,4 +107,227 @@ async function init() {
 	}
 }
 
-init();
+// -----------------------------------------------------------------------------
+// SECÇÃO 2: Renderização da letra
+// -----------------------------------------------------------------------------
+
+/**
+ * Renderiza o cântico completo no elemento #cantico-letra.
+ *
+ * @param {object} dadosCantico - Resultado do parseChordPro()
+ * @param {string} canticoId
+ */
+function atualizaCantico(dadosCantico, canticoId, tomOriginal) {
+	const container = document.getElementById("cantico-letra");
+    if (!container) return; // Página já não está ativa / DOM removido
+
+	const mostrarAcordes = Cancioneiro.preferencias.obter("mostrarAcordes");
+	const notacao        = Cancioneiro.preferencias.obter("notacao");
+	const semitons       = Cancioneiro.preferencias.obterTransposicao(canticoId);
+
+	// Renderiza transposição
+	const tomApresentado = notacao === "latino"
+		? Cancioneiro.parser.converterAcorde(transporAcorde(tomOriginal, semitons), "latino")
+		: transporAcorde(tomOriginal, semitons);
+	const transp = document.getElementById("transp-comp");
+	if (mostrarAcordes) {
+		transp.classList.remove("oculto");
+		const transpValor = transp.querySelector("span#spn-transp-valor");
+		if (transpValor) {
+			transpValor.textContent = `${tomApresentado}`;
+		}
+	} else {
+		transp.classList.add("oculto");
+	}
+
+	// Renderiza botão de Reset
+	const btnReset = transp?.querySelector("button#btn-transp-reset");
+	btnReset.disabled = semitons === 0;
+
+	// Renderiza cântico
+	container.innerHTML = renderizarCantico(dadosCantico, semitons);
+	
+	// Executa depois de renderizar
+	requestAnimationFrame(() => ajustarTamanhoLetra(container));
+
+	// Atualiza se a janela for redimensionada
+	window.addEventListener('resize', () => ajustarTamanhoLetra(container));
+}
+
+// -----------------------------------------------------------------------------
+// SECÇÃO 3: funções de inicialização e eventos
+// -----------------------------------------------------------------------------
+
+function registaEventos(canticoId, indice) {
+	const currentIndex = indice.findIndex(c => c.id === canticoId);
+
+	// Navegação
+	const nav = document.getElementById("nav-comp");
+	requestAnimationFrame(() => {
+		const btnAnterior  = nav?.querySelector("button#btn-anterior");
+		const btnSeguinte  = nav?.querySelector("button#btn-seguinte");
+		const btnIndice    = nav?.querySelector("button#btn-indice");
+
+		if (!btnAnterior || !btnSeguinte || !btnIndice) return;
+
+		// Botão Anterior
+		if (currentIndex <= 0) {
+			btnAnterior.disabled = true;
+		} else {
+			btnAnterior.addEventListener("click", () => {
+			const prevId = indice[currentIndex - 1].id;
+			navigate("/cantico", { id: prevId });
+			});
+		}
+		
+		// Botão Seguinte
+		if (currentIndex === -1 || currentIndex >= indice.length - 1) {
+			btnSeguinte.disabled = true;
+		} else {
+			btnSeguinte.addEventListener("click", () => {
+				const nextId = indice[currentIndex + 1].id;
+				navigate("/cantico", { id: nextId });
+			});
+		}
+
+		// Botão Índice
+		btnIndice.addEventListener("click", () => {
+			let painelIndice = document.getElementById("painel-indice");
+			let overlayIndice = document.getElementById("overlay-indice");
+			
+			// Criar o painel caso ele ainda não exista na página
+			if (!painelIndice) {
+				overlayIndice = document.createElement("div");
+				overlayIndice.id = "overlay-indice";
+				overlayIndice.className = "overlay";
+				overlayIndice.style = `
+					display: none; 
+					position: fixed; 
+					inset: 0; 
+					background: rgba(0,0,0,0.5); /* Se preferires invisível, mete transparent */
+					z-index: 150;
+				`;
+				document.body.appendChild(overlayIndice);
+
+				painelIndice = document.createElement("div");
+				painelIndice.id = "painel-indice";
+				painelIndice.className = "painel-fechado";
+
+				// Criar o conteúdo e listar os cânticos 
+				painelIndice.innerHTML = `
+					<div id="painel-indice-interior" style="display: flex; flex-direction: column; height: 100%; padding: 1.5rem;">
+						
+						<!-- CABEÇALHO (sempre fixo no topo) -->
+						<div id="painel-indice-cabecalho" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0;">
+							<h2 style="margin: 0;">Índice</h2>
+							<button id="btn-fechar-indice" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--cor-contorno);">✕</button>
+						</div>
+
+						<div id="painel-indice-pesquisa" style="flex-grow: 1; display: flex; flex-direction: column; overflow: hidden;"></div>
+					</div>
+				`;
+
+				document.body.appendChild(painelIndice);
+				
+				// Inicializar pesquisa
+				const pesquisaIndice = new Cancioneiro.Pesquisa(
+					"painel-indice-pesquisa", 
+					indice, 
+					(cantico) => {
+						navigate("/cantico", { id: cantico.id });
+					}
+				);
+
+				// Fechar painel
+				function fecharPainel() {
+					painelIndice.classList.remove("painel-aberto");
+					painelIndice.classList.add("painel-fechado");
+					overlayIndice.style.display = "none";
+				}
+
+				document.getElementById("btn-fechar-indice").addEventListener("click", fecharPainel);
+
+				overlayIndice.addEventListener("click", (e) => {
+					if (e.target === overlayIndice) fecharPainel();
+				});
+			}
+
+			// Ao clicar no botão índice, abrimos o painel
+			overlayIndice.style.display = "block";
+			painelIndice.classList.remove("painel-fechado");
+			painelIndice.classList.add("painel-aberto");
+
+			const itemAtual = document.getElementById("pesquisa-item-" + canticoId);
+			if (itemAtual) {
+				itemAtual.classList.add("cantico-atual");
+				itemAtual.scrollIntoView({ behavior: 'instant', block: 'center' });
+			}
+		});
+	});
+
+	// Transposição
+	const transpComp = document.getElementById("transp-comp");
+	requestAnimationFrame(() => {
+		btnTranspMais = transpComp?.querySelector("button#btn-transp-mais");
+		btnTranspMenos = transpComp?.querySelector("button#btn-transp-menos");
+		btnTranspReset = transpComp?.querySelector("button#btn-transp-reset");
+
+		if (!btnTranspMais || !btnTranspMenos || !btnTranspReset) return;
+	
+		btnTranspMais.addEventListener("click", () => {
+			Cancioneiro.preferencias.alterarTransposicao(canticoId, + 1);
+		});
+		btnTranspMenos.addEventListener("click", () => {
+			Cancioneiro.preferencias.alterarTransposicao(canticoId, - 1);
+		});
+		btnTranspReset.addEventListener("click", () => {
+			Cancioneiro.preferencias.resetarTransposicao(canticoId);
+		});
+	});
+
+	// Editar cântico
+	const btnEditar = document.getElementById("btn-editar-cantico");
+	if (btnEditar) {
+		btnEditar.addEventListener("click", async () => {
+            const auth = await window.Cancioneiro.dbApi.authAdmin();
+			if (auth.sucesso) {
+				navigate("/editor-cantico", { id: canticoId });
+			} else {
+                alert("Autenticação necessária para editar cânticos.");
+			}
+		});
+	}
+}
+
+function preencheHeader(dadosCantico, meta, tomOriginal) {
+	const canticoMeta = document.getElementById("cantico-meta");
+	const notacao     = Cancioneiro.preferencias.obter("notacao");
+
+	// Preenche o cabeçalho
+	const tituloEl = document.getElementById("cantico-titulo");
+	tituloEl.textContent    = dadosCantico.meta.title || meta.titulo;
+	document.title = dadosCantico.meta.title || meta.titulo;
+
+	const subtituloEl = document.getElementById("cantico-subtitulo");
+	if (dadosCantico.meta.subtitle || meta.subtitulo) {
+		subtituloEl.textContent = `${"(" + (dadosCantico.meta.subtitle || meta.subtitulo) + ")"}`;
+	}
+	
+	const autorEl = document.getElementById("cantico-autor");
+	autorEl.textContent = dadosCantico.meta.author || meta.autor;
+	canticoMeta.appendChild(autorEl);
+	
+	const tomEl = document.getElementById("cantico-tom");
+	tomEl.textContent = `Tom: ${converterAcorde(tomOriginal, notacao)}`;
+	if (autorEl.textContent !== "" && tomEl.textContent !== "") {
+		canticoMeta.appendChild(document.createTextNode(" · "));
+	}
+	canticoMeta.appendChild(tomEl);
+	
+	const categoriasEl = document.getElementById("cantico-categorias");
+	categoriasEl.textContent = meta.categorias ? meta.categorias.join(" · ") : "";
+	if ((autorEl.textContent !== "" || tomEl.textContent !== "") && categoriasEl.textContent !== "") {
+		canticoMeta.appendChild(document.createTextNode(" · "));
+	}
+	canticoMeta.appendChild(categoriasEl);
+}

@@ -5,7 +5,7 @@
 class NavComp extends HTMLElement {
 	connectedCallback() {
 		this.innerHTML = `
-			<div id="nav-comp">
+			<div id="nav-comp-inner">
 				<!-- Botões de navegação -->
 				<button id="btn-anterior" title="Cântico anterior"  >‹</button>
 				<button id="btn-indice"   title="Índice de cânticos">≡</button>
@@ -19,10 +19,14 @@ customElements.define('nav-comp', NavComp);
 // Componente de transposição (usado em cantico.html e folha.html)
 class TranspComp extends HTMLElement {
 	connectedCallback() {
+		if (this.dataset.ready === "true") return;
+		this.dataset.ready = "true";
+		
 		this.innerHTML = `
-			<div id="transp-comp">
+			<div id="transp-comp-inner">
+				<!-- Botões de transposição -->
 				<button id="btn-transp-menos">−</button>
-				<span id="spn-transp-valor">...</span>
+				<span   id="spn-transp-valor">...</span>
 				<button id="btn-transp-mais">+</button>
 				<button id="btn-transp-reset" class="btn-texto">Repor</button>
 			</div>

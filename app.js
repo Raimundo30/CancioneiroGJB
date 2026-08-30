@@ -1,5 +1,71 @@
 // app.js — Lógica da página principal (lista de cânticos)
 
+async function renderHome() {
+	const app = document.getElementById("app");
+	if (!app) return;
+	
+	app.innerHTML = `
+		<header class="header-grid">
+		<h1>Cancioneiro</h1>
+		<button id="btn-definicoes" title="Definições" class="btn-header btn-normal">⚙</button>
+		</header>
+	
+		<main>
+		<div id="seccao-de-folhas">
+			<div id="header-folhas">
+			<h2>Folhas de Cânticos</h2>
+			<div class="btn-main btn-normal">
+				<button id="btn-nova-folha" title="Nova folha">+</button>
+				<button id="btn-ordem-data" class="btn-texto opcao-toggle">Por data</button>
+				<button id="btn-ordem-alfa" class="btn-texto opcao-toggle">A-Z</button>
+			</div>
+			</div>
+			<div id="container-folhas"></div>
+		</div>
+	
+		<div id="seccao-pesquisa">
+			<div id="header-pesquisa">
+			<h2>Pesquisa de cânticos</h2>
+			</div>
+			<div id="container-pesquisa"></div>
+		</div>
+		</main>
+	`;
+	
+	await initHome();
+}
+	
+async function initHome() {
+	const todosCanticos = await carregarCanticos();
+	ordemAtual = Cancioneiro.preferencias.obter("ordemFolhas") || "data";
+	
+	// Renderiza as folhas na página principal
+	renderizarFolhasMain();
+	
+	const pesquisa = new Cancioneiro.Pesquisa(
+		"container-pesquisa",
+		todosCanticos,
+		(cantico) => {
+		navigate("/cantico", { id: cantico.id });
+		}
+	);
+	
+	// Escuta mudanças nas preferências
+	document.addEventListener("preferencia-alterada", () => {
+		pesquisa.renderizarLista();
+	});
+
+	// Google Analytics: envia evento de page_view
+	if (window.gtag) {
+		gtag('event', 'page_view', {
+			page_path: window.location.pathname,
+			page_title: document.title,
+			page_type: 'home'
+		});
+	}
+}
+
+
 /* -----------------------------------------------------------------------------
  * Carrega o índice de cânticos
  * ----------------------------------------------------------------------------- */
@@ -37,7 +103,7 @@ async function carregarFolhas() {
 	container.innerHTML = "<p class='pesquisa-vazio'>A carregar folhas...</p>";
 
 	try {
-        const folhasLocal = window.Cancioneiro.folhas.listar();
+		const folhasLocal = window.Cancioneiro.folhas.listar();
 
 		// Obter folhas privadas (locais)
 		const privadas = folhasLocal.privada;
@@ -106,7 +172,7 @@ function atualizarLista() {
 
 		// Clique na folha → abre a folha
 		li.addEventListener("click", () => {
-			window.location.href = `folha.html?id=${folha.id}`;
+			navigate("/folha", { id: folha.id });
 		});
 
 		lista.appendChild(li);
@@ -121,8 +187,8 @@ function renderizarFolhasMain() {
 	if (btnNova) {
 		btnNova.addEventListener("click", () => {
 			const novaFolha = Cancioneiro.folhas.criar("Nova folha", "", "");
-            novaFolha.tipo = "privada"; // Garantir que é privada
-			window.location.href = `editor-folha.html?id=${novaFolha.id}`;
+			novaFolha.tipo = "privada"; // Garantir que é privada
+			navigate("/editor-folha", { id: novaFolha.id });
 		});
 	}
 
@@ -156,39 +222,3 @@ function renderizarFolhasMain() {
 	// Executa a chamada à base de dados na primeira vez
 	carregarFolhas();
 }
-
-/* ------------------------------------------------------------------------------
- * SECÇÃo 3: Inicialização
- * ----------------------------------------------------------------------------- */
-async function init() {
-	const todosCanticos = await carregarCanticos();
-	
-	ordemAtual = Cancioneiro.preferencias.obter("ordemFolhas") || "data";
-
-	// Renderiza as folhas na página principal
-	renderizarFolhasMain();
-
-	const pesquisa = new Cancioneiro.Pesquisa(
-		"container-pesquisa", 
-		todosCanticos, 
-		(cantico) => {
-			window.location.href = `cantico.html?id=${cantico.id}`;
-		}
-	);
-
-	// Escuta mudanças nas preferências
-	document.addEventListener("preferencia-alterada", () => {
-		pesquisa.renderizarLista();
-	});
-
-	// Google Analytics: envia evento de page_view
-	if (window.gtag) {
-		gtag('event', 'page_view', {
-			page_path: window.location.pathname,
-			page_title: document.title,
-			page_type: 'home'
-		});
-	}
-}
-
-init();

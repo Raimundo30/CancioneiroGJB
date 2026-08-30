@@ -2,6 +2,19 @@
 
 window.Cancioneiro = window.Cancioneiro || {};
 
+window.Cancioneiro.estadoFolha = window.Cancioneiro.estadoFolha || {
+	folha: null,
+	indice: [],
+	canticosCache: {},
+	momentoAtivo: 0,
+	verPaginas: false,
+	ocultarMeta: false
+};
+
+function obterEstadoFolha() {
+	return window.Cancioneiro.estadoFolha;
+}
+
 window.Cancioneiro.folhas = (function () {
 
 	const MOMENTOS_BASE = [
@@ -165,3 +178,44 @@ window.Cancioneiro.folhas = (function () {
 	};
 
 })();
+
+
+async function carregarIndice() {
+	return await window.Cancioneiro.dbApi.carregarIndice();
+}
+
+async function carregarCantico(canticoId) {
+	const estadoFolha = obterEstadoFolha();
+
+	if (estadoFolha.canticosCache[canticoId]) {
+		return estadoFolha.canticosCache[canticoId];
+	}
+
+	const meta = estadoFolha.indice.find(c => c.id === canticoId);
+	if (!meta) return null;
+
+	const docData = await window.Cancioneiro.dbApi.carregarCantico(canticoId);
+	if (!docData) return null;
+
+	const dados = Cancioneiro.parser.parseChordPro(docData.conteudoChordPro);
+	
+	estadoFolha.canticosCache[canticoId] = { meta, dados };
+	
+	return estadoFolha.canticosCache[canticoId];
+}
+
+async function gravarAlteracoes() {
+	const estadoFolha = obterEstadoFolha();
+
+	if (estadoFolha.folha.tipo === "privada") {
+		window.Cancioneiro.folhas.guardar(estadoFolha.folha);
+		return;
+	}
+
+	try {
+		return await window.Cancioneiro.dbApi.atualizarFolha(estadoFolha.folha);
+	} catch (e) {
+		console.error("Erro a atualizar folha partilhada:", e);
+		return false;
+	}
+}

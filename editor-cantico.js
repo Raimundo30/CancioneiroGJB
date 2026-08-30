@@ -2,6 +2,194 @@
  * Editor de cânticos
  * ----------------------------------------------------------------------------- */
 
+async function renderEditorCantico(canticoId) {
+	const app = document.getElementById("app");
+	if (!app) return;
+
+	app.innerHTML = `
+		<header class="header-grid">
+			<div class="header-info">
+				<button id="btn-voltar" class="btn-transparente btn-voltar">← Voltar</button>
+				<div id="editor-meta"></div>
+			</div>
+			
+			<div class="btn-header btn-normal">
+				<!-- Botão de definições -->
+				<button id="btn-definicoes" title="Definições">⚙</button>
+				<button id="btn-editar-cantico" title="Editar cântico" class="admin oculto">✎</button>
+			</div>
+		</header>
+
+		<main id="editor-conteudo">
+			<div class="tabs-nav">
+				<button class="tab-btn ativo" data-tab="tab-meta">Metadados</button>
+				<button class="tab-btn" data-tab="tab-letra">Letra</button>
+				<button class="tab-btn" data-tab="tab-acordes">Acordes</button>
+				<button class="tab-btn" data-tab="tab-preview">Pré-visualização</button>
+			</div>
+
+			<!-- TAB METADADOS -->
+			<div id="tab-meta" class="tab-content">
+				<div class="form-grupo">
+					<label>Título *</label>
+					<input type="text" id="edit-titulo" placeholder="Obrigatório">
+				</div>
+				<div class="form-grupo">
+					<label>Subtítulo</label>
+					<input type="text" id="edit-subtitulo">
+				</div>
+				<div class="form-grupo">
+					<label>Autor</label>
+					<input type="text" id="edit-autor">
+				</div>
+				<div class="form-grupo">
+					<label>Tom *</label>
+					<input type="text" id="edit-tom" placeholder="Ex: C, Am, F#m (Obrigatório)">
+				</div>
+				<div class="form-grupo">
+					<label>Capo</label>
+					<input type="number" id="edit-capo" min="0" max="12" placeholder="Traste">
+				</div>
+				<div class="form-grupo">
+					<label>Categorias</label>
+					<div id="categorias-container" class="tags-input-container">
+						<div id="categorias-selecionadas"></div>
+						<input type="text" id="edit-categorias-input" placeholder="Adicionar categoria... (Enter)">
+					</div>
+					<div id="categorias-sugestoes" class="tags-sugestoes"></div>
+				</div>
+			</div>
+
+			<!-- TAB LETRA -->
+			<div id="tab-letra" class="tab-content oculto">
+				<div id="editor-blocos-letra"></div>
+				<button id="btn-adicionar-bloco" class="btn-adicionar-cantico" style="margin-top: 1rem;">+ Adicionar bloco</button>
+			</div>
+
+			<!-- TAB ACORDES -->
+			<div id="tab-acordes" class="tab-content oculto">
+				<div id="editor-acordes-header" class="bloco-editor-header" style="margin-bottom: 1rem; justify-content: space-between;">
+					<div style="display: flex; align-items: center; gap: 0.5rem;">
+						<h3 id="acordes-bloco-titulo" style="margin: 0; font-size: 1.1rem;">Sem blocos</h3>
+						<span id="acordes-bloco-contador" style="color: var(--cor-texto-secundario); font-size: 0.9rem;">(0/0)</span>
+					</div>
+					<div class="btn-main btn-transparente" style="position: relative;">
+						<nav-comp id="acordes-nav-comp"></nav-comp>
+						<ul id="acordes-blocos-dropdown" class="dropdown oculto" style="max-height: 250px; overflow-y: auto;"></ul>
+					</div>
+				</div>
+				<div id="editor-acordes-area" class="bloco-editor">
+					<div id="editor-acordes-conteudo" class="cantico-letra" style="padding: 1rem; min-height: 200px;">
+						<!-- O bloco será renderizado aqui dinamicamente -->
+					</div>
+				</div>
+			</div>
+
+			<!-- TAB PREVIEW -->
+			<div id="tab-preview" class="tab-content oculto">
+				<div class="bloco-editor" style="padding: 1.5rem;">
+					<div id="preview-meta-info" style="margin-bottom: 1.5rem; text-align: center; border-bottom: 1px solid var(--cor-contorno); padding-bottom: 1rem;">
+						<h1 id="preview-titulo" style="margin-bottom: 0.2rem;"></h1>
+						<h2 id="preview-subtitulo" style="font-size: 1.1rem; color: var(--cor-texto-secundario); margin-bottom: 0.5rem;"></h2>
+						<div id="preview-detalhes" style="font-size: 0.9rem; color: var(--cor-texto-terciario);"></div>
+					</div>
+					<div id="preview-conteudo" class="cantico-letra"></div>
+				</div>
+
+				<!-- Botão de guardar no fundo da aba de pré-visualização -->
+				<div style="padding: 1.5rem; text-align: center; border-top: 1px solid var(--cor-contorno);">
+					<button id="btn-guardar" class="btn-normal btn-texto" style="width: 100%;">💾 Guardar alterações</button>
+					<p id="msg-guardar-status" style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--cor-texto-terciario);"></p>
+				</div>
+			</div>
+		</main>
+	`;
+
+	await initEditorCantico(canticoId);
+}
+
+async function initEditorCantico(canticoId) {
+	const editorConteudo = document.getElementById("editor-conteudo");
+	if (!editorConteudo) return;
+
+	inicializarTabs();
+	inicializarCategorias();
+	inicializarNavAcordes(); 
+
+	document.getElementById("btn-adicionar-bloco").addEventListener("click", () => {
+		canticoCache.sections.push({ type: "verse", labelBase: "Estrofe", label: "Estrofe", linhas: [] });
+		renderizarBlocosLetra();
+	});
+
+	// Botão voltar
+	document.getElementById("btn-voltar").addEventListener("click", () => {
+		if (canticoId) navigate("/cantico", { id: canticoId });
+		else navigate("/home"); 
+	});
+
+	// --- GUARDAR CÂNTICO ---
+	const btnGuardar = document.getElementById("btn-guardar");
+	if (btnGuardar) {
+		btnGuardar.addEventListener("click", async () => {
+			if (window.Cancioneiro.dbApi.isAdminAuthenticated() && validarCantico()) {
+				await guardarCantico();
+				// redireciona para a página do cântico
+				if (canticoId) {
+					navigate("/cantico", { id: canticoId });
+				}
+			}
+		});
+	}
+
+	const indice = await window.Cancioneiro.dbApi.carregarIndice();
+	const setCats = new Set();
+	indice.forEach(c => c.categorias?.forEach(cat => setCats.add(cat)));
+	todasCategoriasGlobais = Array.from(setCats).sort();
+
+	if (canticoId) {
+		await carregarDadosCantico(canticoId, indice);
+		renderizarBlocosLetra();
+	} else {
+		renderizarCategorias();
+		renderizarBlocosLetra();
+	}
+
+	document.addEventListener("preferencia-alterada", (e) => {
+		if (e.detail.chave === "notacao") {
+			const inputTom = document.getElementById("edit-tom");
+			if (inputTom && inputTom.value.trim()) {
+				inputTom.value = window.Cancioneiro.parser.converterAcorde(inputTom.value.trim(), e.detail.valor);
+				inputTom.placeholder = e.detail.valor === "latino" ? "Ex: Dó, Lám, Fá#m (Obrigatório)" : "Ex: C, Am, F#m (Obrigatório)";
+			}
+			
+			// Força o redesenho dos acordes virtuais e botões com a nova notação
+			renderizarBlocoAcordes();
+		}
+	});
+
+	// Google Analytics: envia evento de page_view do editor
+	if (window.gtag) {
+		const isNovo = !canticoId;
+		const eventParams = {
+			page_path: `/editor${canticoId ? `?id=${canticoId}` : ''}`,
+			page_title: document.title,
+			page_type: 'editor',
+			editor: isNovo ? 'novo' : 'editar'
+		};
+
+		if (canticoId) {
+			const metaCantico = indice.find(c => c.id === canticoId);
+			eventParams.cantico_id = canticoId;
+			eventParams.cantico_titulo = canticoCache.meta.title || metaCantico?.titulo;
+		}
+
+		gtag('event', 'page_view', eventParams);
+	}
+}
+
+
+
+/* ----------------------------------------------------------------------------- */
 // Cache local para as edições
 let canticoCache = {
 	id: null,
@@ -1001,96 +1189,3 @@ function validarCantico() {
 
 	return true;
 }
-
-
-// -----------------------------------------------------------------------------
-// Inicialização
-// -----------------------------------------------------------------------------
-async function init() {
-	const editorConteudo = document.getElementById("editor-conteudo");
-	if (!editorConteudo) return;
-
-	inicializarTabs();
-	inicializarCategorias();
-	inicializarNavAcordes(); 
-
-	document.getElementById("btn-adicionar-bloco").addEventListener("click", () => {
-		canticoCache.sections.push({ type: "verse", labelBase: "Estrofe", label: "Estrofe", linhas: [] });
-		renderizarBlocosLetra();
-	});
-
-	const btnVoltar = document.getElementById("btn-voltar");
-	const params = new URLSearchParams(window.location.search);
-	const canticoId = params.get("id");
-
-	if (btnVoltar) {
-		const BASE_URL = window.location.pathname.includes('CancioneiroGJB')
-			? '/CancioneiroGJB/'
-			: '/';
-		btnVoltar.addEventListener("click", () => {
-			if (canticoId) window.location.href = `${BASE_URL}cantico.html?id=${canticoId}`;
-			else window.location.href = BASE_URL;
-		});
-	}
-
-	// --- GUARDAR CÂNTICO ---
-	const btnGuardar = document.getElementById("btn-guardar");
-	if (btnGuardar) {
-		btnGuardar.addEventListener("click", async () => {
-			if (window.Cancioneiro.dbApi.isAdminAuthenticated() && validarCantico()) {
-				await guardarCantico();
-				// redireciona para a página do cântico
-				if (canticoId) {
-					window.location.href = `cantico.html?id=${canticoId}`;
-				}
-			}
-		});
-	}
-
-	const indice = await window.Cancioneiro.dbApi.carregarIndice();
-	const setCats = new Set();
-	indice.forEach(c => c.categorias?.forEach(cat => setCats.add(cat)));
-	todasCategoriasGlobais = Array.from(setCats).sort();
-
-	if (canticoId) {
-		await carregarDadosCantico(canticoId, indice);
-		renderizarBlocosLetra();
-	} else {
-		renderizarCategorias();
-		renderizarBlocosLetra();
-	}
-
-	document.addEventListener("preferencia-alterada", (e) => {
-		if (e.detail.chave === "notacao") {
-			const inputTom = document.getElementById("edit-tom");
-			if (inputTom && inputTom.value.trim()) {
-				inputTom.value = window.Cancioneiro.parser.converterAcorde(inputTom.value.trim(), e.detail.valor);
-				inputTom.placeholder = e.detail.valor === "latino" ? "Ex: Dó, Lám, Fá#m (Obrigatório)" : "Ex: C, Am, F#m (Obrigatório)";
-			}
-			
-			// Força o redesenho dos acordes virtuais e botões com a nova notação
-			renderizarBlocoAcordes();
-		}
-	});
-
-	// Google Analytics: envia evento de page_view do editor
-	if (window.gtag) {
-		const isNovo = !canticoId;
-		const eventParams = {
-			page_path: `/editor.html${canticoId ? `?id=${canticoId}` : ''}`,
-			page_title: document.title,
-			page_type: 'editor',
-			editor: isNovo ? 'novo' : 'editar'
-		};
-
-		if (canticoId) {
-			const metaCantico = indice.find(c => c.id === canticoId);
-			eventParams.cantico_id = canticoId;
-			eventParams.cantico_titulo = canticoCache.meta.title || metaCantico?.titulo;
-		}
-
-		gtag('event', 'page_view', eventParams);
-	}
-}
-
-init();
