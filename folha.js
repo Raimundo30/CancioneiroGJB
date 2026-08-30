@@ -868,11 +868,23 @@ function criarPaginaExportacao(item, index, total, opcoes, tituloFolha, dataCabe
 	return page;
 }
 
+function aplicarFonteExportacao(blocos, tamanhoPx) {
+    blocos.forEach((bloco) => {
+        bloco.style.fontSize = `${tamanhoPx}px`;
+        bloco.style.lineHeight = `${Math.max(18, tamanhoPx * 1.45)}px`;
+    });
+}
+
 function ajustarEscalaCorpoExportacao(page) {
     const corpo = page.querySelector(".export-corpo");
     if (!corpo) return;
 
-    const blocos = corpo.querySelectorAll(".cantico-letra, .cantico-introducao, .cantico-primeiras, .cantico-duas-colunas");
+    const blocos = [
+        ...corpo.querySelectorAll(
+            ".cantico-letra, .cantico-introducao, .cantico-primeiras, .cantico-duas-colunas, .cantico-coluna"
+        )
+    ];
+
     if (!blocos.length) return;
 
     const pageStyle = getComputedStyle(page);
@@ -903,30 +915,46 @@ function ajustarEscalaCorpoExportacao(page) {
         18;
 
     const alturaDisponivel = Math.max(120, alturaPagina - alturaConsumida);
-    const alturaReal = corpo.scrollHeight || corpo.offsetHeight || 0;
 
-    if (!alturaReal || alturaReal <= alturaDisponivel) {
-        blocos.forEach((bloco) => {
-            bloco.style.fontSize = "";
-            bloco.style.lineHeight = "";
-        });
-        corpo.style.overflow = "visible";
-        corpo.style.height = "";
-        return;
+    const temColunas = corpo.querySelectorAll(".cantico-coluna").length > 0;
+
+    const medirAltura = () => corpo.scrollHeight || corpo.offsetHeight || 0;
+
+    const tamanhoBase = parseFloat(getComputedStyle(blocos[0]).fontSize || "16");
+    let tamanhoAtual = tamanhoBase;
+
+    // 1) Primeiro, reduzir apenas o necessário para não cortar.
+    let tentativas = 0;
+    while (medirAltura() > alturaDisponivel && tamanhoAtual > 10 && tentativas < 18) {
+        tamanhoAtual = Math.max(10, tamanhoAtual * 0.96);
+        aplicarFonteExportacao(blocos, tamanhoAtual);
+        tentativas++;
     }
 
-    const escala = Math.max(0.7, Math.min(1, alturaDisponivel / alturaReal));
+    // 2) Se estiver em 2 colunas, tentar aproveitar ao máximo a altura disponível.
+    if (temColunas) {
+        let tentativasColunas = 0;
+        while (
+            medirAltura() < alturaDisponivel * 0.92 &&
+            tamanhoAtual < 22 &&
+            tentativasColunas < 18
+        ) {
+            tamanhoAtual = Math.min(22, tamanhoAtual * 1.04);
+            aplicarFonteExportacao(blocos, tamanhoAtual);
+            tentativasColunas++;
+        }
+    }
 
-    blocos.forEach((bloco) => {
-        const fontBase = parseFloat(getComputedStyle(bloco).fontSize || "16");
-        const lineBase = parseFloat(getComputedStyle(bloco).lineHeight || "23");
-
-        bloco.style.fontSize = `${fontBase * escala}px`;
-        bloco.style.lineHeight = `${lineBase * escala}px`;
-    });
+    // 3) Garantia final: nunca deixar cortar.
+    if (medirAltura() > alturaDisponivel) {
+        while (medirAltura() > alturaDisponivel && tamanhoAtual > 10) {
+            tamanhoAtual = Math.max(10, tamanhoAtual * 0.98);
+            aplicarFonteExportacao(blocos, tamanhoAtual);
+        }
+    }
 
     corpo.style.overflow = "hidden";
-    corpo.style.height = `${Math.ceil(alturaReal * escala)}px`;
+    corpo.style.height = `${Math.min(medirAltura(), alturaDisponivel)}px`;
 }
 
 function descarregarBlob(blob, nomeFicheiro) {
