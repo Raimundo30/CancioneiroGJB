@@ -27,42 +27,62 @@
 			</div>
 		</div>
 
-		<!-- Secção de definições de folhas -->
-		<div id="painel-definicoes-folha" style="display: none;">
+		<!-- Secção de definições de visualização -->
+		<div id="painel-definicoes-visualizacao">
 			<hr class="painel-separador">
-			<div class="painel-secao-titulo">Vista da Folha</div>
-
-			<div class="definicao-grupo">
-				<div class="toggle">
-					<span>Ver por página</span>
-					<label class="switch">
-						<input type="checkbox" id="toggle-folha-verPaginas">
-						<span class="slider round"></span>
-					</label>
-				</div>
+			<div class="painel-secao-titulo">Visualização</div>
+			
+			<!-- Full screen -->
+			<div class="definicao-grupo toggle">
+				<span>Full Screen</span>
+				<label class="switch">
+					<input type="checkbox" id="toggle-fullscreen">
+					<span class="slider round"></span>
+				</label>
 			</div>
 
-			<div class="definicao-grupo">
-				<div class="toggle">
-					<span>Ocultar meta</span>
-					<label class="switch">
-						<input type="checkbox" id="toggle-folha-meta">
-						<span class="slider round"></span>
-					</label>
-				</div>
+			<!-- ver por página -->
+			<div class="definicao-grupo toggle folha" style="display: none;">
+				<span>Ver por página</span>
+				<label class="switch">
+					<input type="checkbox" id="toggle-verPaginas">
+					<span class="slider round"></span>
+				</label>
+			</div>
+
+			<!-- Ocultar meta -->
+			<div class="definicao-grupo toggle folha cantico" style="display: none;">
+				<span>Ocultar meta</span>
+				<label class="switch">
+					<input type="checkbox" id="toggle-meta">
+					<span class="slider round"></span>
+				</label>
 			</div>
 		</div>
 
-		<div id="admin">
-			<button class="btn-normal btn-texto" id="btn-admin">Admin</button>
-		</div>
+		<!-- Secção de definições de Admin -->
+		<div id="painel-definicoes-admin">
+			<hr class="painel-separador">
+			<!-- <div class="painel-secao-titulo">Admin</div> -->
 
-		<div id="novo-cantico">
-			<button class="btn-normal btn-texto" id="btn-novo-cantico">+ Novo Cântico</button>
-		</div>
+			<!-- Admin -->
+			<div class="definicao-grupo toggle">
+				<span>Admin</span>
+				<label class="switch">
+					<input type="checkbox" id="toggle-admin">
+					<span class="slider round"></span>
+				</label>
+			</div>
 
-		<div id="fullscreen">
-			<button class="btn-normal btn-texto" id="btn-fullscreen">Fullscreen</button>
+			<!-- Adicionar novo cântico -->
+			<div id="novo-cantico" class="folha cantico" style="display: none;">
+				<button class="btn-normal btn-texto" id="btn-novo-cantico">Adicionar Novo Cântico</button>
+			</div>
+
+			<!-- Apagar cântico --><!-- move cântico para "canticos-apagados"-->
+			<div id="apagar-cantico" class="cantico" style="display: none;">
+				<button class="btn-normal btn-texto" id="btn-apagar-cantico">Apagar Cântico</button>
+			</div>
 		</div>
 
 	</div>
