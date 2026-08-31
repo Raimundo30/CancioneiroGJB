@@ -117,7 +117,7 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
             }
 
             .export-corpo .seccao {
-                margin-bottom: 18px;
+                margin-bottom: calc(var(--export-body-size, 17px) * 0.72);
             }
 
             .export-corpo .seccao-label {
@@ -126,7 +126,7 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
                 text-transform: uppercase;
                 letter-spacing: 0.08em;
                 color: var(--exp-texto-ter);
-                margin-bottom: 8px;
+                margin-bottom: calc(var(--export-body-size, 17px) * 0.32);
                 font-weight: 700;
             }
 
@@ -137,7 +137,7 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
                 max-width: 100%;
                 align-items: flex-end;
                 min-height: 1.2em;
-                margin-bottom: 2px;
+                margin-bottom: calc(var(--export-body-size, 17px) * 0.08);
             }
 
             .export-corpo .linha-vazia {
@@ -148,7 +148,7 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
                 font-size: var(--export-body-size, 17px);
                 color: var(--exp-texto-ter);
                 font-style: italic;
-                margin-bottom: 8px;
+                margin-bottom: calc(var(--export-body-size, 17px) * 0.32);
             }
 
             .export-corpo .token {
@@ -187,6 +187,25 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
 
             .export-page.sem-seccoes .seccao-label {
                 display: none !important;
+            }
+
+            .export-page .export-corpo.medindo-natural {
+                width: max-content;
+                max-width: none;
+                height: auto;
+                max-height: none;
+                overflow: visible;
+            }
+            
+            .export-page .export-corpo.medindo-natural .linha-letra {
+                width: max-content;
+                max-width: none;
+            }
+            
+            .export-page .export-coluna {
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
             }
 
             .export-rodape {
@@ -232,7 +251,166 @@ function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalh
         cabecalho.insertBefore(momento, cabecalho.firstChild);
     }
 
+    if (opcoes?.incluirNomeMomento !== false && item?.momento?.label) {
+        const cabecalho = pagina.querySelector(".export-cabecalho");
+        const tituloFolha = cabecalho.querySelector(".export-folha-titulo");
+    
+        const momento = document.createElement("div");
+        momento.className = "export-momento-titulo";
+        momento.textContent = item.momento.label;
+    
+        // Coloca o momento imediatamente depois do título da folha
+        tituloFolha?.after(momento);
+    }
+    
     return pagina;
+}
+
+const LAYOUT_CONFIG = {
+    fontIdeal: 25,
+    fontMin: 8,
+    gapColunas: 32
+};
+
+function aplicarTamanhoCorpo(corpo, tamanho) {
+    corpo.style.setProperty("--export-body-size", `${tamanho}px`);
+    corpo.style.setProperty("--export-acorde-size", `${Math.max(11, tamanho * 0.85)}px`);
+    corpo.style.setProperty("--export-label-size", `${Math.max(9, tamanho * 0.65)}px`);
+}
+
+// Mede o tamanho natural do corpo (sem restrições de largura/altura) a um dado tamanho de letra.
+function medirCorpoNatural(corpo, tamanho) {
+    aplicarTamanhoCorpo(corpo, tamanho);
+
+    corpo.classList.add("medindo-natural");
+    const A = corpo.scrollHeight;
+    const L = corpo.scrollWidth;
+    corpo.classList.remove("medindo-natural");
+
+    return { A, L };
+}
+
+// Decide o tamanho de letra final e se deve usar 1 ou 2 colunas.
+function calcularPlanoLayout(H, W, A, L, config) {
+    const meiaLargura = (W - config.gapColunas) / 2;
+
+    // Cabe tudo numa só coluna ao tamanho ideal - nada a fazer.
+    if (A <= H && L <= W) {
+        return { colunas: 1, tamanho: config.fontIdeal };
+    }
+
+    // A partir daqui só encolhemos - nunca ampliamos acima do tamanho ideal.
+    const escalaAltura = Math.min(1, H / A);
+    const larguraEscalada = L * escalaAltura;
+
+    if (larguraEscalada >= meiaLargura) {
+        // Encolhendo para caber em altura, a coluna única ainda aproveita bem a largura.
+        return {
+            colunas: 1,
+            tamanho: Math.max(config.fontMin, config.fontIdeal * escalaAltura)
+        };
+    }
+
+    // A largura ficaria desperdiçada - vale mais passar a 2 colunas.
+    const escalaLargura = Math.min(1, meiaLargura / L);
+    const alturaEscalada = A * escalaLargura;
+
+    const escalaFinal = alturaEscalada <= 2 * H
+        ? escalaLargura
+        : (2 * H) / A;
+
+    return {
+        colunas: 2,
+        tamanho: Math.max(config.fontMin, config.fontIdeal * escalaFinal)
+    };
+}
+
+// Rede de segurança para o caso de 1 coluna (arredondamentos de fonte/line-height).
+function ajustarFinoAltura(corpo, tamanhoMinimo, passo = 0.25, maxIteracoes = 40) {
+    let iteracoes = 0;
+    while (corpo.scrollHeight > corpo.clientHeight + 1 && iteracoes < maxIteracoes) {
+        const atual = parseFloat(corpo.style.getPropertyValue("--export-body-size")) || tamanhoMinimo;
+        if (atual <= tamanhoMinimo) break;
+        aplicarTamanhoCorpo(corpo, Math.max(tamanhoMinimo, atual - passo));
+        iteracoes++;
+    }
+}
+
+// Divide as secções do corpo em duas colunas lado a lado.
+function aplicarDuasColunas(corpo, H, W, gap) {
+    const larguraColuna = (W - gap) / 2;
+
+    corpo.style.width = `${larguraColuna}px`;
+    corpo.style.maxWidth = `${larguraColuna}px`;
+    corpo.style.height = "auto";
+    corpo.style.maxHeight = "none";
+
+    // Procura as secções em qualquer profundidade - não assume que são filhas diretas do corpo.
+    const seccoes = Array.from(corpo.querySelectorAll(".seccao"));
+
+    if (seccoes.length === 0) {
+        // Sem secções identificáveis, não há como dividir com segurança - fica em 1 coluna.
+        corpo.style.width = "100%";
+        corpo.style.maxWidth = "100%";
+        corpo.style.height = `${H}px`;
+        corpo.style.maxHeight = `${H}px`;
+        ajustarFinoAltura(corpo, LAYOUT_CONFIG.fontMin);
+        return;
+    }
+
+    const alturas = seccoes.map(sec => sec.offsetHeight);
+    const alturaTotal = alturas.reduce((soma, altura) => soma + altura, 0);
+
+    let acumulado = 0;
+    let indiceDivisao = seccoes.length;
+    for (let i = 0; i < seccoes.length; i++) {
+        if (acumulado >= alturaTotal / 2) {
+            indiceDivisao = i;
+            break;
+        }
+        acumulado += alturas[i];
+    }
+    if (indiceDivisao === 0 && seccoes.length > 1) indiceDivisao = 1;
+
+    const col1 = document.createElement("div");
+    const col2 = document.createElement("div");
+    [col1, col2].forEach(coluna => {
+        coluna.className = "export-coluna";
+        coluna.style.width = `${larguraColuna}px`;
+        coluna.style.maxWidth = `${larguraColuna}px`;
+        coluna.style.height = `${H}px`;
+        coluna.style.maxHeight = `${H}px`;
+    });
+
+    seccoes.forEach((sec, i) => {
+        (i < indiceDivisao ? col1 : col2).appendChild(sec);
+    });
+
+    // Descarta o que sobrar no corpo (ex.: wrappers agora vazios) e fica só com as duas colunas.
+    corpo.replaceChildren(col1, col2);
+
+    corpo.style.width = "100%";
+    corpo.style.maxWidth = "100%";
+    corpo.style.height = `${H}px`;
+    corpo.style.maxHeight = `${H}px`;
+    corpo.style.flexDirection = "row";
+    corpo.style.gap = `${gap}px`;
+
+    let iteracoes = 0;
+    while ((col1.scrollHeight > H + 1 || col2.scrollHeight > H + 1) && iteracoes < 60) {
+        const atual = parseFloat(corpo.style.getPropertyValue("--export-body-size")) || LAYOUT_CONFIG.fontMin;
+        if (atual <= LAYOUT_CONFIG.fontMin) break;
+        aplicarTamanhoCorpo(corpo, Math.max(LAYOUT_CONFIG.fontMin, atual - 0.2));
+        iteracoes++;
+    }
+}
+
+function ajustarTituloConformeTamanho(pagina, tamanho) {
+    const titulo = pagina.querySelector(".export-cantico-titulo");
+    if (!titulo) return;
+    const tamanhoTitulo = Math.min(30, Math.max(22, 30 - ((LAYOUT_CONFIG.fontIdeal - tamanho) * 0.75)));
+    titulo.style.fontSize = `${tamanhoTitulo}px`;
+    titulo.style.lineHeight = "1.15";
 }
 
 function ajustarEscalaCorpoExportacao(pagina) {
@@ -243,35 +421,29 @@ function ajustarEscalaCorpoExportacao(pagina) {
     const rodape = pagina.querySelector(".export-rodape");
     if (!corpo || !cabecalho || !rodape) return;
 
-    // Altura real disponível para o corpo depois de cabeçalho + rodapé + padding da página
+    // 1. Espaço disponível para o corpo depois de cabeçalho + rodapé + padding da página.
     const alturaPagina = pagina.clientHeight || 1123;
-    const alturaDisponivel = Math.max(
-        120,
-        alturaPagina - cabecalho.offsetHeight - rodape.offsetHeight - 70
-    );
+    const H = Math.max(120, alturaPagina - cabecalho.offsetHeight - rodape.offsetHeight - 70);
+    const W = corpo.clientWidth;
 
-    corpo.style.height = `${alturaDisponivel}px`;
-    corpo.style.maxHeight = `${alturaDisponivel}px`;
+    // 2. Tamanho natural do corpo ao tamanho de letra ideal, sem restrições.
+    const { A, L } = medirCorpoNatural(corpo, LAYOUT_CONFIG.fontIdeal);
 
-    let tamanho = 25;
+    // 3. Decide tamanho de letra final e nº de colunas.
+    const plano = calcularPlanoLayout(H, W, A, L, LAYOUT_CONFIG);
 
-    for (let i = 0; i < 80; i++) {
-        corpo.style.setProperty("--export-body-size", `${tamanho}px`);
-        corpo.style.setProperty("--export-acorde-size", `${Math.max(11, tamanho * 0.85)}px`);
-        corpo.style.setProperty("--export-label-size", `${Math.max(9, tamanho * 0.65)}px`);
+    // 4. Aplica o plano.
+    corpo.style.height = `${H}px`;
+    corpo.style.maxHeight = `${H}px`;
+    aplicarTamanhoCorpo(corpo, plano.tamanho);
 
-        const excede = corpo.scrollHeight > corpo.clientHeight + 1;
-        if (!excede || tamanho <= 8) break;
-
-        tamanho = Math.max(8, tamanho - 0.25);
+    if (plano.colunas === 2) {
+        aplicarDuasColunas(corpo, H, W, LAYOUT_CONFIG.gapColunas);
+    } else {
+        ajustarFinoAltura(corpo, LAYOUT_CONFIG.fontMin);
     }
 
-    const titulo = pagina.querySelector(".export-cantico-titulo");
-    if (titulo) {
-        const tamanhoTitulo = Math.min(30, Math.max(22, 30 - ((25 - tamanho) * 0.75)));
-        titulo.style.fontSize = `${tamanhoTitulo}px`;
-        titulo.style.lineHeight = "1.15";
-    }
+    ajustarTituloConformeTamanho(pagina, plano.tamanho);
 }
 
 function obterOpcoesCanvasExport() {
