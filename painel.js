@@ -24,30 +24,12 @@ function configurarPainelDefinicoes() {
 	const overlay = document.getElementById("overlay-definicoes");
 	if (!painel || !overlay) return;
 
-	const route = typeof getRoute === "function" ? getRoute() : { path: "/" };
-	const ehFolha = route.path === "/folha";
-	const ehCantico = route.path === "/cantico";
-
-	function atualizarVisibilidadeOpcoes() {
-		document.querySelectorAll("#painel-definicoes .folha, #painel-definicoes .cantico")
-			.forEach((elemento) => {
-				const pertenceFolha = elemento.classList.contains("folha");
-				const pertenceCantico = elemento.classList.contains("cantico");
-
-				const visivel = (pertenceFolha && ehFolha) || (pertenceCantico && ehCantico);
-				elemento.style.display = visivel
-					? (elemento.classList.contains("toggle") ? "flex" : "block")
-					: "none";
-			});
-	}
-
 	function abrirPainel() {
 		const painel = document.getElementById("painel-definicoes");
 		const overlay = document.getElementById("overlay-definicoes");
 		if (!painel || !overlay) return;
 
 		atualizarBotoes();
-		atualizarVisibilidadeOpcoes();
 
 		painel.classList.remove("painel-fechado");
 		painel.classList.add("painel-aberto");
@@ -80,8 +62,25 @@ function configurarPainelDefinicoes() {
 		}
 
 		if (adminAutenticado) {
+			// Obtém a rota apenas uma vez fora do loop
+			const route = typeof getRoute === "function" ? getRoute() : { path: "/" };
+			const ehFolha = route.path === "/folha";
+			const ehCantico = route.path === "/cantico";
+			
 			document.querySelectorAll(".admin").forEach((elemento) => {
 				elemento.classList.remove("oculto");
+				
+				elemento.querySelectorAll(".folha, .cantico").forEach((subElemento) => {
+					const pertenceFolha = subElemento.classList.contains("folha");
+					const pertenceCantico = subElemento.classList.contains("cantico");
+					const visivel = (pertenceFolha && ehFolha) || (pertenceCantico && ehCantico);
+					if (visivel) {
+						subElemento.classList.remove("oculto");
+					}
+					else {
+						subElemento.classList.add("oculto");
+					}
+				});
 			});
 		} else {
 			document.querySelectorAll(".admin").forEach((elemento) => {
@@ -133,7 +132,6 @@ function configurarPainelDefinicoes() {
 		});
 	}
 
-	atualizarVisibilidadeOpcoes();
 	atualizarBotoes();
 
 	// Eventos dos toggles (só uma vez)
@@ -159,6 +157,12 @@ function configurarPainelDefinicoes() {
 				await window.Cancioneiro.dbApi.logoutAdmin();
 			}
 			atualizarBotoes();
+
+			document.dispatchEvent(new CustomEvent("admin-alterado", {
+				detail: {
+					autenticado: toggleAdmin.checked
+				}
+			}));
 		});
 	}
 
@@ -239,8 +243,33 @@ function configurarPainelDefinicoes() {
 		btnNovoCantico.addEventListener("click", () => {
 			if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
 				navigate("/editor-cantico");
+				fecharPainel();
 			} else {
 				alert("Apenas administradores podem criar novos cânticos");
+			}
+		});
+	}
+
+	const btnApagarCantico = document.getElementById("btn-apagar-cantico");
+	if (btnApagarCantico && !btnApagarCantico.dataset.bindado) {
+		btnApagarCantico.dataset.bindado = "true";
+		btnApagarCantico.addEventListener("click", async () => {
+			if (window.Cancioneiro.dbApi.isAdminAuthenticated()) {
+				const { params } = getRoute();
+				const canticoId = params.get("id");
+				if (confirm("Tem a certeza que deseja apagar este cântico com ID " + canticoId + "? Esta ação não pode ser desfeita. Prima OK para confirmar.")) {
+					const result = await window.Cancioneiro.dbApi.apagarCantico(canticoId);
+					if (result.sucesso) {
+						alert("Cântico apagado com sucesso.");
+						navigate("/");
+						fecharPainel();
+					} else {
+						alert("Erro ao apagar o cântico: " + result.mensagem);
+					}
+				}
+			}
+			else {
+				alert("Apenas administradores podem apagar cânticos");
 			}
 		});
 	}

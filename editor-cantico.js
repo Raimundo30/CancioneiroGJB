@@ -133,10 +133,6 @@ async function initEditorCantico(canticoId) {
 		btnGuardar.addEventListener("click", async () => {
 			if (window.Cancioneiro.dbApi.isAdminAuthenticated() && validarCantico()) {
 				await guardarCantico();
-				// redireciona para a página do cântico
-				if (canticoId) {
-					navigate("/cantico", { id: canticoId });
-				}
 			}
 		});
 	}
@@ -1146,7 +1142,7 @@ async function guardarCantico() {
 			canticoCache.id = newId;
 			msgStatus.textContent = "✓ Cântico criado com sucesso!";
 			msgStatus.style.color = "#4CAF50";
-			window.history.replaceState({}, document.title, `editor-cantico.html?id=${newId}`);
+			navigate("/editor-cantico", { id: canticoCache.id });
 		}
 
 		// Reabilita o botão após 2 segundos

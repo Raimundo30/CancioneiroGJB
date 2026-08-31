@@ -289,8 +289,8 @@ function registaEventos(canticoId, indice) {
 	const btnEditar = document.getElementById("btn-editar-cantico");
 	if (btnEditar) {
 		btnEditar.addEventListener("click", async () => {
-            const auth = await window.Cancioneiro.dbApi.authAdmin();
-			if (auth.sucesso) {
+            const auth = await window.Cancioneiro.dbApi.isAdminAuthenticated();
+			if (auth) {
 				navigate("/editor-cantico", { id: canticoId });
 			} else {
                 alert("Autenticação necessária para editar cânticos.");

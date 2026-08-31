@@ -55,6 +55,10 @@ async function initHome() {
 		pesquisa.renderizarLista();
 	});
 
+	document.addEventListener("admin-alterado", () => {
+		renderizarFolhasMain();
+	});
+
 	// Google Analytics: envia evento de page_view
 	if (window.gtag) {
 		gtag('event', 'page_view', {
@@ -111,7 +115,11 @@ async function carregarFolhas() {
 		// Obter folhas partilhadas (base de dados com referência local)
 		let partilhadas = [];
 		if (window.Cancioneiro.dbApi && window.Cancioneiro.dbApi.listarFolhaPartilhada) {
-			partilhadas = await window.Cancioneiro.dbApi.listarFolhaPartilhada(folhasLocal.partilhada);
+			if(window.Cancioneiro.dbApi.isAdminAuthenticated()) {
+				partilhadas = await window.Cancioneiro.dbApi.listarFolhas("partilhada");
+			} else {
+				partilhadas = await window.Cancioneiro.dbApi.listarFolhaPartilhada(folhasLocal.partilhada);
+			}
 		}
 
 		// Obter folhas públicas (base de dados)
@@ -163,12 +171,80 @@ function atualizarLista() {
 
 		const li = document.createElement("li");
 		li.className = "pesquisa-item";
+
+		const listarPartilhadasLocal = window.Cancioneiro.folhas.listar().partilhada || [];
+		const mostrarBotaoAdicionar = folha.tipo === "partilhada"  &&
+								window.Cancioneiro.dbApi.isAdminAuthenticated() &&
+								!listarPartilhadasLocal.includes(folha.id);
+		const mostrarBotaoRemover = folha.tipo === "partilhada" &&
+								listarPartilhadasLocal.includes(folha.id);
+
 		li.innerHTML = `
 			<div class="pesquisa-info">
 				<span class="pesquisa-titulo">${folha.titulo}${iconeFolha}</span>
 				<span class="pesquisa-meta">${dataFormatada}</span>
 			</div>
+			${mostrarBotaoAdicionar ? `
+				<button class="btn-secundario btn-adicionar-folha">Adicionar</button>
+			` : ""}
+			${mostrarBotaoRemover ? `
+				<button class="btn-secundario btn-remover-folha">Remover</button>
+			` : ""}
 		`;
+
+		if (mostrarBotaoAdicionar) {
+			const btnAdicionar = li.querySelector(".btn-adicionar-folha");
+			btnAdicionar.addEventListener("click", async (e) => {
+				e.stopPropagation();
+
+				// Recarrega a lista mais recente e guarda o novo array
+				const listaAtual = Cancioneiro.folhas.listar()?.partilhada || [];
+				if (!listaAtual.includes(folha.id)) {
+					const novaLista = [...listaAtual, folha.id];
+					localStorage.setItem(
+						Cancioneiro.folhas.KEY_PARTILHADAS, 
+						JSON.stringify(novaLista)
+					);
+					
+					alert("Folha adicionada à sua lista de folhas partilhadas.");
+					
+					// Remove o botão da interface após adicionar
+					btnAdicionar.remove(); 
+
+					// Atualiza a lista de folhas em memória e re-renderiza
+					atualizarLista();
+				}
+			});
+		}
+		if (mostrarBotaoRemover) {
+			const btnRemover = li.querySelector(".btn-remover-folha");
+			btnRemover.addEventListener("click", async (e) => {
+				e.stopPropagation();
+
+				// Recarrega a lista mais recente e guarda o novo array
+				const listaAtual = Cancioneiro.folhas.listar()?.partilhada || [];
+				if (listaAtual.includes(folha.id)) {
+					const novaLista = listaAtual.filter((id) => id !== folha.id);
+					localStorage.setItem(
+						Cancioneiro.folhas.KEY_PARTILHADAS, 
+						JSON.stringify(novaLista)
+					);
+
+					alert("Folha removida da sua lista de folhas partilhadas.");
+
+					// Remove o botão da interface após remover
+					btnRemover.remove();
+
+					// Se não for admin, remove da memória local filtrando o ID (ou f.id consoante a estrutura)
+					if (!window.Cancioneiro.dbApi.isAdminAuthenticated()) {
+						folhasEmMemoria = folhasEmMemoria.filter(item => (item.id || item) !== folha.id);
+					}
+
+					// Atualiza a lista de folhas na interface
+					atualizarLista();
+				}
+			});
+		}
 
 		// Clique na folha → abre a folha
 		li.addEventListener("click", () => {

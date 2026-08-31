@@ -1086,6 +1086,7 @@ button.btn-transparente:disabled,
 
 .pesquisa-item {
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
 	padding: 0.75rem 1rem;
 	cursor: pointer;
@@ -1694,7 +1695,8 @@ input:checked + .slider:before {
 
 /* Seções */
 .secao-compartilhamento,
-.secao-copiar {
+.secao-copiar,
+.secao-codigo {
 	background: #f9f9f9;
 	border-radius: 6px;
 	padding: 15px;
@@ -1702,12 +1704,14 @@ input:checked + .slider:before {
 }
 
 	.secao-compartilhamento h3,
-	.secao-copiar h3 {
+	.secao-copiar h3,
+	.secao-codigo h3 {
 		margin-top: 0;
 		font-size: 16px;
 	}
 
-	.secao-copiar p {
+	.secao-copiar p,
+	.secao-codigo p {
 		margin: 0 0 10px 0;
 		font-size: 14px;
 		color: #666;
@@ -1720,14 +1724,14 @@ input:checked + .slider:before {
 	margin-bottom: 15px;
 }
 
-	.grupo-link label,
-	.grupo-qrcode label,
-	.grupo-codigo-edicao label {
-		display: block;
-		margin-bottom: 5px;
-		font-weight: 500;
-		font-size: 14px;
-	}
+.grupo-link label,
+.grupo-qrcode label,
+.grupo-codigo-edicao label {
+	display: block;
+	margin-bottom: 5px;
+	font-weight: 500;
+	font-size: 14px;
+}
 
 .link-container,
 .codigo-container {
@@ -1735,15 +1739,15 @@ input:checked + .slider:before {
 	gap: 10px;
 }
 
-	.link-container input,
-	.codigo-container input {
-		flex: 1;
-		padding: 8px 12px;
-		border: 1px solid #ddd;
-		border-radius: 4px;
-		font-family: monospace;
-		font-size: 12px;
-	}
+.link-container input,
+.codigo-container input {
+	flex: 1;
+	padding: 8px 12px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 12px;
+}
 
 .btn-secundario {
 	padding: 8px 12px;
@@ -1755,10 +1759,10 @@ input:checked + .slider:before {
 	white-space: nowrap;
 }
 
-	.btn-secundario:hover {
-		background: #f0f0f0;
-		border-color: #999;
-	}
+.btn-secundario:hover {
+	background: #f0f0f0;
+	border-color: #999;
+}
 
 .btn-primario {
 	width: 100%;
@@ -1773,9 +1777,9 @@ input:checked + .slider:before {
 	transition: all 0.2s;
 }
 
-	.btn-primario:hover {
-		background: #45a049;
-	}
+.btn-primario:hover {
+	background: #45a049;
+}
 
 /* QR Code */
 .container-qrcode {

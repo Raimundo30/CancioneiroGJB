@@ -1,6 +1,6 @@
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, updateDoc, deleteDoc, addDoc, setDoc, runTransaction, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-firestore.js";
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-analytics.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.10.0/firebase-auth.js";
 
@@ -29,6 +29,7 @@ window.Cancioneiro.auth = auth;
 
 // --- MAPA DE COLECÇÕES POR TIPO DE FOLHA ---
 const TIPOS_FOLHAS = {
+	privada: "folhas-privadas",
 	partilhada: "folhas-partilhadas",
 	publica: "folhas-publicas"
 };
@@ -103,9 +104,34 @@ window.Cancioneiro.dbApi = {
 	},
 
 	apagarCantico: async function (id) {
-		const docRef = doc(db, "canticos", id);
-		await deleteDoc(docRef);
-		return true;
+		try {
+			const docRef = doc(db, "canticos", id);
+			const binRef = doc(db, "bin-canticos", id); // Mantém o MESMO ID na reciclagem
+
+			await runTransaction(db, async (transaction) => {
+				const docSnap = await transaction.get(docRef);
+				
+				if (!docSnap.exists()) {
+					throw new Error("O cântico não existe.");
+				}
+	
+				const canticoData = docSnap.data();
+	
+				// 1. Movel para a reciclagem preservando o ID e adicionando a data de eliminação
+				transaction.set(binRef, {
+					...canticoData,
+					deletedAt: serverTimestamp()
+				});
+	
+				// 2. Elimina da coleção original na mesma operação atómica
+				transaction.delete(docRef);
+			});
+	
+			return {sucesso: true};
+		} catch (error) {
+			console.error("Erro ao mover cântico para a reciclagem:", error);
+			return {sucesso: false, mensagem: error.message};
+		}
 	},
 
 	atualizarCantico: async function (id, canticoData) {
@@ -242,7 +268,7 @@ window.Cancioneiro.dbApi = {
 		}
 	},
 
-	editarCodigoFolha: async function (tipo, id, codigoAtual, novoCodigo) {
+	editarCodigoFolha: async function (tipo, id, novoCodigo) {
 		if (!TIPOS_FOLHAS[tipo]) {
 			return { sucesso: false, erro: "Tipo de folha inválido" };
 		}
@@ -302,11 +328,19 @@ window.Cancioneiro.dbApi = {
 			// Verifica Permissões
 			if (tipoOrigem === "partilhada") {
 				const authResult = await this.authFolha(tipoOrigem, id);
-				if (!authResult.sucesso) alert("Autenticação falhou");
+				if (!authResult.sucesso) throw new Error("Autenticação falhou");
 
-				codigo = authResult.codigo;
-				if (!codigo) throw new Error("Código de autenticação não encontrado");
+				// Se não foi bypass de admin, usamos o código existente
+				if (!authResult.admin_bypass) {
+                    codigo = authResult.codigo;
 
+				} else {
+                    // Se for admin, o código original é desconhecido. 
+                    // Opcional: Podes pedir ao admin para definir um novo código se for mover para pública/partilhada
+                    if (tipoDestino !== "privada") {
+                        codigo = prompt("Sendo Admin, defina um novo código para esta folha no novo destino (mín. 4 carateres):");
+                    }
+                }
 			}
 			if (tipoOrigem === "publica" || tipoDestino === "publica") {
 				const authResult = await this.authAdmin();
@@ -491,22 +525,16 @@ window.Cancioneiro.dbApi = {
 		if (!TIPOS_FOLHAS[tipo]) {
             return { sucesso: false, erro: "Tipo de folha inválido" };
         }
+
+		// 0. Tenta obter do cache de sessionStorage
+		const authCache = await this.isFolhaAuthenticated(tipo, id);
+		if (authCache.sucesso) {
+            return { sucesso: true, codigo: authCache.codigo };
+        }
 		
-		// 0. Verifica se está autenticado como Admin
+		// 1. Verifica se está autenticado como Admin
 		if (this.isAdminAuthenticated()) {
-			return { sucesso: true, codigo: this.getCodigoFolha(id) };
-		}
-
-		// 1. Tenta obter do cache de sessionStorage
-		let codigoCache = sessionStorage.getItem(`folha-${id}`);
-		if (codigoCache) {
-			// Valida o código armazenado em cache
-			if (await this._validarCodigo(tipo, id, codigoCache)) {
-				return { sucesso: true, codigo: codigoCache };
-			}
-
-			// Se não é válido, remove do cache
-			sessionStorage.removeItem(`folha-${id}`);
+			return { sucesso: true, admin_bypass: true};
 		}
 
 		// 2. Se não tem em cache, pede ao utilizador
@@ -558,14 +586,24 @@ window.Cancioneiro.dbApi = {
 	/**
 	 * Verifica se a folha está autenticada em cache
 	 */
-	isFolhaAuthenticated: function (id) {
-		return sessionStorage.getItem(`folha-${id}`) !== null;
+	isFolhaAuthenticated: async function (tipo, id) {
+		const codigoCache = this.getCodigoFolha(id);
+		if (codigoCache) {
+			// Valida o código armazenado em cache
+			if (await this._validarCodigo(tipo, id, codigoCache)) {
+				return { sucesso: true, codigo: codigoCache };
+			}
+
+			// Se não é válido, remove do cache
+			sessionStorage.removeItem(`folha-${id}`);
+		}
+		return { sucesso: false, erro: "Folha não autenticada" };
 	},
 
 	/**
 	 * Retorna o código de edição da folha (ou null)
 	 */
 	getCodigoFolha: function (id) {
-		return sessionStorage.getItem(`folha-${id}`);
+		return sessionStorage.getItem(`folha-${id}`) || null;
 	}
 };

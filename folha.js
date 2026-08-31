@@ -54,7 +54,10 @@ async function initFolha(folhaId) {
 		if (!folhasPartilhadas.includes(folhaId)) {
 			folhasPartilhadas.push(folhaId);
 		}
-		localStorage.setItem(Cancioneiro.folhas.KEY_PARTILHADAS, JSON.stringify(folhasPartilhadas));
+
+		if (!window.Cancioneiro.dbApi.isAdminAuthenticated()) {
+			localStorage.setItem(Cancioneiro.folhas.KEY_PARTILHADAS, JSON.stringify(folhasPartilhadas));
+		}
 	}
 
 	// 🆕 Carregar preferências locais
@@ -471,6 +474,10 @@ async function abrirOverlayPartilha() {
 		painel.classList.remove("painel-fechado");
 	}
 
+	const _authFolha = await window.Cancioneiro.dbApi.isFolhaAuthenticated(folha.tipo, folha.id);
+	const _authAdmin = window.Cancioneiro.dbApi.isAdminAuthenticated();
+
+
 	// Renderiza conteúdo
 	painel.innerHTML = `
 		<div class="painel-conteudo">
@@ -481,38 +488,40 @@ async function abrirOverlayPartilha() {
 
 			<div class="painel-corpo">
 				<!-- Opções de tipo -->
-				<div class="opcao-partilha ${folha.tipo === "privada" ? "opcao-selecionada" : ""}">
-					<div class="opcao-info">
-						<h3>Privada</h3>
-						<p>Apenas você pode aceder</p>
+				${folha.tipo === "privada" || _authFolha.sucesso || _authAdmin ? `
+					<div class="opcao-partilha ${folha.tipo === "privada" ? "opcao-selecionada" : ""}">
+						<div class="opcao-info">
+							<h3>Privada</h3>
+							<p>Apenas você pode aceder</p>
+						</div>
+						<button class="btn-opcao-partilha" data-tipo="privada" 
+								${folha.tipo === "privada" ? "disabled" : ""}>
+							${folha.tipo === "privada" ? "Tipo atual" : "Tornar privada"}
+						</button>
 					</div>
-					<button class="btn-opcao-partilha" data-tipo="privada" 
-							${folha.tipo === "privada" ? "disabled" : ""}>
-						${folha.tipo === "privada" ? "Tipo atual" : "Tornar privada"}
-					</button>
-				</div>
 
-				<div class="opcao-partilha ${folha.tipo === "partilhada" ? "opcao-selecionada" : ""}">
-					<div class="opcao-info">
-						<h3>Partilhada</h3>
-						<p>Qualquer pessoa com link pode aceder e editar</p>
+					<div class="opcao-partilha ${folha.tipo === "partilhada" ? "opcao-selecionada" : ""}">
+						<div class="opcao-info">
+							<h3>Partilhada</h3>
+							<p>Qualquer pessoa com link pode aceder e editar</p>
+						</div>
+						<button class="btn-opcao-partilha" data-tipo="partilhada" 
+								${folha.tipo === "partilhada" ? "disabled" : ""}>
+							${folha.tipo === "partilhada" ? "Tipo atual" : "Tornar partilhada"}
+						</button>
 					</div>
-					<button class="btn-opcao-partilha" data-tipo="partilhada" 
-							${folha.tipo === "partilhada" ? "disabled" : ""}>
-						${folha.tipo === "partilhada" ? "Tipo atual" : "Tornar partilhada"}
-					</button>
-				</div>
 
-				<div class="opcao-partilha ${folha.tipo === "publica" ? "opcao-selecionada" : ""}">
-					<div class="opcao-info">
-						<h3>Pública</h3>
-						<p>Qualquer pessoa pode ver (leitura apenas)</p>
+					<div class="opcao-partilha ${folha.tipo === "publica" ? "opcao-selecionada" : ""}">
+						<div class="opcao-info">
+							<h3>Pública</h3>
+							<p>Qualquer pessoa pode ver (leitura apenas)</p>
+						</div>
+						<button class="btn-opcao-partilha" data-tipo="publica" 
+								${folha.tipo === "publica" ? "disabled" : ""}>
+							${folha.tipo === "publica" ? "Tipo atual" : "Tornar pública"}
+						</button>
 					</div>
-					<button class="btn-opcao-partilha" data-tipo="publica" 
-							${folha.tipo === "publica" ? "disabled" : ""}>
-						${folha.tipo === "publica" ? "Tipo atual" : "Tornar pública"}
-					</button>
-				</div>
+				` : ""}
 
 				<!-- Seção compartilhamento -->
 				${folha.tipo !== "privada" ? `
@@ -532,18 +541,29 @@ async function abrirOverlayPartilha() {
 							<label>QR Code:</label>
 							<div id="container-qrcode"></div>
 						</div>
-
-						${folha.tipo !== "publica" ? `
-							<div class="grupo-codigo-edicao">
-								<label>Código de edição:</label>
-								<div class="codigo-container">
-									<input type="text" id="inp-codigo-edicao" readonly 
-										value="${folha.codigoEdicao || "---"}">
-									<button id="btn-copiar-codigo" class="btn-secundario">Copiar</button>
-								</div>
-							</div>
-						` : ""}
 					</div>
+
+					${_authFolha.sucesso || _authAdmin ? `
+						<div class="secao-codigo">
+							<h3>Código de edição</h3>
+
+							${_authFolha.sucesso? `
+								<div class="grupo-codigo-edicao">
+									<div class="codigo-container">
+										<input type="text" id="inp-codigo-edicao" readonly 
+											value="${_authFolha.codigo}">
+										<button id="btn-copiar-codigo" class="btn-secundario">Copiar</button>
+									</div>
+								</div>
+							` : ""}
+
+							<div class="editar-codigo">
+								<p>Se quiser alterar o código de edição, clique no botão abaixo. 
+								Isto invalidará o código antigo.</p>
+								<button id="btn-alterar-codigo" class="btn-primario">Alterar código${!_authFolha.sucesso && _authAdmin ? ` (Admin)` : ``}</button>
+							</div>
+						</div>
+					` : ""}
 				` : ""}
 
 				<!-- Guardar cópia -->
@@ -559,10 +579,10 @@ async function abrirOverlayPartilha() {
 	`;
 
 	// Eventos dos botões
-	ligarEventosPartilha();
+	await ligarEventosPartilha();
 }
 
-function ligarEventosPartilha() {
+async function ligarEventosPartilha() {
 	const estadoFolha = obterEstadoFolha();
 	// Fechar
 	document.getElementById("btn-fechar-partilha")?.addEventListener("click", fecharOverlayPartilha);
@@ -588,13 +608,25 @@ function ligarEventosPartilha() {
 		// QR Code
 		gerarQRCode(gerarLinkPartilha(folha.id));
 
+		// Secção de código de edição (se autenticado)
+		const _authFolha = await window.Cancioneiro.dbApi.isFolhaAuthenticated(folha.tipo, folha.id);
+		const _authAdmin = window.Cancioneiro.dbApi.isAdminAuthenticated();
+
 		// Copiar código
-		if (folha.tipo !== "publica") {
+		if (_authFolha.sucesso) {
 			document.getElementById("btn-copiar-codigo")?.addEventListener("click", () => {
 				const input = document.getElementById("inp-codigo-edicao");
 				input.select();
 				document.execCommand("copy");
 				alert("Código copiado!");
+			});
+		}
+		// Alterar código
+		if (_authFolha.sucesso || _authAdmin) {
+			document.getElementById("btn-alterar-codigo")?.addEventListener("click", async () => {
+				const novoCodigo = prompt("Insira o novo código de edição (mínimo 4 caracteres):");
+				if (novoCodigo === null) return;
+				await window.Cancioneiro.dbApi.editarCodigoFolha(folha.tipo, folha.id, novoCodigo);
 			});
 		}
 
