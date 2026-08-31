@@ -1,728 +1,400 @@
-function criarPaginaExportacao(item, i, total, opcoes, tituloFolha, dataCabecalho) {
-    const canticoData = item?.canticoData;
-    const entrada = item?.entrada || {};
-    const dados = canticoData?.dados || window.Cancioneiro?.parser?.parseChordPro(canticoData?.conteudoChordPro || "");
-    const meta = canticoData?.meta || {};
-    const semitons = Number(entrada.tom || 0);
-
-    const titulo = dados?.meta?.title || meta.titulo || "Sem título";
-    const subtitulo = dados?.meta?.subtitle || meta.subtitulo || "";
-    const autor = dados?.meta?.author || meta.autor || "";
-    const tomOriginal = dados?.meta?.key || meta.tom || "";
-    const tomFinal = tomOriginal ? transporAcorde(tomOriginal, semitons) : "";
-
-    const pagina = document.createElement("article");
-    pagina.className = "export-page";
-    pagina.classList.toggle("sem-acordes", opcoes?.incluirAcordes === false);
-    pagina.classList.toggle("sem-seccoes", opcoes?.incluirTitulosSeccao === false);
-
-    pagina.style.cssText = `
-        position: relative;
-        width: 794px;
-        height: 1123px;
-        background: #ffffff;
-        color: #111111;
-        border: 1px solid #d9d9d9;
-        padding: 48px 52px 36px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        gap: 0;
-        font-family: Georgia, "Times New Roman", serif;
-        overflow: hidden;
-        box-shadow: none;
-    `;
-
-    const html = `
+// ============================================================================
+// 1. CONFIGURAÇÕES E ESTILOS
+// ============================================================================
+const ExportConfig = {
+    layout: { fontIdeal: 25, fontMin: 8, gapColunas: 32 },
+    page: { width: 794, height: 1123, paddingBase: 120 }, // H-offset (cabeçalho/rodapé + padding)
+    
+    obterCSS: () => `
         <style>
             .export-page * { box-sizing: border-box; }
-
             .export-page {
-                --exp-texto: #111111;
-                --exp-texto-sec: #444444;
-                --exp-texto-ter: #666666;
-                --exp-borda: #d9d9d9;
-                --exp-acorde: #ff6400;
-                --exp-fundo: #ffffff;
+                --exp-texto: #111111; --exp-texto-sec: #444444; --exp-texto-ter: #666666;
+                --exp-borda: #d9d9d9; --exp-acorde: #ff6400; --exp-fundo: #ffffff;
+                position: relative; width: ${ExportConfig.page.width}px; height: ${ExportConfig.page.height}px;
+                background: var(--exp-fundo); color: var(--exp-texto);
+                border: 1px solid var(--exp-borda); padding: 48px 52px 36px;
+                display: flex; flex-direction: column; font-family: Georgia, serif; overflow: hidden;
             }
-
-            .export-page {
-                color: var(--exp-texto);
-                background: var(--exp-fundo);
-            }
-
-            .export-cabecalho {
-                flex-shrink: 0;
-                padding-bottom: 14px;
-                border-bottom: 1px solid var(--exp-borda);
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .export-folha-titulo {
-                font-size: 12px;
-                line-height: 1.2;
-                letter-spacing: 0.08em;
-                text-transform: uppercase;
-                color: var(--exp-texto-ter);
-            }
-
-            .export-cantico-titulo {
-                font-size: 30px;
-                line-height: 1.15;
-                font-weight: 700;
-                margin: 0;
-                color: var(--exp-texto);
-            }
-
-            .export-cantico-subtitulo {
-                font-size: 18px;
-                line-height: 1.2;
-                color: var(--exp-texto-sec);
-                margin: 0;
-            }
-
-            .export-meta {
-                font-size: 14px;
-                line-height: 1.4;
-                color: var(--exp-texto-sec);
-                display: flex;
-                flex-wrap: wrap;
-                gap: 6px;
-            }
+            .export-cabecalho { flex-shrink: 0; padding-bottom: 14px; padding-right: 80px; border-bottom: 1px solid var(--exp-borda); display: flex; flex-direction: column; gap: 8px; }
+            .export-folha-titulo { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--exp-texto-ter); }
+            .export-momento-titulo { font-size: 20px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--exp-texto); }
+            .export-cantico-titulo { font-size: 20px; line-height: 1.15; font-weight: 700; margin: 0;  color: var(--exp-texto-sec);}
+            .export-cantico-subtitulo { font-size: 18px; color: var(--exp-texto-sec); margin: 0; }
+            .export-meta { font-size: 12px; color: var(--exp-texto-ter); display: flex; flex-wrap: wrap; gap: 6px; }
+            
+            .export-qrcode { position: absolute; top: 48px; right: 52px; width: 65px; height: 65px; background: #fff; }
 
             .export-corpo {
-                flex: 1 1 auto;
-                min-height: 0;
-                overflow: hidden;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                margin-top: 16px;
-                margin-bottom: 12px;
-                font-size: var(--export-body-size, 17px);
-                line-height: 1.15;
-                color: var(--exp-texto);
+                flex: 1 1 auto; margin: 16px 0 12px; overflow: hidden; display: flex; flex-direction: column;
+                min-height: 0; justify-content: flex-start;
+                font-size: var(--export-body-size, 17px); line-height: 1.15;
             }
-
-            .export-corpo .cantico-letra,
-            .export-corpo .seccao,
-            .export-corpo .linha-letra,
-            .export-corpo .token,
-            .export-corpo .silaba,
-            .export-corpo .acorde,
-            .export-corpo .seccao-label {
-                font-family: inherit;
-            }
-
-            .export-corpo .seccao {
-                margin-bottom: calc(var(--export-body-size, 17px) * 0.72);
-            }
-
-            .export-corpo .seccao-label {
-                font-size: var(--export-label-size, 12px);
-                line-height: 1.2;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                color: var(--exp-texto-ter);
-                margin-bottom: calc(var(--export-body-size, 17px) * 0.32);
-                font-weight: 700;
-            }
-
-            .export-corpo .linha-letra {
-                display: flex;
-                flex-wrap: nowrap;
-                width: 100%;
-                max-width: 100%;
-                align-items: flex-end;
-                min-height: 1.2em;
-                margin-bottom: calc(var(--export-body-size, 17px) * 0.08);
-            }
-
-            .export-corpo .linha-vazia {
-                height: 0.6em;
-            }
-
-            .export-corpo .linha-comentario {
-                font-size: var(--export-body-size, 17px);
-                color: var(--exp-texto-ter);
-                font-style: italic;
-                margin-bottom: calc(var(--export-body-size, 17px) * 0.32);
-            }
-
-            .export-corpo .token {
-                display: inline-flex;
-                flex-direction: column;
-                align-items: flex-start;
-                justify-content: flex-end;
-                margin-right: 0.12em;
-            }
-
-            .export-corpo .acorde {
-                font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-                font-size: var(--export-acorde-size, 15px);
-                line-height: 1.2;
-                color: var(--exp-acorde);
-                font-weight: 700;
-                white-space: pre;
-                min-width: 1ch;
-            }
-
-            .export-corpo .silaba {
-                font-size: var(--export-body-size, 17px);
-                line-height: 1.15;
-                white-space: pre;
-                color: var(--exp-texto);
-            }
-
-            .export-corpo .acorde-vazio {
-                visibility: hidden;
-            }
-
-            .export-page.sem-acordes .acorde,
-            .export-page.sem-acordes .acorde-vazio {
-                display: none !important;
-            }
-
-            .export-page.sem-seccoes .seccao-label {
-                display: none !important;
-            }
-
-            .export-page .export-corpo.medindo-natural {
-                width: max-content;
-                max-width: none;
-                height: auto;
-                max-height: none;
-                overflow: visible;
-            }
+            .export-corpo .seccao { margin-bottom: calc(var(--export-body-size, 17px) * 2.0); }
+            .export-corpo .seccao-label { font-size: var(--export-label-size, 12px); text-transform: uppercase; font-weight: 700; color: var(--exp-texto-ter); margin-bottom: 0.32em; }
+            .export-corpo .linha-letra { display: flex; align-items: flex-end; min-height: 1.2em; margin-bottom: 0.08em; }
+            .export-corpo .acorde { font-family: monospace; font-size: var(--export-acorde-size, 15px); color: var(--exp-acorde); font-weight: 700; white-space: pre; }
+            .export-corpo .silaba { white-space: pre; }
             
-            .export-page .export-corpo.medindo-natural .linha-letra {
-                width: max-content;
-                max-width: none;
-            }
+            .export-page.sem-acordes .acorde { display: none !important; }
+            .export-page.sem-seccoes .seccao-label { display: none !important; }
             
-            .export-page .export-coluna {
-                display: flex;
-                flex-direction: column;
-                overflow: hidden;
-            }
-
-            .export-rodape {
-                flex-shrink: 0;
-                padding-top: 12px;
-                border-top: 1px solid var(--exp-borda);
-                font-size: 11px;
-                color: var(--exp-texto-ter);
-                line-height: 1.2;
-                text-align: right;
-                letter-spacing: 0.04em;
-                text-transform: uppercase;
-            }
+            .export-corpo.medindo-natural { width: max-content; height: auto; max-width: none; max-height: none; overflow: visible; }
+            .export-corpo.medindo-natural .linha-letra { width: max-content; max-width: none; }
+            .export-coluna { display: flex; flex-direction: column; overflow: hidden; }
+            
+            .export-rodape { flex-shrink: 0; padding-top: 12px; border-top: 1px solid var(--exp-borda); font-size: 11px; color: var(--exp-texto-ter); text-align: right; text-transform: uppercase; }
         </style>
-
-        <div class="export-cabecalho">
-            <div class="export-folha-titulo">${tituloFolha || "Cancioneiro"}</div>
-            ${opcoes?.incluirNomeCantico !== false ? `<h1 class="export-cantico-titulo">${titulo}</h1>` : ""}
-            ${subtitulo ? `<h2 class="export-cantico-subtitulo">(${subtitulo})</h2>` : ""}
-            <div class="export-meta">
-                ${autor ? `<span>${autor}</span>` : ""}
-                ${opcoes?.incluirTom !== false && tomFinal ? `<span>Tom: ${tomFinal}</span>` : ""}
-                ${entrada?.notas ? `<span>${entrada.notas}</span>` : ""}
-            </div>
-        </div>
-
-        <div class="export-corpo">
-            ${renderizarCantico(dados, semitons, entrada?.seccoes || null)}
-        </div>
-
-        <div class="export-rodape">
-            ${dataCabecalho || ""} · página ${i + 1}/${total}
-        </div>
-    `;
-
-    pagina.innerHTML = html;
-
-    if (opcoes?.incluirNomeMomento !== false && item?.momento?.label) {
-        const cabecalho = pagina.querySelector(".export-cabecalho");
-        const momento = document.createElement("div");
-        momento.className = "export-folha-titulo";
-        momento.textContent = item.momento.label;
-        cabecalho.insertBefore(momento, cabecalho.firstChild);
-    }
-
-    if (opcoes?.incluirNomeMomento !== false && item?.momento?.label) {
-        const cabecalho = pagina.querySelector(".export-cabecalho");
-        const tituloFolha = cabecalho.querySelector(".export-folha-titulo");
-    
-        const momento = document.createElement("div");
-        momento.className = "export-momento-titulo";
-        momento.textContent = item.momento.label;
-    
-        // Coloca o momento imediatamente depois do título da folha
-        tituloFolha?.after(momento);
-    }
-    
-    return pagina;
-}
-
-const LAYOUT_CONFIG = {
-    fontIdeal: 25,
-    fontMin: 8,
-    gapColunas: 32
+    `
 };
 
-function aplicarTamanhoCorpo(corpo, tamanho) {
-    corpo.style.setProperty("--export-body-size", `${tamanho}px`);
-    corpo.style.setProperty("--export-acorde-size", `${Math.max(11, tamanho * 0.85)}px`);
-    corpo.style.setProperty("--export-label-size", `${Math.max(9, tamanho * 0.65)}px`);
-}
-
-// Mede o tamanho natural do corpo (sem restrições de largura/altura) a um dado tamanho de letra.
-function medirCorpoNatural(corpo, tamanho) {
-    aplicarTamanhoCorpo(corpo, tamanho);
-
-    corpo.classList.add("medindo-natural");
-    const A = corpo.scrollHeight;
-    const L = corpo.scrollWidth;
-    corpo.classList.remove("medindo-natural");
-
-    return { A, L };
-}
-
-// Decide o tamanho de letra final e se deve usar 1 ou 2 colunas.
-function calcularPlanoLayout(H, W, A, L, config) {
-    const meiaLargura = (W - config.gapColunas) / 2;
-
-    // Cabe tudo numa só coluna ao tamanho ideal - nada a fazer.
-    if (A <= H && L <= W) {
-        return { colunas: 1, tamanho: config.fontIdeal };
+// ============================================================================
+// MÓDULO QR CODE
+// ============================================================================
+const ExportQR = {
+    obterBase64: async (folhaId) => {
+        if (!folhaId) return null;
+        
+        const baseUrl = window.location.origin + window.location.pathname.replace("folha", "");
+        const url = `${baseUrl}folha?id=${folhaId}`;
+        const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
+        
+        try {
+            const resposta = await fetch(qrcodeUrl);
+            const blob = await resposta.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            console.error("Erro ao carregar o QR Code:", e);
+            return null;
+        }
     }
+};
 
-    // A partir daqui só encolhemos - nunca ampliamos acima do tamanho ideal.
-    const escalaAltura = Math.min(1, H / A);
-    const larguraEscalada = L * escalaAltura;
+// ============================================================================
+// 2. CONSTRUTOR DE PÁGINAS (DOM)
+// ============================================================================
+const ExportDOM = {
+    criarPagina: (item, i, total, opcoes, tituloFolha, dataCabecalho) => {
+        const { canticoData, entrada = {}, momento } = item || {};
+        const dados = canticoData?.dados || window.Cancioneiro?.parser?.parseChordPro(canticoData?.conteudoChordPro || "");
+        const meta = canticoData?.meta || {};
+        
+        const semitons = Number(entrada.tom || 0);
+        const tomOriginal = dados?.meta?.key || meta.tom || "";
+        const tomFinal = tomOriginal ? transporAcorde(tomOriginal, semitons) : "";
+        const titulo = dados?.meta?.title || meta.titulo || "Sem título";
+        const subtitulo = dados?.meta?.subtitle || meta.subtitulo || "";
+        const autor = dados?.meta?.author || meta.autor || "";
 
-    if (larguraEscalada >= meiaLargura) {
-        // Encolhendo para caber em altura, a coluna única ainda aproveita bem a largura.
-        return {
-            colunas: 1,
-            tamanho: Math.max(config.fontMin, config.fontIdeal * escalaAltura)
+        let htmlTituloCantico = "";
+        if (subtitulo) {
+            htmlTituloCantico = `<h1 class="export-cantico-titulo">${titulo} (${subtitulo})</h1>`;
+        } else {
+            htmlTituloCantico = `<h1 class="export-cantico-titulo">${titulo}</h1>`;
+        }
+
+        const pagina = document.createElement("article");
+        pagina.className = `export-page ${opcoes.incluirAcordes === false ? 'sem-acordes' : ''} ${opcoes.incluirTitulosSeccao === false ? 'sem-seccoes' : ''}`;
+        
+        pagina.innerHTML = `
+            ${ExportConfig.obterCSS()}
+            <div class="export-cabecalho">
+                <div class="export-folha-titulo">${tituloFolha || "Cancioneiro"}</div>
+                ${opcoes.incluirNomeMomento !== false && momento?.label ? `<div class="export-momento-titulo">${momento.label}</div>` : ""}
+                ${opcoes.incluirNomeCantico !== false ? htmlTituloCantico : ""}
+                <div class="export-meta">
+                    ${autor ? `<span>${autor}</span>` : ""}
+                    ${opcoes.incluirTom !== false && tomFinal ? `<span>Tom: ${tomFinal}</span>` : ""}
+                    ${entrada.notas ? `<span>${entrada.notas}</span>` : ""}
+                </div>
+            </div>
+            <div class="export-corpo">
+                ${renderizarCantico(dados, semitons, entrada.seccoes || null)}
+            </div>
+            <div class="export-rodape">
+                ${dataCabecalho || ""} · página ${i + 1}/${total}
+            </div>
+        `;
+        return pagina;
+    }
+};
+
+// ============================================================================
+// 3. MOTOR DE LAYOUT E ESCALA
+// ============================================================================
+const ExportLayout = {
+    aplicarTamanho: (corpo, tamanho) => {
+        corpo.style.setProperty("--export-body-size", `${tamanho}px`);
+        corpo.style.setProperty("--export-acorde-size", `${Math.max(11, tamanho * 0.85)}px`);
+        corpo.style.setProperty("--export-label-size", `${Math.max(9, tamanho * 0.65)}px`);
+    },
+
+    calcularPlano: (H, W, A, L, conf) => {
+        const meiaLargura = (W - conf.gapColunas) / 2;
+        if (A <= H && L <= W) return { colunas: 1, tamanho: conf.fontIdeal };
+
+        const escalaAltura = Math.min(1, H / A);
+        if (L * escalaAltura >= meiaLargura) {
+            return { colunas: 1, tamanho: Math.max(conf.fontMin, conf.fontIdeal * escalaAltura) };
+        }
+
+        const escalaLargura = Math.min(1, meiaLargura / L);
+        const escalaFinal = (A * escalaLargura) <= (2 * H) ? escalaLargura : (2 * H) / A;
+        
+        return { colunas: 2, tamanho: Math.max(conf.fontMin, conf.fontIdeal * escalaFinal) };
+    },
+
+    dividirEmColunas: (corpo, maxH, colW) => {
+        const seccoes = Array.from(corpo.querySelectorAll(".seccao"));
+        if (!seccoes.length) return; 
+
+        const alturaTotal = seccoes.reduce((soma, sec) => soma + sec.offsetHeight, 0);
+        let [acumulado, indiceDivisao] = [0, Math.max(1, seccoes.length)];
+
+        for (let i = 0; i < seccoes.length; i++) {
+            if (acumulado >= alturaTotal / 2) { indiceDivisao = i; break; }
+            acumulado += seccoes[i].offsetHeight;
+        }
+
+        const criarColuna = () => {
+            const col = document.createElement("div");
+            col.className = "export-coluna";
+            Object.assign(col.style, { width: `${colW}px`, maxWidth: `${colW}px`, height: `${maxH}px` });
+            return col;
+        };
+
+        const [col1, col2] = [criarColuna(), criarColuna()];
+        seccoes.forEach((sec, i) => (i < indiceDivisao ? col1 : col2).appendChild(sec));
+        
+        corpo.replaceChildren(col1, col2);
+        Object.assign(corpo.style, { flexDirection: "row", gap: `${ExportConfig.layout.gapColunas}px` });
+    },
+
+    ajustarPagina: (pagina) => {
+        const corpo = pagina.querySelector(".export-corpo");
+        if (!corpo) return;
+
+        // 1. Limpamos restrições manuais para o flexbox assumir o tamanho natural exato.
+        corpo.style.height = "";
+        corpo.style.maxHeight = "";
+
+        // 2. Medir tamanho "sem limites" para avaliar o plano.
+        ExportLayout.aplicarTamanho(corpo, ExportConfig.layout.fontIdeal);
+        corpo.classList.add("medindo-natural");
+        const { scrollHeight: A, scrollWidth: L } = corpo;
+        corpo.classList.remove("medindo-natural");
+
+        // 3. Obter o espaço que o flexbox realmente alocou 
+        // (Fallback aritmético super restrito caso o DOM atrase a renderização)
+        const cab = pagina.querySelector(".export-cabecalho");
+        const rod = pagina.querySelector(".export-rodape");
+        const altCalc = pagina.clientHeight - (cab?.offsetHeight || 0) - (rod?.offsetHeight || 0) - 112; 
+        const maxH = corpo.clientHeight > 10 ? corpo.clientHeight : altCalc;
+        const maxW = corpo.clientWidth;
+
+        // 4. Aplicar plano
+        const plano = ExportLayout.calcularPlano(maxH, maxW, A, L, ExportConfig.layout);
+        ExportLayout.aplicarTamanho(corpo, plano.tamanho);
+        Object.assign(corpo.style, { height: `${maxH}px`, maxHeight: `${maxH}px` });
+
+        if (plano.colunas === 2) {
+            ExportLayout.dividirEmColunas(corpo, maxH, (maxW - ExportConfig.layout.gapColunas) / 2);
+        }
+
+        // 5. Ajuste fino baseado EXATAMENTE no clientHeight de onde o texto mora
+        let iteracoes = 0;
+        const testContainer = plano.colunas === 2 ? corpo.children : [corpo];
+        
+        while (Array.from(testContainer).some(c => c.scrollHeight > c.clientHeight + 1) && iteracoes++ < 50) {
+            const atual = parseFloat(corpo.style.getPropertyValue("--export-body-size"));
+            if (atual <= ExportConfig.layout.fontMin) break;
+            ExportLayout.aplicarTamanho(corpo, atual - 0.25);
+        }
+    }
+};
+
+// ============================================================================
+// 4. SERVIÇOS DE EXPORTAÇÃO (PDF/ZIP)
+// ============================================================================
+const ExportService = {
+    utils: {
+        nomeSeguro: (nome = "folha") => nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[<>:"/\\|?*\x00-\x1F\s]+/g, "-").toLowerCase(),
+        dataHoje: (dataStr) => new Date(dataStr ? `${dataStr}T00:00:00` : Date.now()).toLocaleDateString("pt-PT"),
+        downloadBlob: (blob, nome) => {
+            const url = URL.createObjectURL(blob);
+            const a = Object.assign(document.createElement("a"), { href: url, download: nome });
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        },
+        carregarScript: (url, checkFn) => new Promise((resolve, reject) => {
+            if (checkFn()) return resolve();
+            const s = Object.assign(document.createElement("script"), { src: url, async: true, onload: () => checkFn() ? resolve() : reject(), onerror: reject });
+            document.head.appendChild(s);
+        })
+    },
+
+    prepararDependencias: async (formato) => {
+        await ExportService.utils.carregarScript("https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js", () => window.html2canvas);
+        if (formato === "pdf") await ExportService.utils.carregarScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js", () => window.jspdf);
+        else await ExportService.utils.carregarScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js", () => window.JSZip);
+    },
+
+    gerar: async (formato, opcoes) => {
+        const { folha } = obterEstadoFolha();
+        const itens = (await Promise.all(
+            folha.momentos.flatMap(m => m.canticos.map(async c => ({ momento: m, entrada: c, canticoData: await carregarCantico(c.canticoId) })))
+        )).filter(i => i.canticoData);
+
+        if (!itens.length) return alert("Não há cânticos para exportar.");
+
+        await ExportService.prepararDependencias(formato);
+
+        // Gerar QR Code para a folha
+        const qrCodeBase64 = await ExportQR.obterBase64(folha.id);
+
+        // Contentor Invisível
+        const root = Object.assign(document.createElement("div"), { style: "position:fixed; left:-10000px; top:0; z-index:-1; background:#fff;" });
+        document.body.appendChild(root);
+
+        try {
+            const dataCab = ExportService.utils.dataHoje(folha.data);
+            const paginas = itens.map((item, i) => {
+                const pagina = ExportDOM.criarPagina(item, i, itens.length, opcoes, folha.titulo, dataCab);
+                
+                if (qrCodeBase64) {
+                    const imgQR = document.createElement("img");
+                    imgQR.src = qrCodeBase64;
+                    imgQR.className = "export-qrcode";
+                    imgQR.alt = "QR Code";
+                    pagina.appendChild(imgQR);
+                }
+                return pagina;
+            });
+
+            paginas.forEach(p => root.appendChild(p));
+            await new Promise(requestAnimationFrame);
+            paginas.forEach(ExportLayout.ajustarPagina);
+            await new Promise(r => setTimeout(r, 50)); // Tempo para render DOM
+
+            const canvasOpts = { scale: 2, backgroundColor: "#ffffff", useCORS: true };
+            const nomeBase = ExportService.utils.nomeSeguro(folha.titulo);
+
+            if (formato === "pdf") {
+                const pdf = new window.jspdf.jsPDF({ orientation: "p", unit: "pt", format: "a4" });
+                for (let i = 0; i < paginas.length; i++) {
+                    if (i > 0) pdf.addPage();
+                    const canvas = await window.html2canvas(paginas[i], canvasOpts);
+                    const ratio = Math.min(pdf.internal.pageSize.getWidth() / canvas.width, pdf.internal.pageSize.getHeight() / canvas.height);
+                    pdf.addImage(canvas.toDataURL("image/png"), "PNG", (pdf.internal.pageSize.getWidth() - (canvas.width * ratio)) / 2, 0, canvas.width * ratio, canvas.height * ratio);
+                }
+                pdf.save(`${nomeBase}.pdf`);
+            } else {
+                const zip = new window.JSZip();
+                for (let i = 0; i < paginas.length; i++) {
+                    const canvas = await window.html2canvas(paginas[i], canvasOpts);
+                    const titulo = ExportService.utils.nomeSeguro(itens[i].canticoData?.dados?.meta?.title || `cantico-${i + 1}`);
+                    zip.file(`${String(i + 1).padStart(2, "0")}-${titulo}.png`, await new Promise(r => canvas.toBlob(r, "image/png")));
+                }
+                ExportService.utils.downloadBlob(await zip.generateAsync({ type: "blob" }), `${nomeBase}.zip`);
+            }
+        } finally {
+            root.remove();
+        }
+    }
+};
+
+// ============================================================================
+// 5. INTERFACE DE UTILIZADOR (UI)
+// ============================================================================
+const ExportUI = {
+    obterOpcoes: () => ({
+        formato: document.getElementById("painel-exportacao")?.dataset.formato || "pdf",
+        incluirNomeMomento: document.getElementById("exp-momento")?.checked,
+        incluirNomeCantico: document.getElementById("exp-cantico")?.checked,
+        incluirTom: document.getElementById("exp-tom")?.checked,
+        incluirTitulosSeccao: document.getElementById("exp-seccoes")?.checked,
+        incluirAcordes: document.getElementById("exp-acordes")?.checked
+    }),
+
+    fechar: () => {
+        document.getElementById("overlay-exportacao")?.classList.remove("overlay-visivel");
+        document.getElementById("painel-exportacao")?.classList.replace("painel-aberto", "painel-fechado");
+    },
+
+    abrir: () => {
+        // Criar ou obter elementos sem tentar reatribuir o 'dataset' diretamente
+        let overlay = document.getElementById("overlay-exportacao") || Object.assign(document.createElement("div"), { id: "overlay-exportacao", className: "overlay" });
+        let painel = document.getElementById("painel-exportacao") || Object.assign(document.createElement("div"), { id: "painel-exportacao", className: "painel" });
+        
+        // Atribuir o dataset da forma correta
+        painel.dataset.formato = painel.dataset.formato || "pdf";
+        
+        if (!overlay.parentNode) document.body.appendChild(overlay);
+        if (!painel.parentNode) document.body.appendChild(painel);
+
+        overlay.className = "overlay overlay-visivel";
+        painel.className = "painel painel-aberto";
+        
+        overlay.onclick = (e) => e.target === overlay && ExportUI.fechar();
+
+        const formato = painel.dataset.formato;
+        painel.innerHTML = `
+            <div class="painel-conteudo">
+                <div class="painel-cabecalho">
+                    <h2>Exportar Folha</h2>
+                    <button id="btn-fechar-exportacao" class="btn-fechar">✕</button>
+                </div>
+                <div class="painel-corpo">
+                    <div class="definicao-grupo">
+                        <label>Formato</label>
+                        <div class="opcoes-toggle">
+                            <button type="button" class="opcao-toggle btn-formato-export ${formato === "pdf" ? "ativo" : ""}" data-formato="pdf">PDF</button>
+                            <button type="button" class="opcao-toggle btn-formato-export ${formato === "png" ? "ativo" : ""}" data-formato="png">PNG (.zip)</button>
+                        </div>
+                    </div>
+                    <div class="definicao-grupo">
+                        <label>Incluir</label>
+                        <div class="export-opcoes">
+                            ${[['exp-momento', 'Nome do momento'], ['exp-cantico', 'Nome do cântico'], ['exp-tom', 'Tom original / selecionado'], ['exp-seccoes', 'Títulos de estrofes/refrão'], ['exp-acordes', 'Acordes']]
+                                .map(([id, label]) => `<label class="export-opcao"><input type="checkbox" id="${id}" checked> ${label}</label>`).join('')}
+                        </div>
+                    </div>
+                    <div id="export-status" class="export-status"></div>
+                    <button id="btn-exportar-confirmar" class="btn-primario">Exportar</button>
+                </div>
+            </div>
+        `;
+
+        // Eventos
+        document.getElementById("btn-fechar-exportacao").onclick = ExportUI.fechar;
+        document.querySelectorAll(".btn-formato-export").forEach(btn => btn.onclick = () => {
+            painel.dataset.formato = btn.dataset.formato;
+            document.querySelectorAll(".btn-formato-export").forEach(b => b.classList.remove("ativo"));
+            btn.classList.add("ativo");
+        });
+
+        document.getElementById("btn-exportar-confirmar").onclick = async function() {
+            const status = document.getElementById("export-status");
+            try {
+                this.disabled = true;
+                if (status) status.textContent = "A preparar exportação...";
+                await ExportService.gerar(ExportUI.obterOpcoes().formato, ExportUI.obterOpcoes());
+                if (status) status.textContent = "Exportação concluída.";
+                ExportUI.fechar();
+            } catch (e) {
+                console.error("Erro na exportação:", e);
+                if (status) status.textContent = "Erro na exportação.";
+                alert("Não foi possível exportar a folha.");
+            } finally {
+                this.disabled = false;
+            }
         };
     }
+};
 
-    // A largura ficaria desperdiçada - vale mais passar a 2 colunas.
-    const escalaLargura = Math.min(1, meiaLargura / L);
-    const alturaEscalada = A * escalaLargura;
-
-    const escalaFinal = alturaEscalada <= 2 * H
-        ? escalaLargura
-        : (2 * H) / A;
-
-    return {
-        colunas: 2,
-        tamanho: Math.max(config.fontMin, config.fontIdeal * escalaFinal)
-    };
-}
-
-// Rede de segurança para o caso de 1 coluna (arredondamentos de fonte/line-height).
-function ajustarFinoAltura(corpo, tamanhoMinimo, passo = 0.25, maxIteracoes = 40) {
-    let iteracoes = 0;
-    while (corpo.scrollHeight > corpo.clientHeight + 1 && iteracoes < maxIteracoes) {
-        const atual = parseFloat(corpo.style.getPropertyValue("--export-body-size")) || tamanhoMinimo;
-        if (atual <= tamanhoMinimo) break;
-        aplicarTamanhoCorpo(corpo, Math.max(tamanhoMinimo, atual - passo));
-        iteracoes++;
-    }
-}
-
-// Divide as secções do corpo em duas colunas lado a lado.
-function aplicarDuasColunas(corpo, H, W, gap) {
-    const larguraColuna = (W - gap) / 2;
-
-    corpo.style.width = `${larguraColuna}px`;
-    corpo.style.maxWidth = `${larguraColuna}px`;
-    corpo.style.height = "auto";
-    corpo.style.maxHeight = "none";
-
-    // Procura as secções em qualquer profundidade - não assume que são filhas diretas do corpo.
-    const seccoes = Array.from(corpo.querySelectorAll(".seccao"));
-
-    if (seccoes.length === 0) {
-        // Sem secções identificáveis, não há como dividir com segurança - fica em 1 coluna.
-        corpo.style.width = "100%";
-        corpo.style.maxWidth = "100%";
-        corpo.style.height = `${H}px`;
-        corpo.style.maxHeight = `${H}px`;
-        ajustarFinoAltura(corpo, LAYOUT_CONFIG.fontMin);
-        return;
-    }
-
-    const alturas = seccoes.map(sec => sec.offsetHeight);
-    const alturaTotal = alturas.reduce((soma, altura) => soma + altura, 0);
-
-    let acumulado = 0;
-    let indiceDivisao = seccoes.length;
-    for (let i = 0; i < seccoes.length; i++) {
-        if (acumulado >= alturaTotal / 2) {
-            indiceDivisao = i;
-            break;
-        }
-        acumulado += alturas[i];
-    }
-    if (indiceDivisao === 0 && seccoes.length > 1) indiceDivisao = 1;
-
-    const col1 = document.createElement("div");
-    const col2 = document.createElement("div");
-    [col1, col2].forEach(coluna => {
-        coluna.className = "export-coluna";
-        coluna.style.width = `${larguraColuna}px`;
-        coluna.style.maxWidth = `${larguraColuna}px`;
-        coluna.style.height = `${H}px`;
-        coluna.style.maxHeight = `${H}px`;
-    });
-
-    seccoes.forEach((sec, i) => {
-        (i < indiceDivisao ? col1 : col2).appendChild(sec);
-    });
-
-    // Descarta o que sobrar no corpo (ex.: wrappers agora vazios) e fica só com as duas colunas.
-    corpo.replaceChildren(col1, col2);
-
-    corpo.style.width = "100%";
-    corpo.style.maxWidth = "100%";
-    corpo.style.height = `${H}px`;
-    corpo.style.maxHeight = `${H}px`;
-    corpo.style.flexDirection = "row";
-    corpo.style.gap = `${gap}px`;
-
-    let iteracoes = 0;
-    while ((col1.scrollHeight > H + 1 || col2.scrollHeight > H + 1) && iteracoes < 60) {
-        const atual = parseFloat(corpo.style.getPropertyValue("--export-body-size")) || LAYOUT_CONFIG.fontMin;
-        if (atual <= LAYOUT_CONFIG.fontMin) break;
-        aplicarTamanhoCorpo(corpo, Math.max(LAYOUT_CONFIG.fontMin, atual - 0.2));
-        iteracoes++;
-    }
-}
-
-function ajustarTituloConformeTamanho(pagina, tamanho) {
-    const titulo = pagina.querySelector(".export-cantico-titulo");
-    if (!titulo) return;
-    const tamanhoTitulo = Math.min(30, Math.max(22, 30 - ((LAYOUT_CONFIG.fontIdeal - tamanho) * 0.75)));
-    titulo.style.fontSize = `${tamanhoTitulo}px`;
-    titulo.style.lineHeight = "1.15";
-}
-
-function ajustarEscalaCorpoExportacao(pagina) {
-    if (!pagina) return;
-
-    const corpo = pagina.querySelector(".export-corpo");
-    const cabecalho = pagina.querySelector(".export-cabecalho");
-    const rodape = pagina.querySelector(".export-rodape");
-    if (!corpo || !cabecalho || !rodape) return;
-
-    // 1. Espaço disponível para o corpo depois de cabeçalho + rodapé + padding da página.
-    const alturaPagina = pagina.clientHeight || 1123;
-    const H = Math.max(120, alturaPagina - cabecalho.offsetHeight - rodape.offsetHeight - 70);
-    const W = corpo.clientWidth;
-
-    // 2. Tamanho natural do corpo ao tamanho de letra ideal, sem restrições.
-    const { A, L } = medirCorpoNatural(corpo, LAYOUT_CONFIG.fontIdeal);
-
-    // 3. Decide tamanho de letra final e nº de colunas.
-    const plano = calcularPlanoLayout(H, W, A, L, LAYOUT_CONFIG);
-
-    // 4. Aplica o plano.
-    corpo.style.height = `${H}px`;
-    corpo.style.maxHeight = `${H}px`;
-    aplicarTamanhoCorpo(corpo, plano.tamanho);
-
-    if (plano.colunas === 2) {
-        aplicarDuasColunas(corpo, H, W, LAYOUT_CONFIG.gapColunas);
-    } else {
-        ajustarFinoAltura(corpo, LAYOUT_CONFIG.fontMin);
-    }
-
-    ajustarTituloConformeTamanho(pagina, plano.tamanho);
-}
-
-function obterOpcoesCanvasExport() {
-    return {
-        scale: 2,
-        backgroundColor: "#ffffff",
-        useCORS: true,
-        allowTaint: true,
-        logging: false
-    };
-}
-
-// -----------------------------------------------------------------------------
-// SECÇÃO 5C: Exportação de folhas
-// -----------------------------------------------------------------------------
-function nomeArquivoSeguro(nome) {
-	return (nome || "folha")
-		.normalize("NFD")
-		.replace(/[\u0300-\u036f]/g, "")
-		.replace(/[<>:"/\\|?*\x00-\x1F]/g, "")
-		.replace(/\s+/g, "-")
-		.toLowerCase();
-}
-
-function dataCabecalhoExportacao(folha) {
-	const base = folha.data ? new Date(folha.data + "T00:00:00") : new Date();
-	return base.toLocaleDateString("pt-PT", { day: "2-digit", month: "2-digit", year: "numeric" });
-}
-
-function carregarScript(url, checkFn) {
-	return new Promise((resolve, reject) => {
-		if (checkFn()) return resolve();
-
-		const s = document.createElement("script");
-		s.src = url;
-		s.async = true;
-		s.onload = () => checkFn() ? resolve() : reject(new Error(`Dependência inválida: ${url}`));
-		s.onerror = () => reject(new Error(`Falha ao carregar script: ${url}`));
-		document.head.appendChild(s);
-	});
-}
-
-async function garantirBibliotecasExportacao(formato) {
-	await carregarScript(
-		"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
-		() => typeof window.html2canvas === "function"
-	);
-
-	if (formato === "pdf") {
-		await carregarScript(
-			"https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",
-			() => !!(window.jspdf && window.jspdf.jsPDF)
-		);
-	} else {
-		await carregarScript(
-			"https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js",
-			() => typeof window.JSZip !== "undefined"
-		);
-	}
-}
-
-function descarregarBlob(blob, nomeFicheiro) {
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = nomeFicheiro;
-	document.body.appendChild(a);
-	a.click();
-	a.remove();
-	setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-async function exportarPaginasPDF(paginas, nomeBase) {
-	const { jsPDF } = window.jspdf;
-	const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-	const pageW = pdf.internal.pageSize.getWidth();
-	const pageH = pdf.internal.pageSize.getHeight();
-
-	for (let i = 0; i < paginas.length; i++) {
-		if (i > 0) pdf.addPage();
-
-		const canvas = await window.html2canvas(paginas[i], obterOpcoesCanvasExport());
-		const img = canvas.toDataURL("image/png");
-
-		const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
-		const w = canvas.width * ratio;
-		const h = canvas.height * ratio;
-		const x = (pageW - w) / 2;
-		const y = 0;
-
-		pdf.addImage(img, "PNG", x, y, w, h);
-	}
-
-	pdf.save(`${nomeArquivoSeguro(nomeBase)}.pdf`);
-}
-
-async function exportarPaginasPNGZip(paginas, itens, nomeBase) {
-	const zip = new window.JSZip();
-
-	for (let i = 0; i < paginas.length; i++) {
-		const canvas = await window.html2canvas(paginas[i], obterOpcoesCanvasExport());
-		const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
-		const titulo = (itens[i]?.canticoData?.dados?.meta?.title || itens[i]?.canticoData?.meta?.titulo || `cantico-${i + 1}`);
-		zip.file(`${String(i + 1).padStart(2, "0")}-${nomeArquivoSeguro(titulo)}.png`, blob);
-	}
-
-	const zipBlob = await zip.generateAsync({ type: "blob" });
-	descarregarBlob(zipBlob, `${nomeArquivoSeguro(nomeBase)}.zip`);
-}
-
-async function exportarFolha(formato, opcoes) {
-    const estadoFolha = obterEstadoFolha();
-    const folha = estadoFolha.folha;
-    const momentosFiltrados = folha.momentos.filter(m => m.canticos.length > 0);
-
-    console.groupCollapsed("[export-debug] exportarFolha inicio");
-    console.log("folha:", folha.titulo);
-    console.log("momentos:", momentosFiltrados.length);
-    console.groupEnd();
-
-    const itens = [];
-    for (const momento of momentosFiltrados) {
-        for (const entrada of momento.canticos) {
-            const canticoData = await carregarCantico(entrada.canticoId);
-            if (canticoData) itens.push({ momento, entrada, canticoData });
-        }
-    }
-
-    if (itens.length === 0) {
-        alert("Não há cânticos para exportar.");
-        return;
-    }
-
-    await garantirBibliotecasExportacao(formato);
-
-    const root = document.createElement("div");
-    root.id = "export-root";
-    root.style.position = "fixed";
-    root.style.left = "-10000px";
-    root.style.top = "0";
-    root.style.zIndex = "-1";
-    root.style.background = "#fff";
-    document.body.appendChild(root);
-
-    try {
-        const dataCab = dataCabecalhoExportacao(folha);
-        const paginas = itens.map((item, i) =>
-            criarPaginaExportacao(item, i, itens.length, opcoes, folha.titulo, dataCab)
-        );
-
-        console.log("[export-debug] paginas criadas:", paginas.length);
-
-        paginas.forEach(p => root.appendChild(p));
-        await new Promise(r => requestAnimationFrame(r));
-        paginas.forEach(p => ajustarEscalaCorpoExportacao(p));
-
-        await new Promise(r => setTimeout(r, 30));
-
-        if (formato === "pdf") {
-            await exportarPaginasPDF(paginas, folha.titulo || "folha");
-        } else {
-            await exportarPaginasPNGZip(paginas, itens, folha.titulo || "folha");
-        }
-    } finally {
-        root.remove();
-    }
-}
-
-function fecharOverlayExportacao() {
-	document.getElementById("overlay-exportacao")?.classList.remove("overlay-visivel");
-	document.getElementById("painel-exportacao")?.classList.remove("painel-aberto");
-	document.getElementById("painel-exportacao")?.classList.add("painel-fechado");
-}
-
-function obterOpcoesExportacaoPainel() {
-	const painel = document.getElementById("painel-exportacao");
-	return {
-		formato: painel?.dataset.formato || "pdf",
-		incluirNomeMomento: document.getElementById("exp-momento")?.checked === true,
-		incluirNomeCantico: document.getElementById("exp-cantico")?.checked === true,
-		incluirTom: document.getElementById("exp-tom")?.checked === true,
-		incluirTitulosSeccao: document.getElementById("exp-seccoes")?.checked === true,
-		incluirAcordes: document.getElementById("exp-acordes")?.checked === true
-	};
-}
-
-function ligarEventosExportacao() {
-	document.getElementById("btn-fechar-exportacao")?.addEventListener("click", fecharOverlayExportacao);
-
-	document.querySelectorAll(".btn-formato-export").forEach(btn => {
-		btn.addEventListener("click", () => {
-			const painel = document.getElementById("painel-exportacao");
-			painel.dataset.formato = btn.dataset.formato;
-			document.querySelectorAll(".btn-formato-export").forEach(b => b.classList.remove("ativo"));
-			btn.classList.add("ativo");
-		});
-	});
-
-	document.getElementById("btn-exportar-confirmar")?.addEventListener("click", async () => {
-		const btn = document.getElementById("btn-exportar-confirmar");
-		const status = document.getElementById("export-status");
-		const opcoes = obterOpcoesExportacaoPainel();
-
-		try {
-			btn.disabled = true;
-			if (status) status.textContent = "A preparar exportação...";
-			await exportarFolha(opcoes.formato, opcoes);
-			if (status) status.textContent = "Exportação concluída.";
-			fecharOverlayExportacao();
-		} catch (e) {
-			console.error("Erro na exportação:", e);
-			if (status) status.textContent = "Erro na exportação.";
-			alert("Não foi possível exportar a folha.");
-		} finally {
-			btn.disabled = false;
-		}
-	});
-}
-
-function abrirOverlayExportacao() {
-	let overlay = document.getElementById("overlay-exportacao");
-	if (!overlay) {
-		overlay = document.createElement("div");
-		overlay.id = "overlay-exportacao";
-		overlay.className = "overlay overlay-visivel";
-		document.body.appendChild(overlay);
-		overlay.addEventListener("click", (e) => {
-			if (e.target === overlay) fecharOverlayExportacao();
-		});
-	} else {
-		overlay.classList.add("overlay-visivel");
-	}
-
-	let painel = document.getElementById("painel-exportacao");
-	if (!painel) {
-		painel = document.createElement("div");
-		painel.id = "painel-exportacao";
-		painel.className = "painel painel-aberto";
-		painel.dataset.formato = "pdf";
-		document.body.appendChild(painel);
-	} else {
-		painel.classList.add("painel-aberto");
-		painel.classList.remove("painel-fechado");
-		painel.dataset.formato = painel.dataset.formato || "pdf";
-	}
-
-	const formato = painel.dataset.formato;
-	painel.innerHTML = `
-		<div class="painel-conteudo">
-			<div class="painel-cabecalho">
-				<h2>Exportar Folha</h2>
-				<button id="btn-fechar-exportacao" class="btn-fechar">✕</button>
-			</div>
-
-			<div class="painel-corpo">
-				<div class="definicao-grupo">
-					<label>Formato</label>
-					<div class="opcoes-toggle">
-						<button type="button" class="opcao-toggle btn-formato-export ${formato === "pdf" ? "ativo" : ""}" data-formato="pdf">PDF</button>
-						<button type="button" class="opcao-toggle btn-formato-export ${formato === "png" ? "ativo" : ""}" data-formato="png">PNG (.zip)</button>
-					</div>
-				</div>
-
-				<div class="definicao-grupo">
-					<label>Incluir</label>
-					<div class="export-opcoes">
-						<label class="export-opcao"><input type="checkbox" id="exp-momento" checked> Nome do momento</label>
-						<label class="export-opcao"><input type="checkbox" id="exp-cantico" checked> Nome do cântico</label>
-						<label class="export-opcao"><input type="checkbox" id="exp-tom" checked> Tom original / selecionado</label>
-						<label class="export-opcao"><input type="checkbox" id="exp-seccoes" checked> Títulos de estrofes/refrão</label>
-						<label class="export-opcao"><input type="checkbox" id="exp-acordes" checked> Acordes</label>
-					</div>
-				</div>
-
-				<div id="export-status" class="export-status"></div>
-				<button id="btn-exportar-confirmar" class="btn-primario">Exportar</button>
-			</div>
-		</div>
-	`;
-
-	ligarEventosExportacao();
-}
+// Como usar (mantendo a API original que as outras partes do seu código possam estar a chamar):
+function abrirOverlayExportacao() { ExportUI.abrir(); }
