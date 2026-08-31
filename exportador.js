@@ -55,11 +55,9 @@ const ExportQR = {
     obterBase64: async (folhaId) => {
         if (!folhaId) return null;
         
-        const urlObj = new URL(window.location.href);
-        urlObj.hash = "#/folha";
-        urlObj.searchParams.set("id", String(folhaId));
+        const base = `${window.location.origin}${window.location.pathname}`.replace(/\/$/, "");
+        const url = `${base}/#/folha?id=${encodeURIComponent(String(folhaId))}`;
 
-        const url = urlObj.toString();
         const qrcodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(url)}`;
         
         try {

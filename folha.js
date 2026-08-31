@@ -613,10 +613,10 @@ function fecharOverlayPartilha() {
 }
 
 function gerarLinkPartilha(folhaId) {
-    const url = new URL(window.location.href);
-    url.hash = "#/folha";
-    url.search = new URLSearchParams({ id: String(folhaId) }).toString();
-    return url.toString();
+    const base = new URL(window.location.href);
+    const basePath = `${base.origin}${base.pathname}`.replace(/\/$/, "");
+    const hashRoute = `/#/folha?id=${encodeURIComponent(String(folhaId))}`;
+    return `${basePath}${hashRoute}`;
 }
 
 function gerarQRCode(url) {
