@@ -44,7 +44,7 @@ async function renderCantico(canticoIdParam) {
 }
 
 async function initCantico(canticoIdParam) {
-	// Lê o id do cântico da URL (ex: cantico.html?id=001)
+	// Lê o id do cântico da URL (ex: cantico?id=001)
 	const { params } = getRoute();
 	const canticoId = canticoIdParam || params.get("id");
 

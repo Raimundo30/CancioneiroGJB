@@ -163,7 +163,7 @@ async function renderizarEditorFolha() {
 							<transp-comp id="transp-comp"></transp-comp>
 						` : ""}
 						
-						<button onclick="window.open('cantico.html?id=${entrada.canticoId}', '_blank')">↗</button>
+						<button type="button" class="btn-abre-cantico" data-cantico-id="${entrada.canticoId}" title="Abrir cântico">↗</button>
 						
 						<button id="btn-editar-cantico" data-momento="${momento.id}"
 							data-cantico="${entrada.canticoId}" title="Editar">✎</button>
@@ -271,6 +271,16 @@ function ligarEventosEditorFolha(momentosFiltrados) {
 			entrada.tom = 0;
 			gravarAlteracoes();
 			renderizarEditorFolha();
+		});
+	});
+
+	// Abrir cântico em nova aba
+	document.querySelectorAll(".btn-abre-cantico").forEach(btn => {
+		btn.addEventListener("click", () => {
+			const canticoId = btn.dataset.canticoId;
+			// Abrir o cântico em uma nova aba
+			window.open(`#/cantico?id=${canticoId}`, "_blank");
+			// navigate("/cantico", { id: canticoId });
 		});
 	});
 

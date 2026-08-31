@@ -1,7 +1,7 @@
 // arquivo: componentes.js
 
 
-// Componente de navegação (usado em cantico.html e folha.html)
+// Componente de navegação (usado em /cantico e /folha)
 class NavComp extends HTMLElement {
 	connectedCallback() {
 		this.innerHTML = `
@@ -16,7 +16,7 @@ class NavComp extends HTMLElement {
 }
 customElements.define('nav-comp', NavComp);
 
-// Componente de transposição (usado em cantico.html e folha.html)
+// Componente de transposição (usado em /cantico e /folha)
 class TranspComp extends HTMLElement {
 	connectedCallback() {
 		if (this.dataset.ready === "true") return;

@@ -238,7 +238,7 @@ async function renderizarFolha() {
 							<transp-comp id="transp-comp"></transp-comp>
 						` : ""}
 						
-						<button onclick="window.open('cantico.html?id=${entrada.canticoId}', '_blank')">↗</button>
+						<button type="button" class="btn-abre-cantico" data-cantico-id="${entrada.canticoId}" title="Abrir cântico">↗</button>
 					</div>
 				</div>
 				<div class="cantico-letra">${letra}</div>
@@ -339,6 +339,17 @@ function ligarEventos(momentosFiltrados) {
 			renderizarFolha();
 		});
 	});
+
+	// Abrir cântico em nova aba
+	document.querySelectorAll(".btn-abre-cantico").forEach(btn => {
+		btn.addEventListener("click", () => {
+			const canticoId = btn.dataset.canticoId;
+			// Abrir o cântico em uma nova aba
+			window.open(`#/cantico?id=${canticoId}`, "_blank");
+			// navigate("/cantico", { id: canticoId });
+		});
+	});
+
 
 	// Navegação entre momentos (modo apresentar individual)
 	const btnAnterior = nav?.querySelector("button#btn-anterior");
