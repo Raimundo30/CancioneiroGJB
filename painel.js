@@ -47,6 +47,11 @@ function configurarPainelDefinicoes() {
 	}
 
 	function atualizarBotoes() {
+		// Obtém a rota apenas uma vez fora do loop
+		const route = typeof getRoute === "function" ? getRoute() : { path: "/" };
+		const ehFolha = route.path === "/folha";
+		const ehCantico = route.path === "/cantico";
+
 		document.querySelectorAll(".opcao-toggle[data-pref][data-valor]").forEach((btn) => {
 			const chave = btn.dataset.pref;
 			const valor = btn.dataset.valor;
@@ -54,6 +59,7 @@ function configurarPainelDefinicoes() {
 			btn.classList.toggle("ativo", String(atual) === String(valor));
 		});
 
+		// Atualiza o estado do toggle de admin e visibilidade dos elementos admin
 		const toggleAdmin = document.getElementById("toggle-admin");
 		const adminAutenticado = window.Cancioneiro.dbApi.isAdminAuthenticated();
 
@@ -62,25 +68,8 @@ function configurarPainelDefinicoes() {
 		}
 
 		if (adminAutenticado) {
-			// Obtém a rota apenas uma vez fora do loop
-			const route = typeof getRoute === "function" ? getRoute() : { path: "/" };
-			const ehFolha = route.path === "/folha";
-			const ehCantico = route.path === "/cantico";
-			
 			document.querySelectorAll(".admin").forEach((elemento) => {
 				elemento.classList.remove("oculto");
-				
-				elemento.querySelectorAll(".folha, .cantico").forEach((subElemento) => {
-					const pertenceFolha = subElemento.classList.contains("folha");
-					const pertenceCantico = subElemento.classList.contains("cantico");
-					const visivel = (pertenceFolha && ehFolha) || (pertenceCantico && ehCantico);
-					if (visivel) {
-						subElemento.classList.remove("oculto");
-					}
-					else {
-						subElemento.classList.add("oculto");
-					}
-				});
 			});
 		} else {
 			document.querySelectorAll(".admin").forEach((elemento) => {
@@ -88,17 +77,35 @@ function configurarPainelDefinicoes() {
 			});
 		}
 
+		// Atualiza o estado do toggle de fullscreen
 		const toggleFullscreen = document.getElementById("toggle-fullscreen");
 		if (toggleFullscreen) {
 			toggleFullscreen.checked = Boolean(document.fullscreenElement);
 		}
 
+		// Ocultar todos os elementos de folha e cântico antes de mostrar os relevantes
+		document.querySelectorAll(".folha, .cantico").forEach((elemento) => {
+			elemento.classList.add("oculto");
+		});
+
+		// Mostrar elementos relevantes com base na rota atual
+		if (ehFolha) {
+			document.querySelectorAll(".folha").forEach((elemento) => {
+				elemento.classList.remove("oculto");
+			});
+		}
+		if (ehCantico) {
+			document.querySelectorAll(".cantico").forEach((elemento) => {
+				elemento.classList.remove("oculto");
+			});
+		}
+
+		// Atualiza os toggles de ver páginas e ocultar meta com base no estado da folha
 		const estadoFolha = obterEstadoFolha();
 		const toggleVerPaginas = document.getElementById("toggle-verPaginas");
 		if (toggleVerPaginas) {
 			toggleVerPaginas.checked = Boolean(estadoFolha.folha && estadoFolha.folha.verPaginas);
 		}
-
 		const toggleMeta = document.getElementById("toggle-meta");
 		if (toggleMeta) {
 			toggleMeta.checked = Boolean(estadoFolha.folha && estadoFolha.folha.ocultarMeta);
